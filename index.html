@@ -168,9 +168,48 @@
         </div>
     </div>
     <!-- End of Authentication Overlay -->
+    
+    <!-- ONBOARDING OVERLAY (Hidden initially, shown if signed in but not verified) -->
+    <div id="onboardingDiv" class="hidden fixed inset-0 z-40 flex items-center justify-center bg-gem-bg-global p-4">
+        <div class="bg-white w-full max-w-2xl p-8 rounded-xl shadow-2xl border-t-4 border-gem-accent text-center">
+            <i data-lucide="shield-check" class="w-12 h-12 text-gem-accent mx-auto mb-4"></i>
+            <h2 class="text-3xl font-extrabold text-gem-text-main mb-2">Secure Your Identity on GreenFeed</h2>
+            <p class="text-lg text-gray-600 mb-6">
+                To ensure trust and accountability, please set a permanent, verified identity.
+            </p>
+            
+            <div class="p-4 bg-gem-bg-card rounded-lg mb-6 text-left">
+                <p class="text-sm font-medium text-gray-500 mb-2">Your current temporary ID:</p>
+                <p id="onboardingUserId" class="font-mono text-gem-accent text-sm break-all">Loading...</p>
+            </div>
+            
+            <div class="space-y-4 text-left">
+                <!-- 1. Display Name Input -->
+                <div>
+                    <label for="onboardingDisplayNameInput" class="block text-sm font-bold text-gem-text-main mb-1">1. Public Display Name:</label>
+                    <input type="text" id="onboardingDisplayNameInput" class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gem-primary text-gem-text-main" placeholder="e.g., The Real John Doe">
+                    <p class="text-xs text-gray-500 mt-1">This name will be permanently displayed next to your posts.</p>
+                </div>
+
+                <!-- 2. Secret Code Input -->
+                <div>
+                    <label for="onboardingVerificationCodeInput" class="block text-sm font-bold text-gem-text-main mb-1">2. Secret Verification Code (Minimum 6 characters):</label>
+                    <input type="password" id="onboardingVerificationCodeInput" class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 text-gem-text-main" placeholder="Enter your secret code">
+                    <p class="text-xs text-gray-500 mt-1">This is a secret key only you know, used to generate your verifiable ID.</p>
+                </div>
+                
+                <div id="onboardingMessage" class="hidden p-3 text-sm rounded-lg text-gem-text-secondary bg-red-100 mt-4"></div>
+            </div>
+
+            <button id="onboardingSetCodeButton" class="w-full mt-6 py-3 px-4 bg-gem-primary text-gem-text-secondary rounded-lg font-bold text-lg shadow-xl hover:bg-gem-accent transition-colors duration-200 disabled:opacity-50">
+                <i data-lucide="lock" class="w-5 h-5 mr-2 inline-block"></i> Confirm Identity & Unlock Feed
+            </button>
+        </div>
+    </div>
+    <!-- END ONBOARDING OVERLAY -->
 
 
-    <!-- Post/QR/Verification/Comments Modal -->
+    <!-- Post/QR/Comments Modal (Verification view removed from modal) -->
     <div id="appModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 transition-opacity duration-300 p-4">
         <div class="bg-white p-6 md:p-8 rounded-xl shadow-2xl w-full max-w-lg transition-transform duration-300 transform scale-95 opacity-0" id="modalContent">
             
@@ -224,30 +263,8 @@
                 <button onclick="closeModal()" class="mt-6 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors duration-200 font-semibold">Close</button>
             </div>
             
-            <!-- Identity Setup View -->
-            <div id="verificationView" class="hidden">
-                <h2 class="text-xl font-bold text-red-500 mb-4">Permanent Identity Setup</h2>
-                <p class="text-sm text-gray-600 mb-4">
-                    Set a **Display Name** for verified posts and a secret **Verification Code** that only you know. This is a one-time setup.
-                </p>
-                
-                <!-- NEW: Display Name Input -->
-                <div class="mb-4">
-                    <label for="displayNameInput" class="block text-sm font-medium text-gray-700 mb-1">Public Display Name:</label>
-                    <input type="text" id="displayNameInput" class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gem-primary text-gem-text-main" placeholder="e.g., The Real John Doe">
-                </div>
-
-                <!-- Secret Code Input -->
-                <div class="mb-4">
-                    <label for="verificationCodeInput" class="block text-sm font-medium text-gray-700 mb-1">Secret Code/Phrase (Minimum 6 characters):</label>
-                    <input type="password" id="verificationCodeInput" class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 text-gem-text-main" placeholder="Enter your secret code">
-                </div>
-                
-                <div class="flex justify-end mt-4 space-x-3">
-                    <button onclick="closeModal()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors duration-200 font-semibold">Cancel</button>
-                    <button id="setCodeButton" class="px-4 py-2 bg-red-500 text-white rounded-lg font-bold hover:bg-red-700 transition-colors duration-200 disabled:opacity-50">Set Identity & Verify</button>
-                </div>
-            </div>
+            <!-- Identity Setup View (REMOVED: Moved to onboardingDiv) -->
+            <div id="verificationView" class="hidden"></div>
             
             <!-- NEW: Comment View -->
             <div id="commentView" class="hidden">
@@ -279,7 +296,7 @@
         </div>
     </div>
 
-    <!-- Header / Navigation Bar -->
+    <!-- Header / Navigation Bar (Hidden by default, shown when verified) -->
     <header id="appHeader" class="hidden sticky top-0 z-40 bg-white shadow-md">
         <div class="container mx-auto flex items-center justify-between p-3 md:p-4">
             <h1 class="text-3xl font-extrabold text-gem-primary cursor-pointer">
@@ -306,7 +323,7 @@
         </div>
     </header>
 
-    <!-- Main Content Grid -->
+    <!-- Main Content Grid (Hidden by default, shown when verified) -->
     <main id="appMain" class="hidden container mx-auto p-3 md:p-6 lg:p-8">
         <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
 
@@ -334,11 +351,6 @@
                             <i data-lucide="loader-circle" class="w-4 h-4 mr-2 text-gray-500 animate-spin" id="verificationIcon"></i>
                             <span class="text-gray-500" id="verificationText">Checking status...</span>
                         </div>
-                        
-                        <!-- Identity Setup Button/Display -->
-                        <button onclick="openModal('verification')" class="w-full mt-2 flex items-center justify-center px-3 py-2 bg-red-500 text-white rounded-lg font-semibold hover:bg-red-700 transition-colors duration-200 text-sm disabled:opacity-50" id="setVerificationCodeButton" disabled>
-                            <i data-lucide="key" class="w-4 h-4 mr-2"></i> Set Identity
-                        </button>
                         
                         <!-- QR CODE BUTTON (to show ID) -->
                         <button onclick="showQrModal()" class="w-full mt-3 flex items-center justify-center px-3 py-2 bg-gem-bg-global text-gem-accent rounded-lg font-semibold hover:bg-gem-light transition-colors duration-200 text-sm disabled:opacity-50" id="showQrButton" disabled>
@@ -461,8 +473,8 @@
         const modalContent = document.getElementById('modalContent');
         const postView = document.getElementById('postView');
         const qrView = document.getElementById('qrView');
-        const verificationView = document.getElementById('verificationView'); 
-        const commentView = document.getElementById('commentView'); // NEW
+        const verificationView = document.getElementById('verificationView'); // Now unused, kept for reference
+        const commentView = document.getElementById('commentView'); 
         const postTextarea = document.getElementById('postTextarea');
         const publishButton = document.getElementById('publishButton');
         const generateDraftButton = document.getElementById('generateDraftButton');
@@ -477,10 +489,14 @@
         const signOutButton = document.getElementById('signOutButton');
         const verificationIcon = document.getElementById('verificationIcon');
         const verificationText = document.getElementById('verificationText');
-        const verificationCodeInput = document.getElementById('verificationCodeInput');
-        const setCodeButton = document.getElementById('setCodeButton');
-        const setVerificationCodeButton = document.getElementById('setVerificationCodeButton');
-        const displayNameInput = document.getElementById('displayNameInput');
+        
+        // NEW: Onboarding UI elements
+        const onboardingDiv = document.getElementById('onboardingDiv');
+        const onboardingDisplayNameInput = document.getElementById('onboardingDisplayNameInput');
+        const onboardingVerificationCodeInput = document.getElementById('onboardingVerificationCodeInput');
+        const onboardingSetCodeButton = document.getElementById('onboardingSetCodeButton');
+        const onboardingUserId = document.getElementById('onboardingUserId');
+        const onboardingMessage = document.getElementById('onboardingMessage');
         
         // NEW Comment UI elements
         const commentOriginalPostContent = document.getElementById('commentOriginalPostContent');
@@ -516,8 +532,8 @@
         // --- Firestore Reference Helper ---
         const userProfileDocRef = (uid) => doc(db, `artifacts/${appId}/users/${uid}/metadata/profile`);
         const publicIdentityDocRef = (uid) => doc(db, `artifacts/${appId}/public/data/verified_identities/${uid}`);
-        const postDocRef = (postId) => doc(db, `artifacts/${appId}/public/data/posts`, postId); // NEW
-        const commentsCollectionRef = (postId) => collection(db, `artifacts/${appId}/public/data/posts/${postId}/comments`); // NEW
+        const postDocRef = (postId) => doc(db, `artifacts/${appId}/public/data/posts`, postId); 
+        const commentsCollectionRef = (postId) => collection(db, `artifacts/${appId}/public/data/posts/${postId}/comments`); 
         
         // --- Hashing Utility (Unchanged) ---
         async function sha256(message) {
@@ -563,13 +579,15 @@
             return date.toLocaleString('en-US', { hour: '2-digit', minute: '2-digit', day: 'numeric', month: 'short' });
         }
 
-        function showMessage(msg, isSuccess = true) {
-            modalMessage.textContent = msg;
-            modalMessage.classList.remove('hidden', 'bg-red-100', 'text-red-700', 'bg-gem-bg-card', 'text-gem-text-main');
+        function showMessage(msg, isSuccess = true, target = modalMessage) {
+            target.textContent = msg;
+            target.classList.remove('hidden', 'bg-red-100', 'text-red-700', 'bg-gem-bg-card', 'text-gem-text-main');
             if (isSuccess) {
-                modalMessage.classList.add('bg-gem-bg-card', 'text-gem-text-main');
+                target.classList.add('bg-gem-bg-card', 'text-gem-text-main');
+                target.classList.remove('bg-red-100', 'text-red-700');
             } else {
-                modalMessage.classList.add('bg-red-100', 'text-red-700');
+                target.classList.add('bg-red-100', 'text-red-700');
+                target.classList.remove('bg-gem-bg-card', 'text-gem-text-main');
             }
         }
 
@@ -594,16 +612,26 @@
                 postView.classList.add('hidden');
                 qrView.classList.add('hidden');
                 verificationView.classList.add('hidden'); 
-                commentView.classList.add('hidden'); // NEW
+                commentView.classList.add('hidden'); 
             }, 300);
         }
 
         function openModal(view) {
+            // Only allow modal open if user is verified (or if it's the QR modal)
+            if (!isUserVerified && view !== 'qr') {
+                 // Attempting to post/comment when not verified will show the onboarding screen
+                 if (onboardingDiv.classList.contains('hidden') && !authOverlay.classList.contains('hidden')) {
+                    // This case should ideally not happen if UI is correctly hidden
+                    console.warn("Attempted to access feature without verification.");
+                 }
+                 return;
+            }
+            
             // Hide all views first
             postView.classList.add('hidden');
             qrView.classList.add('hidden');
             verificationView.classList.add('hidden'); 
-            commentView.classList.add('hidden'); // NEW
+            commentView.classList.add('hidden'); 
             
             hideModalMessage();
             
@@ -614,12 +642,7 @@
                 publishButton.disabled = true;
             } else if (view === 'qr') {
                 qrView.classList.remove('hidden');
-            } else if (view === 'verification') { 
-                verificationView.classList.remove('hidden');
-                verificationCodeInput.value = '';
-                displayNameInput.value = displayName || userName; 
-                setCodeButton.disabled = false;
-            } else if (view === 'comments') { // NEW
+            } else if (view === 'comments') { 
                 commentView.classList.remove('hidden');
                 commentInput.value = ''; // Clear comment input
             }
@@ -634,6 +657,8 @@
         
         // NEW: Open comment modal function
         function openCommentModal(postId, postContent) {
+            if (!isUserVerified) return; // Prevent if not verified
+            
             currentPostId = postId;
             commentOriginalPostContent.textContent = postContent.trim().substring(0, 100) + '...';
             commentsContainer.innerHTML = '<p class="text-center text-gray-500 text-sm">Loading comments...</p>';
@@ -729,26 +754,26 @@
         // --- End Authentication Functions ---
 
 
-        // --- Verification Logic (Unchanged) ---
+        // --- Verification Logic (UPDATED) ---
         async function setVerificationCode() {
-            const code = verificationCodeInput.value.trim();
-            const newDisplayName = displayNameInput.value.trim();
+            const code = onboardingVerificationCodeInput.value.trim();
+            const newDisplayName = onboardingDisplayNameInput.value.trim();
 
             if (!newDisplayName) {
-                showMessage("Please enter a Display Name.", false);
+                showMessage("Please enter a Display Name.", false, onboardingMessage);
                 return;
             }
             if (code.length < 6) {
-                showMessage("The secret code must be at least 6 characters long.", false);
+                showMessage("The secret code must be at least 6 characters long.", false, onboardingMessage);
                 return;
             }
             if (!db || !userId) {
-                showMessage("Cannot set identity: Database connection or user ID is missing.", false);
+                showMessage("Cannot set identity: Database connection or user ID is missing.", false, onboardingMessage);
                 return;
             }
 
-            setCodeButton.disabled = true;
-            showMessage("Hashing and securing your identity...", true);
+            onboardingSetCodeButton.disabled = true;
+            showMessage("Hashing and securing your identity...", true, onboardingMessage);
 
             try {
                 const codeHash = await sha256(code);
@@ -773,17 +798,15 @@
                 updateVerificationUI(true); 
                 updateUIOnAuth(userId, displayName || userName); 
                 
-                showMessage("Identity Setup successful! Your account is now verified.", true);
+                showMessage("Identity Setup successful! Welcome to the feed!", true, onboardingMessage);
                 
-                setTimeout(() => {
-                    closeModal();
-                }, 1500);
+                // Onboarding div is hidden by updateUIOnAuth
 
             } catch (error) {
                 console.error("Error setting verification code and identity:", error);
-                showMessage(`Failed to set identity: ${error.message}`, false);
+                showMessage(`Failed to set identity: ${error.message}`, false, onboardingMessage);
             } finally {
-                setCodeButton.disabled = false;
+                onboardingSetCodeButton.disabled = false;
             }
         }
 
@@ -798,22 +821,11 @@
                 verificationIcon.classList.add('text-green-500');
                 verificationText.classList.add('text-green-500');
                 verificationText.textContent = 'Verified Identity';
-                
-                setVerificationCodeButton.disabled = true;
-                setVerificationCodeButton.textContent = 'Identity Confirmed';
-                setVerificationCodeButton.classList.remove('bg-red-500', 'hover:bg-red-700');
-                setVerificationCodeButton.classList.add('bg-gem-accent', 'cursor-default');
-
             } else {
                 verificationIcon.setAttribute('data-lucide', 'x-circle');
                 verificationIcon.classList.add('text-red-500');
                 verificationText.classList.add('text-red-500');
-                verificationText.textContent = 'Unverified - Setup Identity';
-                
-                setVerificationCodeButton.disabled = false;
-                setVerificationCodeButton.textContent = 'Set Identity';
-                setVerificationCodeButton.classList.remove('bg-gem-accent', 'cursor-default');
-                setVerificationCodeButton.classList.add('bg-red-500', 'hover:bg-red-700');
+                verificationText.textContent = 'Unverified - Set Identity';
             }
             lucide.createIcons();
         }
@@ -828,6 +840,7 @@
             verificationText.textContent = 'Checking status...';
             lucide.createIcons();
 
+            // Setup real-time listener for user profile
             onSnapshot(profileRef, (docSnap) => {
                 let verified = false;
                 if (docSnap.exists()) {
@@ -837,6 +850,9 @@
                 } else {
                     setDoc(profileRef, { createdAt: serverTimestamp() }, { merge: true }).catch(console.error);
                 }
+                
+                // IMPORTANT: Update verification status before updating the main UI
+                isUserVerified = verified; 
                 updateVerificationUI(verified);
                 updateUIOnAuth(userId, displayName || userName);
             }, (error) => {
@@ -851,14 +867,15 @@
         // --- End Verification Logic ---
 
         
-        // --- Post Interaction Logic (NEW) ---
+        // --- Post Interaction Logic (Unchanged) ---
 
         /**
          * Toggles the like status for a post.
          */
         async function toggleLike(postId, isCurrentlyLiked) {
-            if (!db || !userId) {
-                console.error("Cannot like: DB or user ID missing.");
+            if (!db || !userId || !isUserVerified) {
+                console.error("Cannot like: DB, user ID, or verification missing.");
+                // If not verified, the button should be effectively blocked by the UI
                 return;
             }
             
@@ -873,7 +890,6 @@
                 });
             } catch (error) {
                 console.error("Error toggling like:", error);
-                // Optionally show a temporary message on the UI
             }
         }
         
@@ -881,30 +897,21 @@
          * Deletes a post document. This should only be called by the author.
          */
         async function deletePost(postId) {
-            if (!db || !userId) return;
+            if (!db || !userId || !isUserVerified) return;
 
-            // IMPORTANT: In a real-world app, you should confirm deletion
             if (!confirm(`Are you sure you want to delete this post? This action is permanent.`)) {
                 return;
             }
 
             try {
-                // Delete the main post document
                 await deleteDoc(postDocRef(postId));
-                
-                // NOTE: Deleting the comments subcollection manually is complex 
-                // and should be handled by server-side logic (e.g., Firebase Functions)
-                // in production. For this client-side app, we rely on security 
-                // rules allowing the author to delete the post.
-                
                 console.log(`Post ${postId} deleted successfully.`);
             } catch (error) {
                 console.error("Error deleting post:", error);
-                // In case the user is not the author, Firestore security rules will prevent it.
             }
         }
         
-        // --- Comment Logic (NEW) ---
+        // --- Comment Logic (Unchanged) ---
         
         /**
          * Renders comments for the currently viewed post.
@@ -966,7 +973,7 @@
          */
         async function addComment() {
             const content = commentInput.value.trim();
-            if (!content || !currentPostId || !userId) return;
+            if (!content || !currentPostId || !userId || !isUserVerified) return;
 
             addCommentButton.disabled = true;
 
@@ -985,7 +992,6 @@
                 commentInput.value = ''; // Clear input on success
             } catch (error) {
                 console.error("Error adding comment:", error);
-                // Could show a message, but since this is in a modal, we'll rely on console for now.
             } finally {
                 addCommentButton.disabled = false;
             }
@@ -994,9 +1000,10 @@
         // --- End Post Interaction Logic ---
 
 
-        // Utility functions (pcmToWav, base64ToArrayBuffer, disableUI, updateUIOnAuth, showQrModal, signOutUser, initFirebaseAndAuth are mostly unchanged for brevity)
+        // Utility functions (pcmToWav, base64ToArrayBuffer, disableUI, updateUIOnAuth, showQrModal, signOutUser, initFirebaseAndAuth are updated for onboarding flow)
 
         function pcmToWav(pcm16, sampleRate) {
+             // ... (WAV conversion logic - unchanged) ...
             const numChannels = 1;
             const bytesPerSample = 2; // 16-bit PCM
             const dataLength = pcm16.length * bytesPerSample;
@@ -1057,19 +1064,24 @@
 
         function disableUI() {
             isAuthReady = false;
+            // Hide everything except auth overlay
             appHeader.classList.add('hidden');
             appMain.classList.add('hidden');
+            onboardingDiv.classList.add('hidden');
             authOverlay.classList.remove('hidden');
+            
             feedContainer.innerHTML = '';
             loadingIndicator.classList.remove('hidden');
             loadingIndicator.textContent = "Please sign in to continue.";
+            
+            // Disable all main action buttons/inputs
             profileElements.createPostHeaderBtn.disabled = true;
             profileElements.createPostMobileBtn.disabled = true;
             showQrButton.disabled = true;
             signOutButton.disabled = true;
-            setVerificationCodeButton.disabled = true; 
             profileElements.postInput.disabled = true;
             profileElements.postTextBtn.disabled = true;
+            
             const initials = '??';
             profileElements.profileInitials.textContent = initials;
             profileElements.sidebarProfileInitials.textContent = initials;
@@ -1077,42 +1089,66 @@
             profileElements.sidebarUsername.textContent = "Guest";
             profileElements.currentUserId.textContent = "N/A";
             profileElements.postInput.placeholder = `Sign in to post.`;
+            
             updateVerificationUI(false);
             verificationIcon.classList.remove('animate-spin');
             verificationIcon.setAttribute('data-lucide', 'x-circle');
             lucide.createIcons();
         }
 
+        // UPDATED: Now handles the logic for showing main app vs. onboarding screen
         function updateUIOnAuth(uid, currentName) {
             const nameToDisplay = displayName || currentName; 
             userName = currentName; 
             
             const initials = getInitials(nameToDisplay);
+            
+            // 1. Update Core Profile Elements (always visible in sidebar/header if signed in)
             profileElements.sidebarUsername.textContent = nameToDisplay;
             profileElements.profileInitials.textContent = initials;
             profileElements.sidebarProfileInitials.textContent = initials;
             profileElements.inputProfileInitials.textContent = initials;
             profileElements.currentUserId.textContent = uid;
 
-            profileElements.createPostHeaderBtn.disabled = false;
-            profileElements.createPostMobileBtn.disabled = false;
-            showQrButton.disabled = false;
-            signOutButton.disabled = false;
-            profileElements.postInput.disabled = false;
-            profileElements.postTextBtn.disabled = false;
+            authOverlay.classList.add('hidden'); // Always hide auth overlay if signed in
 
-            profileElements.postInput.placeholder = `What's going on, ${nameToDisplay}?`;
+            if (isUserVerified) {
+                // 2. SHOW MAIN APP
+                appHeader.classList.remove('hidden');
+                appMain.classList.remove('hidden');
+                onboardingDiv.classList.add('hidden'); // Hide onboarding
 
-            authOverlay.classList.add('hidden');
-            appHeader.classList.remove('hidden');
-            appMain.classList.remove('hidden');
+                // Enable main features
+                profileElements.createPostHeaderBtn.disabled = false;
+                profileElements.createPostMobileBtn.disabled = false;
+                showQrButton.disabled = false;
+                signOutButton.disabled = false;
+                profileElements.postInput.disabled = false;
+                profileElements.postTextBtn.disabled = false;
+                profileElements.postInput.placeholder = `What's going on, ${nameToDisplay}?`;
+
+            } else {
+                // 3. SHOW ONBOARDING SCREEN
+                appHeader.classList.add('hidden');
+                appMain.classList.add('hidden');
+                onboardingDiv.classList.remove('hidden'); 
+                
+                // Disable main features (they are hidden anyway, but good practice)
+                profileElements.createPostHeaderBtn.disabled = true;
+                profileElements.createPostMobileBtn.disabled = true;
+                showQrButton.disabled = true;
+                signOutButton.disabled = false; // Allow sign out from onboarding
+                
+                // Populate onboarding fields
+                onboardingDisplayNameInput.value = nameToDisplay;
+                onboardingUserId.textContent = uid;
+            }
 
             lucide.createIcons();
         }
 
         function showQrModal() {
-            if (!userId) {
-                showMessage("You must be signed in to view your verification QR code.", false);
+            if (!userId || !isUserVerified) { // Must be verified to show QR
                 return;
             }
             
@@ -1174,14 +1210,16 @@
                         userId = user.uid;
                         userName = deriveUserName(user);
                         isAuthReady = true;
-                        updateUIOnAuth(userId, userName);
-                        loadUserProfile();
+                        // loadUserProfile will determine if verified and call updateUIOnAuth
+                        loadUserProfile(); 
+                        // Start listener for posts once we know the user is signed in
                         setupPostsListener(); 
                     } else {
                         isAuthReady = false;
                         userId = null;
                         userName = null;
                         displayName = null;
+                        isUserVerified = false;
                         disableUI();
                         
                         if (isSigningOutIntent) {
@@ -1204,7 +1242,11 @@
         // Function to handle post submission
         async function publishPost() {
             const content = postTextarea.value.trim();
-            if (!content) { showMessage("Post content cannot be empty.", false); return; }
+            // Added verification check here too, though UI should prevent it
+            if (!content || !isUserVerified) { 
+                showMessage("Post content cannot be empty or you are not verified.", false); 
+                return; 
+            }
             if (!db || !userId) { showMessage("Cannot publish: Database connection or user ID is missing.", false); return; }
 
             publishButton.disabled = true;
@@ -1220,7 +1262,7 @@
                     content: content,
                     timestamp: serverTimestamp(),
                     isVerified: isUserVerified,
-                    likes: [], // NEW: Initialize likes array
+                    likes: [], 
                 };
 
                 const postsCollection = collection(db, `artifacts/${appId}/public/data/posts`);
@@ -1246,8 +1288,8 @@
                 showMessage("Please enter an idea in the text box before generating a draft.", false);
                 return;
             }
-            if (!userId) {
-                 showMessage("You must be logged in to use AI features.", false);
+            if (!userId || !isUserVerified) {
+                 showMessage("You must be verified to use AI features.", false);
                  return;
             }
 
@@ -1390,7 +1432,7 @@
             lucide.createIcons(); 
         }
 
-        // Sets up real-time listener for posts (Unchanged, but post data now includes 'likes')
+        // Sets up real-time listener for posts
         function setupPostsListener() {
             if (!db || !isAuthReady || !userId) {
                 console.log("Skipping setupPostsListener: DB or Auth not ready.");
@@ -1404,7 +1446,6 @@
                 const posts = [];
                 snapshot.forEach(doc => {
                     const data = doc.data();
-                    // Ensure the document ID is part of the data object
                     posts.push({ id: doc.id, ...data });
                 });
                 
@@ -1431,7 +1472,6 @@
             });
             publishButton.addEventListener('click', publishPost);
             
-            // NEW: Listener for the comment input to post comment on Enter
             commentInput.addEventListener('keydown', (e) => {
                 if (e.key === 'Enter') {
                     e.preventDefault();
@@ -1442,7 +1482,8 @@
 
             populatePersonalitySelector();
             
-            setCodeButton.addEventListener('click', setVerificationCode);
+            // Onboarding Button Listener
+            onboardingSetCodeButton.addEventListener('click', setVerificationCode);
 
             initFirebaseAndAuth();
             
