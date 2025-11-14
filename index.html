@@ -154,12 +154,12 @@
     <!-- End of Authentication Overlay -->
 
 
-    <!-- Post/QR Modal (Renamed from postModal to appModal for dual purpose) -->
+    <!-- Post/QR/Verification Modal -->
     <div id="appModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 transition-opacity duration-300 p-4">
         <div class="bg-white p-6 md:p-8 rounded-xl shadow-2xl w-full max-w-lg transition-transform duration-300 transform scale-95 opacity-0" id="modalContent">
             
             <!-- Post Creation View -->
-            <div id="postView">
+            <div id="postView" class="hidden">
                 <h2 class="text-xl font-bold text-gem-accent mb-4">Create New Post</h2>
                 
                 <!-- AI Personality Selector -->
@@ -185,7 +185,7 @@
                 </div>
             </div>
 
-            <!-- QR Code View - UPDATED FOR IDENTITY/AUTHENTICITY -->
+            <!-- QR Code View -->
             <div id="qrView" class="hidden text-center">
                 <h2 class="text-xl font-bold text-gem-accent mb-4">Confirm Your Identity / Get Connected</h2>
                 <p class="text-sm text-gray-600 mb-4">Scan this code to let others confirm your unique GreenFeed ID and identity.</p>
@@ -201,6 +201,24 @@
                 <p class="text-xs text-gray-500 mt-1">User ID: <span id="qrCodeUserId" class="font-mono text-gem-text-main text-[10px] break-all"></span></p>
 
                 <button onclick="closeModal()" class="mt-6 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors duration-200 font-semibold">Close</button>
+            </div>
+            
+            <!-- NEW: Verification Code Setting View -->
+            <div id="verificationView" class="hidden">
+                <h2 class="text-xl font-bold text-red-500 mb-4">Set Your Permanent Verification Code</h2>
+                <p class="text-sm text-gray-600 mb-4">
+                    This is a **one-time action**. Once set, your account is permanently marked as verified.
+                    Choose a secret word or phrase that only you know.
+                </p>
+                <div class="mb-4">
+                    <label for="verificationCodeInput" class="block text-sm font-medium text-gray-700 mb-1">Secret Code/Phrase (Minimum 6 characters):</label>
+                    <input type="password" id="verificationCodeInput" class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 text-gem-text-main" placeholder="Enter your secret code">
+                </div>
+                
+                <div class="flex justify-end mt-4 space-x-3">
+                    <button onclick="closeModal()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors duration-200 font-semibold">Cancel</button>
+                    <button id="setCodeButton" class="px-4 py-2 bg-red-500 text-white rounded-lg font-bold hover:bg-red-700 transition-colors duration-200 disabled:opacity-50">Set Code & Verify</button>
+                </div>
             </div>
 
             <div id="modalMessage" class="hidden mt-3 p-3 text-sm rounded-lg bg-gem-bg-card text-gem-text-main"></div>
@@ -256,23 +274,22 @@
                             </div>
                         </div>
                         
-                        <!-- NEW: Verification Status -->
+                        <!-- Verification Status -->
                         <div class="flex items-center text-sm font-semibold mt-2 border-t border-gem-bg-global pt-3" id="verificationStatusContainer">
                             <i data-lucide="loader-circle" class="w-4 h-4 mr-2 text-gray-500 animate-spin" id="verificationIcon"></i>
                             <span class="text-gray-500" id="verificationText">Checking status...</span>
                         </div>
+                        
+                        <!-- NEW: Verification Code Button/Display -->
+                        <button onclick="openModal('verification')" class="w-full mt-2 flex items-center justify-center px-3 py-2 bg-red-500 text-white rounded-lg font-semibold hover:bg-red-700 transition-colors duration-200 text-sm disabled:opacity-50" id="setVerificationCodeButton" disabled>
+                            <i data-lucide="key" class="w-4 h-4 mr-2"></i> Set Verification Code
+                        </button>
                         
                         <!-- QR CODE BUTTON (to show ID) -->
                         <button onclick="showQrModal()" class="w-full mt-3 flex items-center justify-center px-3 py-2 bg-gem-bg-global text-gem-accent rounded-lg font-semibold hover:bg-gem-light transition-colors duration-200 text-sm disabled:opacity-50" id="showQrButton" disabled>
                             <i data-lucide="scan-line" class="w-4 h-4 mr-2"></i> Show ID QR Code
                         </button>
                         
-                        <!-- NEW: Toggle Verification Button (Simulates Verification Fix) -->
-                         <button onclick="toggleVerificationStatus()" class="w-full mt-2 flex items-center justify-center px-3 py-2 bg-gem-primary text-white rounded-lg font-semibold hover:bg-gem-accent transition-colors duration-200 text-sm disabled:opacity-50" id="toggleVerifyButton" disabled>
-                            <i data-lucide="shield" class="w-4 h-4 mr-2"></i> Toggle Verification Status
-                        </button>
-
-
                         <!-- Sign Out Button -->
                         <button onclick="signOutUser()" class="w-full mt-2 flex items-center justify-center px-3 py-2 bg-red-100 text-red-600 rounded-lg font-semibold hover:bg-red-200 transition-colors duration-200 text-sm" id="signOutButton" disabled>
                             <i data-lucide="log-out" class="w-4 h-4 mr-2"></i> Sign Out
@@ -373,7 +390,7 @@
         let userName = null;
         let isAuthReady = false;
         let isSigningOutIntent = false; // Flag to prevent re-auth on intentional sign out
-        let isUserVerified = false; // NEW: Track verification status
+        let isUserVerified = false; // Track verification status
         
         // --- AI Personalities Definition (Unused in JS logic, but needed for modal structure) ---
         const aiPersonalities = {
@@ -385,10 +402,11 @@
 
 
         // UI element references
-        const appModal = document.getElementById('appModal'); // Renamed from postModal
+        const appModal = document.getElementById('appModal'); 
         const modalContent = document.getElementById('modalContent');
         const postView = document.getElementById('postView');
         const qrView = document.getElementById('qrView');
+        const verificationView = document.getElementById('verificationView'); // NEW
         const postTextarea = document.getElementById('postTextarea');
         const publishButton = document.getElementById('publishButton');
         const generateDraftButton = document.getElementById('generateDraftButton');
@@ -398,12 +416,14 @@
         const loadingIndicator = document.getElementById('loadingIndicator');
         const qrcodeCanvas = document.getElementById('qrcodeCanvas');
         const qrCodeUserId = document.getElementById('qrCodeUserId');
-        const qrCodeUserName = document.getElementById('qrCodeUserName'); // NEW
+        const qrCodeUserName = document.getElementById('qrCodeUserName'); 
         const showQrButton = document.getElementById('showQrButton');
         const signOutButton = document.getElementById('signOutButton');
-        const toggleVerifyButton = document.getElementById('toggleVerifyButton'); // NEW
-        const verificationIcon = document.getElementById('verificationIcon'); // NEW
-        const verificationText = document.getElementById('verificationText'); // NEW
+        const verificationIcon = document.getElementById('verificationIcon');
+        const verificationText = document.getElementById('verificationText');
+        const verificationCodeInput = document.getElementById('verificationCodeInput'); // NEW
+        const setCodeButton = document.getElementById('setCodeButton'); // NEW
+        const setVerificationCodeButton = document.getElementById('setVerificationCodeButton'); // NEW Sidebar Button
 
         // NEW: Auth Overlay UI references
         const authOverlay = document.getElementById('authOverlay');
@@ -432,6 +452,21 @@
         
         // --- Firestore Reference Helper ---
         const userProfileDocRef = (uid) => doc(db, `artifacts/${appId}/users/${uid}/metadata/profile`);
+
+        // --- Hashing Utility (NEW) ---
+        /**
+         * Asynchronously hashes a string using SHA-256 and returns a hex string.
+         */
+        async function sha256(message) {
+            const msgBuffer = new TextEncoder().encode(message);
+            // hash the message
+            const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+            // convert ArrayBuffer to Array
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            // convert bytes to hex string
+            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        }
+        // --- End Hashing Utility ---
 
 
         // --- Helper Functions ---
@@ -496,22 +531,32 @@
             setTimeout(() => {
                 appModal.classList.add('hidden');
                 hideModalMessage();
-                // Reset to Post View when closing
-                postView.classList.remove('hidden');
+                // Hide all views when closing
+                postView.classList.add('hidden');
                 qrView.classList.add('hidden');
+                verificationView.classList.add('hidden'); // NEW
             }, 300);
         }
 
         function openModal(view) {
+            // Hide all views first
+            postView.classList.add('hidden');
+            qrView.classList.add('hidden');
+            verificationView.classList.add('hidden'); // NEW
+            
             hideModalMessage();
+            
+            // Show the requested view
             if (view === 'post') {
                 postView.classList.remove('hidden');
-                qrView.classList.add('hidden');
-            } else if (view === 'qr') {
-                postTextarea.value = ''; // Clear textarea if switching to QR
+                postTextarea.value = ''; // Clear textarea 
                 publishButton.disabled = true;
-                postView.classList.add('hidden');
+            } else if (view === 'qr') {
                 qrView.classList.remove('hidden');
+            } else if (view === 'verification') { // NEW
+                verificationView.classList.remove('hidden');
+                verificationCodeInput.value = '';
+                setCodeButton.disabled = false;
             }
             
             appModal.classList.remove('hidden');
@@ -618,61 +663,93 @@
         }
 
 
-        // --- Firebase Functions ---
+        // --- Verification Logic (UPDATED) ---
+
+        /**
+         * Sets the one-time verification code hash in the user's profile.
+         */
+        async function setVerificationCode() {
+            const code = verificationCodeInput.value.trim();
+
+            if (code.length < 6) {
+                showMessage("The secret code must be at least 6 characters long.", false);
+                return;
+            }
+            if (!db || !userId) {
+                showMessage("Cannot set code: Database connection or user ID is missing.", false);
+                return;
+            }
+
+            setCodeButton.disabled = true;
+            showMessage("Hashing and securing your code...", true);
+
+            try {
+                // 1. Hash the user's secret code
+                const codeHash = await sha256(code);
+
+                // 2. Save the hash to Firestore
+                const profileRef = userProfileDocRef(userId);
+
+                await setDoc(profileRef, { 
+                    verificationCodeHash: codeHash,
+                    verified: true, // Mark as verified immediately
+                    verifiedAt: serverTimestamp()
+                }, { merge: true });
+
+                // The onSnapshot listener will handle the UI update
+                showMessage("Verification successful! Your identity is now confirmed.", true);
+                
+                setTimeout(() => {
+                    closeModal();
+                }, 1500);
+
+            } catch (error) {
+                console.error("Error setting verification code:", error);
+                showMessage(`Failed to set code: ${error.message}`, false);
+            } finally {
+                setCodeButton.disabled = false;
+            }
+        }
+
+
         /**
          * Updates the UI to reflect the current verification status.
+         * Status is determined by the existence of verificationCodeHash in the profile.
          */
         function updateVerificationUI(isVerified) {
             isUserVerified = isVerified;
             
             // Update badge appearance
-            verificationIcon.setAttribute('data-lucide', isVerified ? 'check-circle' : 'x-circle');
             verificationIcon.classList.remove('text-red-500', 'text-green-500', 'animate-spin');
             verificationText.classList.remove('text-red-500', 'text-green-500');
             
             if (isVerified) {
+                // Verified State
+                verificationIcon.setAttribute('data-lucide', 'check-circle');
                 verificationIcon.classList.add('text-green-500');
                 verificationText.classList.add('text-green-500');
                 verificationText.textContent = 'Verified Account';
-                toggleVerifyButton.textContent = 'Unverify Status (for testing)';
-                toggleVerifyButton.classList.remove('bg-gem-primary');
-                toggleVerifyButton.classList.add('bg-red-500', 'hover:bg-red-700');
+                
+                // Sidebar button turns into a permanent, non-clickable 'Verified' display
+                setVerificationCodeButton.disabled = true;
+                setVerificationCodeButton.textContent = 'Identity Confirmed';
+                setVerificationCodeButton.classList.remove('bg-red-500', 'hover:bg-red-700');
+                setVerificationCodeButton.classList.add('bg-gem-accent', 'cursor-default');
+
             } else {
+                // Unverified State
+                verificationIcon.setAttribute('data-lucide', 'x-circle');
                 verificationIcon.classList.add('text-red-500');
                 verificationText.classList.add('text-red-500');
-                verificationText.textContent = 'Unverified';
-                toggleVerifyButton.textContent = 'Verify Status (for testing)';
-                toggleVerifyButton.classList.remove('bg-red-500', 'hover:bg-red-700');
-                toggleVerifyButton.classList.add('bg-gem-primary');
+                verificationText.textContent = 'Unverified - Set Code';
+                
+                // Sidebar button is active
+                setVerificationCodeButton.disabled = false;
+                setVerificationCodeButton.textContent = 'Set Verification Code';
+                setVerificationCodeButton.classList.remove('bg-gem-accent', 'cursor-default');
+                setVerificationCodeButton.classList.add('bg-red-500', 'hover:bg-red-700');
             }
             lucide.createIcons(); // Re-render icons
-        }
-
-        /**
-         * Toggles the user's verification status in Firestore.
-         */
-        async function toggleVerificationStatus() {
-            if (!db || !userId) return;
-
-            toggleVerifyButton.disabled = true;
-            showMessage(`Toggling status to ${isUserVerified ? 'Unverified' : 'Verified'}...`, true);
-
-            try {
-                const profileRef = userProfileDocRef(userId);
-                const newStatus = !isUserVerified;
-
-                await setDoc(profileRef, { verified: newStatus }, { merge: true });
-                // The onSnapshot listener in loadUserProfile will update the UI.
-
-                showMessage(`Status successfully updated to ${newStatus ? 'Verified' : 'Unverified'}.`, true);
-
-            } catch (error) {
-                console.error("Error toggling verification status:", error);
-                showMessage(`Failed to toggle status: ${error.message}`, false);
-            } finally {
-                setTimeout(() => hideModalMessage(), 2000);
-                toggleVerifyButton.disabled = false;
-            }
         }
 
         /**
@@ -693,11 +770,11 @@
                 let verified = false;
                 if (docSnap.exists()) {
                     const data = docSnap.data();
-                    verified = !!data.verified; // Ensure it's a boolean
+                    // Verification is true if the secure hash exists
+                    verified = !!data.verificationCodeHash; 
                 } else {
-                    // Document doesn't exist, treat as unverified and create a minimal document
-                    // This is optional but ensures the document exists for future updates
-                    setDoc(profileRef, { verified: false, createdAt: serverTimestamp() }, { merge: true }).catch(console.error);
+                    // Document doesn't exist, treat as unverified and optionally create minimal document
+                    setDoc(profileRef, { createdAt: serverTimestamp() }, { merge: true }).catch(console.error);
                 }
                 updateVerificationUI(verified);
             }, (error) => {
@@ -792,7 +869,7 @@
             profileElements.createPostMobileBtn.disabled = true;
             showQrButton.disabled = true;
             signOutButton.disabled = true;
-            toggleVerifyButton.disabled = true; // NEW
+            setVerificationCodeButton.disabled = true; // NEW
             profileElements.postInput.disabled = true;
             profileElements.postTextBtn.disabled = true;
             
@@ -828,7 +905,7 @@
             profileElements.createPostMobileBtn.disabled = false;
             showQrButton.disabled = false;
             signOutButton.disabled = false;
-            toggleVerifyButton.disabled = false; // NEW
+            // setVerificationCodeButton disabled state is controlled by loadUserProfile/updateVerificationUI
             profileElements.postInput.disabled = false;
             profileElements.postTextBtn.disabled = false;
 
@@ -983,7 +1060,7 @@
                     authorName: userName, 
                     content: content,
                     timestamp: serverTimestamp(),
-                    isVerified: isUserVerified, // NEW: Include verification status on post
+                    isVerified: isUserVerified, // Include current verification status on post
                 };
 
                 // FIX: 'collection' is now globally available
@@ -1105,6 +1182,7 @@
                 const initials = getInitials(post.authorName || 'Anon');
                 const isPostVerified = post.isVerified === true; // Check if the post author was verified
                 
+                // Keep the verified badge logic simple as requested
                 const verifiedBadge = isPostVerified ? `
                     <span class="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
                         <i data-lucide="check-circle" class="w-3 h-3 mr-1"></i> Verified
@@ -1190,8 +1268,8 @@
             publishButton.addEventListener('click', publishPost);
             populatePersonalitySelector();
             
-            // NEW: Add listener for the new toggle button
-            toggleVerifyButton.addEventListener('click', toggleVerificationStatus);
+            // NEW: Add listener for the new set code button
+            setCodeButton.addEventListener('click', setVerificationCode);
 
             // 3. Initialize Firebase and Authentication
             initFirebaseAndAuth();
