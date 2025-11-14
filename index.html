@@ -15,8 +15,9 @@
     <script type="module">
         // --- Firebase Core Modules ---
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        // CRITICAL FIX: Ensure collection and query are imported and exposed
         import { getFirestore, doc, addDoc, onSnapshot, collection, query, serverTimestamp, setLogLevel, updateDoc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-        // --- Firebase Auth Modules (GitHub removed) ---
+        // --- Firebase Auth Modules ---
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, signOut, createUserWithEmailAndPassword, signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         
 
@@ -31,9 +32,15 @@
         window.serverTimestamp = serverTimestamp;
         window.signOut = signOut;
         window.setLogLevel = setLogLevel;
-        window.updateDoc = updateDoc; // NEW
-        window.setDoc = setDoc;     // NEW
-        window.getDoc = getDoc;     // NEW
+        window.updateDoc = updateDoc;
+        window.setDoc = setDoc;
+        window.getDoc = getDoc;
+        
+        // --- CRITICAL FIX: Expose collection and query ---
+        window.collection = collection; // <-- ADDED
+        window.query = query;           // <-- ADDED
+        window.onSnapshot = onSnapshot; // Ensure onSnapshot is exposed too
+        window.addDoc = addDoc;
         
         // Expose Email/Password auth functions
         window.createUserWithEmailAndPassword = createUserWithEmailAndPassword;
@@ -972,6 +979,7 @@
                     isVerified: isUserVerified, // NEW: Include verification status on post
                 };
 
+                // FIX: 'collection' is now globally available
                 const postsCollection = collection(db, `artifacts/${appId}/public/data/posts`);
                 await addDoc(postsCollection, postData);
                 
@@ -1134,9 +1142,11 @@
                 return;
             }
             
+            // FIX: 'collection' is now globally available
             const postsCollection = collection(db, `artifacts/${appId}/public/data/posts`);
             
             // Fetch all posts (no sorting implemented to avoid index errors)
+            // FIX: 'query' is now globally available
             const q = query(postsCollection);
             
             // Set up real-time listener
