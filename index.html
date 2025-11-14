@@ -1,1511 +1,1254 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Green Feed - Social Media (Firebase + AI)</title>
-    <!-- Load Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Load Lucide Icons -->
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <!-- Load QR Code Generator Library -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-    <!-- Firebase SDK Imports (MUST be defined before script block) -->
-    <script type="module">
-        // --- Firebase Core Modules ---
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        // CRITICAL FIX: Ensure all necessary Firestore functions are imported and exposed
-        import { 
-            getFirestore, 
-            doc, 
-            addDoc, 
-            onSnapshot, 
-            collection, 
-            query, 
-            serverTimestamp, 
-            setLogLevel, 
-            updateDoc, 
-            setDoc, 
-            getDoc,
-            arrayUnion,      // NEW: For adding to the likes array
-            arrayRemove,     // NEW: For removing from the likes array
-            deleteDoc,       // NEW: For deleting posts
-            orderBy          // NEW: For ordering comments (optional, but good practice)
-        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-        // --- Firebase Auth Modules ---
-        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, signOut, createUserWithEmailAndPassword, signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Green Feed - Social Media (Firebase + AI)</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Load Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Load QR Code Generator Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- Firebase SDK Imports (MUST be defined before script block) -->
+    <script type="module">
+        // --- Firebase Core Modules ---
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        // CRITICAL FIX: Ensure all necessary Firestore functions are imported and exposed
+        import { 
+            getFirestore, 
+            doc, 
+            addDoc, 
+            onSnapshot, 
+            collection, 
+            query, 
+            serverTimestamp, 
+            setLogLevel, 
+            updateDoc, 
+            setDoc, 
+            getDoc,
+            arrayUnion,      // NEW: For adding to the likes array
+            arrayRemove,     // NEW: For removing from the likes array
+            deleteDoc,       // NEW: For deleting posts
+            orderBy          // NEW: For ordering comments (optional, but good practice)
+        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        // --- Firebase Auth Modules ---
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, signOut, createUserWithEmailAndPassword, signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        
 
-        // Global Firebase variables accessible within the main script
-        window.initializeApp = initializeApp;
-        window.getAuth = getAuth;
-        window.signInAnonymously = signInAnonymously;
-        window.signInWithCustomToken = signInWithCustomToken;
-        window.onAuthStateChanged = onAuthStateChanged;
-        window.getFirestore = getFirestore;
-        window.doc = doc;
-        window.serverTimestamp = serverTimestamp;
-        window.signOut = signOut;
-        window.setLogLevel = setLogLevel;
-        window.updateDoc = updateDoc;
-        window.setDoc = setDoc;
-        window.getDoc = getDoc;
-        
-        // --- CRITICAL FIX: Expose collection and query and array operations ---
-        window.collection = collection;
-        window.query = query;           
-        window.onSnapshot = onSnapshot; 
-        window.addDoc = addDoc;
-        window.arrayUnion = arrayUnion; // NEW
-        window.arrayRemove = arrayRemove; // NEW
-        window.deleteDoc = deleteDoc; // NEW
-        window.orderBy = orderBy; // NEW
-        
-        // Expose Auth functions
-        window.createUserWithEmailAndPassword = createUserWithEmailAndPassword;
-        window.signInWithEmailAndPassword = signInWithEmailAndPassword;
-        window.GoogleAuthProvider = GoogleAuthProvider;
-        window.signInWithPopup = signInWithPopup;
-    </script>
-    
-    <style>
-        /* Custom Colors based on the user's palette */
-        :root {
-            --palette-color-1: #18e767; /* Primary Green */
-            --palette-color-2: #62ea9d; /* Light Accent */
-            --palette-color-3: #0ca640; /* Darker Primary */
-            --palette-color-4: #aaeecb; /* Very Light Green */
-            --palette-color-5: #05611f; /* Dark Text/Hover */
-            --palette-color-6: #d7f4e6; /* Card Background */
-            --palette-color-7: #00330c; /* Main Text */
-            --palette-color-8: #ecf9f3; /* Global Background */
-        }
+        // Global Firebase variables accessible within the main script
+        window.initializeApp = initializeApp;
+        window.getAuth = getAuth;
+        window.signInAnonymously = signInAnonymously;
+        window.signInWithCustomToken = signInWithCustomToken;
+        window.onAuthStateChanged = onAuthStateChanged;
+        window.getFirestore = getFirestore;
+        window.doc = doc;
+        window.serverTimestamp = serverTimestamp;
+        window.signOut = signOut;
+        window.setLogLevel = setLogLevel;
+        window.updateDoc = updateDoc;
+        window.setDoc = setDoc;
+        window.getDoc = getDoc;
+        
+        // --- CRITICAL FIX: Expose collection and query and array operations ---
+        window.collection = collection;
+        window.query = query;           
+        window.onSnapshot = onSnapshot; 
+        window.addDoc = addDoc;
+        window.arrayUnion = arrayUnion; // NEW
+        window.arrayRemove = arrayRemove; // NEW
+        window.deleteDoc = deleteDoc; // NEW
+        window.orderBy = orderBy; // NEW
+        
+        // Expose Auth functions
+        window.createUserWithEmailAndPassword = createUserWithEmailAndPassword;
+        window.signInWithEmailAndPassword = signInWithEmailAndPassword;
+        window.GoogleAuthProvider = GoogleAuthProvider;
+        window.signInWithPopup = signInWithPopup;
+    </script>
+    
+    <style>
+        /* Custom Colors based on the user's palette */
+        :root {
+            --palette-color-1: #18e767; /* Primary Green */
+            --palette-color-2: #62ea9d; /* Light Accent */
+            --palette-color-3: #0ca640; /* Darker Primary */
+            --palette-color-4: #aaeecb; /* Very Light Green */
+            --palette-color-5: #05611f; /* Dark Text/Hover */
+            --palette-color-6: #d7f4e6; /* Card Background */
+            --palette-color-7: #00330c; /* Main Text */
+            --palette-color-8: #ecf9f3; /* Global Background */
+        }
 
-        /* Set up Tailwind configuration to use the custom CSS variables */
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
-                    },
-                    colors: {
-                        'gem-primary': 'var(--palette-color-1)',
-                        'gem-accent': 'var(--palette-color-3)',
-                        'gem-light': 'var(--palette-color-2)',
-                        'gem-bg-global': 'var(--palette-color-8)',
-                        'gem-bg-card': 'var(--palette-color-6)',
-                        'gem-text-main': 'var(--palette-color-7)',
-                        'gem-text-secondary': 'var(--palette-color-5)',
-                    },
-                }
-            }
-        }
+        /* Set up Tailwind configuration to use the custom CSS variables */
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        'gem-primary': 'var(--palette-color-1)',
+                        'gem-accent': 'var(--palette-color-3)',
+                        'gem-light': 'var(--palette-color-2)',
+                        'gem-bg-global': 'var(--palette-color-8)',
+                        'gem-bg-card': 'var(--palette-color-6)',
+                        'gem-text-main': 'var(--palette-color-7)',
+                        'gem-text-secondary': 'var(--palette-color-5)',
+                    },
+                }
+            }
+        }
 
-        /* Basic global styles */
-        body {
-            background-color: var(--palette-color-8);
-            color: var(--palette-color-7);
-            min-height: 100vh;
-        }
-        /* Custom scrollbar for a nicer look */
-        ::-webkit-scrollbar {
-            width: 8px;
-        }
-        ::-webkit-scrollbar-thumb {
-            background-color: var(--palette-color-2);
-            border-radius: 10px;
-        }
-    </style>
+        /* Basic global styles */
+        body {
+            background-color: var(--palette-color-8);
+            color: var(--palette-color-7);
+            min-height: 100vh;
+        }
+        /* Custom scrollbar for a nicer look */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background-color: var(--palette-color-2);
+            border-radius: 10px;
+        }
+    </style>
 </head>
 <body class="font-sans">
 
-    <!-- Authentication Overlay (Hidden after sign-in) -->
-    <div id="authOverlay" class="fixed inset-0 z-50 flex items-center justify-center bg-gem-bg-global p-4">
-        <div class="bg-white w-full max-w-sm p-8 rounded-xl shadow-2xl border-t-4 border-gem-primary">
-            <h2 class="text-3xl font-extrabold text-gem-primary text-center mb-6">Welcome to GreenFeed</h2>
-            
-            <div id="authMessage" class="hidden p-3 mb-4 text-sm rounded-lg bg-red-100 text-red-700"></div>
-
-            <div class="space-y-4">
-                <div>
-                    <label for="emailInput" class="block text-sm font-medium text-gem-text-main mb-1">Email</label>
-                    <input type="email" id="emailInput" class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gem-primary" placeholder="you@example.com">
-                </div>
-                <div>
-                    <label for="passwordInput" class="block text-sm font-medium text-gem-text-main mb-1">Password</label>
-                    <input type="password" id="passwordInput" class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gem-primary" placeholder="••••••••">
-                </div>
-            </div>
-
-            <div class="flex flex-col space-y-3 mt-6">
-                <button id="signInButton" class="w-full py-3 px-4 bg-gem-primary text-gem-text-secondary rounded-lg font-bold hover:bg-gem-accent transition-colors duration-200">
-                    Sign In
-                </button>
-                <button id="createAccountButton" class="w-full py-3 px-4 bg-gem-light text-gem-text-secondary rounded-lg font-semibold hover:bg-gem-primary transition-colors duration-200">
-                    Create Account
-                </button>
-                
-                <!-- GOOGLE BUTTON -->
-                <button id="googleSignInButton" class="w-full py-3 px-4 bg-white border border-gray-300 text-gray-700 rounded-lg font-semibold hover:bg-gray-100 transition-colors duration-200 flex items-center justify-center">
-                    <svg class="w-5 h-5 mr-3" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg"><path fill="#FFC107" d="M43.611 20.083H42V20H24v8h11.303c-1.68 5.473-6.84 9.473-13.303 9.473-7.72 0-14-6.28-14-14s6.28-14 14-14c3.14 0 6.02 1.08 8.24 2.86l6.51-6.51C34.63 2.36 29.5 0 24 0 10.74 0 0 10.74 0 24s10.74 24 24 24c12.55 0 22.7-9.59 23.99-21.92l-1.38-1.997z"/><path fill="#FF3D00" d="M6.306 14.691c2.16-5.85 7.85-9.691 14.694-9.691 3.14 0 6.02 1.08 8.24 2.86l6.51-6.51C34.63 2.36 29.5 0 24 0 10.74 0 0 10.74 0 24s10.74 24 24 24c12.55 0 22.7-9.59 23.99-21.92l-1.38-1.997z"/><path fill="#4CAF50" d="M24 48c13.26 0 24-10.74 24-24 0-1.74-.18-3.43-.51-5.06l-6.51 6.51C40.92 21.08 42 22.46 42 24c0 4.08-1.68 7.74-4.38 10.38l6.38 6.38C46.86 37.07 48 30.73 48 24c0-3.32-.67-6.47-1.85-9.35l-6.51 6.51c.32 1.15.51 2.36.51 3.63 0 7.72-6.28 14-14 14-4.93 0-9.27-2.58-11.83-6.48l-6.66 6.66C8.86 45.47 15.93 48 24 48z"/><path fill="#1976D2" d="M43.611 20.083H42V20H24v8h11.303c-1.68 5.473-6.84 9.473-13.303 9.473-7.72 0-14-6.28-14-14s6.28-14 14-14c3.14 0 6.02 1.08 8.24 2.86l6.51-6.51C34.63 2.36 29.5 0 24 0 10.74 0 0 10.74 0 24s10.74 24 24 24c12.55 0 22.7-9.59 23.99-21.92l-1.38-1.997z"/></svg>
-                    Sign In with Google
-                </button>
-            </div>
-
-            <div class="relative my-6">
-                <div class="absolute inset-0 flex items-center">
-                    <div class="w-full border-t border-gray-300"></div>
-                </div>
-                <div class="relative flex justify-center text-sm">
-                    <span class="px-2 bg-white text-gray-500">or</span>
-                </div>
-            </div>
-
-            <button id="guestButton" class="w-full py-3 px-4 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300 transition-colors duration-200">
-                Continue as Guest
-            </button>
-        </div>
-    </div>
-    <!-- End of Authentication Overlay -->
-    
-    <!-- ONBOARDING OVERLAY (Hidden initially, shown if signed in but not verified) -->
-    <div id="onboardingDiv" class="hidden fixed inset-0 z-40 flex items-center justify-center bg-gem-bg-global p-4">
-        <div class="bg-white w-full max-w-2xl p-8 rounded-xl shadow-2xl border-t-4 border-gem-accent text-center">
-            <i data-lucide="shield-check" class="w-12 h-12 text-gem-accent mx-auto mb-4"></i>
-            <h2 class="text-3xl font-extrabold text-gem-text-main mb-2">Secure Your Identity on GreenFeed</h2>
-            <p class="text-lg text-gray-600 mb-6">
-                To ensure trust and accountability, please set a permanent, verified identity.
-            </p>
-            
-            <div class="p-4 bg-gem-bg-card rounded-lg mb-6 text-left">
-                <p class="text-sm font-medium text-gray-500 mb-2">Your current temporary ID:</p>
-                <p id="onboardingUserId" class="font-mono text-gem-accent text-sm break-all">Loading...</p>
-            </div>
-            
-            <div class="space-y-4 text-left">
-                <!-- 1. Display Name Input -->
-                <div>
-                    <label for="onboardingDisplayNameInput" class="block text-sm font-bold text-gem-text-main mb-1">1. Public Display Name:</label>
-                    <input type="text" id="onboardingDisplayNameInput" class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gem-primary text-gem-text-main" placeholder="e.g., The Real John Doe">
-                    <p class="text-xs text-gray-500 mt-1">This name will be permanently displayed next to your posts.</p>
-                </div>
-
-                <!-- 2. Secret Code Input -->
-                <div>
-                    <label for="onboardingVerificationCodeInput" class="block text-sm font-bold text-gem-text-main mb-1">2. Secret Verification Code (Minimum 6 characters):</label>
-                    <input type="password" id="onboardingVerificationCodeInput" class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 text-gem-text-main" placeholder="Enter your secret code">
-                    <p class="text-xs text-gray-500 mt-1">This is a secret key only you know, used to generate your verifiable ID.</p>
-                </div>
-                
-                <div id="onboardingMessage" class="hidden p-3 text-sm rounded-lg text-gem-text-secondary bg-red-100 mt-4"></div>
-            </div>
-
-            <button id="onboardingSetCodeButton" class="w-full mt-6 py-3 px-4 bg-gem-primary text-gem-text-secondary rounded-lg font-bold text-lg shadow-xl hover:bg-gem-accent transition-colors duration-200 disabled:opacity-50">
-                <i data-lucide="lock" class="w-5 h-5 mr-2 inline-block"></i> Confirm Identity & Unlock Feed
-            </button>
-        </div>
-    </div>
-    <!-- END ONBOARDING OVERLAY -->
-
-
-    <!-- Post/QR/Comments Modal (Verification view removed from modal) -->
-    <div id="appModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 transition-opacity duration-300 p-4">
-        <div class="bg-white p-6 md:p-8 rounded-xl shadow-2xl w-full max-w-lg transition-transform duration-300 transform scale-95 opacity-0" id="modalContent">
-            
-            <!-- Post Creation View -->
-            <div id="postView" class="hidden">
-                <h2 class="text-xl font-bold text-gem-accent mb-4">Create New Post</h2>
-                
-                <!-- AI Personality Selector -->
-                <div class="mb-4">
-                    <label for="aiPersonalitySelect" class="block text-sm font-medium text-gray-700 mb-1">AI Personality:</label>
-                    <select id="aiPersonalitySelect" class="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gem-primary text-gem-text-main bg-white">
-                        <!-- Options populated by JS -->
-                    </select>
-                </div>
-
-                <textarea id="postTextarea" class="w-full h-32 p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gem-primary resize-none text-gem-text-main" placeholder="Type a short idea here, or write your full post."></textarea>
-                
-                <p class="text-xs text-gray-500 mt-2 mb-4">
-                    * If you enter a short idea, use the "Generate Draft" button below.
-                </p>
-
-                <div class="flex flex-col sm:flex-row justify-end mt-4 space-x-0 sm:space-x-3 space-y-3 sm:space-y-0">
-                    <button id="generateDraftButton" onclick="generatePostDraft()" class="px-4 py-2 bg-gem-light text-gem-text-secondary rounded-lg font-semibold hover:bg-gem-primary transition-colors duration-200 flex items-center justify-center disabled:opacity-50">
-                        <i data-lucide="sparkles" class="w-4 h-4 mr-2"></i> Generate Draft
-                    </button>
-                    <button onclick="closeModal()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors duration-200 font-semibold">Cancel</button>
-                    <button id="publishButton" class="px-4 py-2 bg-gem-primary text-gem-text-secondary rounded-lg font-bold hover:bg-gem-accent transition-colors duration-200 disabled:opacity-50" disabled>Publish</button>
-                </div>
-            </div>
-
-            <!-- QR Code View -->
-            <div id="qrView" class="hidden text-center">
-                <h2 class="text-xl font-bold text-gem-accent mb-4">Your Verifiable Identity</h2>
-                <p class="text-sm text-gray-600 mb-4">
-                    Scan this code to let others confirm your **Display Name** and unique GreenFeed ID.
-                </p>
-                
-                <!-- ADDED STYLING TO MAKE THE FRAME POP -->
-                <div id="qrcodeCanvas" class="p-5 bg-white border-4 border-gem-accent inline-block rounded-xl shadow-2xl transition-all duration-300 transform hover:scale-[1.02]">
-                    <!-- QR Code will be drawn here -->
-                </div>
-                
-                <div class="mt-4 p-3 bg-gem-bg-global rounded-lg inline-block min-w-[200px]">
-                    <p class="text-sm text-gray-500 font-medium">Display Name:</p>
-                    <!-- Display Name is now critical identity info -->
-                    <p id="qrCodeUserName" class="text-2xl font-bold text-gem-text-main">Loading...</p> 
-                    <p class="text-xs text-gray-500 mt-2">User ID (for lookup):</p>
-                    <p id="qrCodeUserId" class="font-mono text-gem-accent text-[10px] break-all">Loading...</p>
-                </div>
-
-                <button onclick="closeModal()" class="mt-6 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors duration-200 font-semibold">Close</button>
-            </div>
-            
-            <!-- Identity Setup View (REMOVED: Moved to onboardingDiv) -->
-            <div id="verificationView" class="hidden"></div>
-            
-            <!-- NEW: Comment View -->
-            <div id="commentView" class="hidden">
-                <h2 class="text-xl font-bold text-gem-accent mb-4">Comments</h2>
-                
-                <!-- The original post content being commented on -->
-                <div class="p-3 bg-gem-bg-global rounded-lg mb-4 max-h-24 overflow-y-auto border border-gem-light">
-                    <p class="text-sm font-semibold text-gem-text-main mb-1">Replying to:</p>
-                    <p id="commentOriginalPostContent" class="text-xs text-gray-700 line-clamp-2"></p>
-                </div>
-
-                <!-- Comments List -->
-                <div id="commentsContainer" class="space-y-3 max-h-64 overflow-y-auto mb-4 p-2">
-                    <p class="text-center text-gray-500 text-sm">Loading comments...</p>
-                    <!-- Comments will be injected here -->
-                </div>
-                
-                <!-- Add Comment Input -->
-                <div class="border-t pt-4">
-                    <input type="text" id="commentInput" class="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gem-primary text-gem-text-main" placeholder="Write a comment...">
-                    <div class="flex justify-end mt-3 space-x-3">
-                        <button onclick="closeModal()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors duration-200 font-semibold">Cancel</button>
-                        <button id="addCommentButton" class="px-4 py-2 bg-gem-primary text-gem-text-secondary rounded-lg font-bold hover:bg-gem-accent transition-colors duration-200 disabled:opacity-50">Post Comment</button>
-                    </div>
-                </div>
-            </div>
-
-            <div id="modalMessage" class="hidden mt-3 p-3 text-sm rounded-lg bg-gem-bg-card text-gem-text-main"></div>
-        </div>
-    </div>
-
-    <!-- Header / Navigation Bar (Hidden by default, shown when verified) -->
-    <header id="appHeader" class="hidden sticky top-0 z-40 bg-white shadow-md">
-        <div class="container mx-auto flex items-center justify-between p-3 md:p-4">
-            <h1 class="text-3xl font-extrabold text-gem-primary cursor-pointer">
-                GreenFeed
-            </h1>
-
-            <!-- Search Bar (Desktop/Tablet) -->
-            <div class="hidden lg:flex flex-1 max-w-md mx-6">
-                <input type="text" placeholder="Search friends, posts, or groups..." class="w-full p-2 border border-gray-200 rounded-full focus:outline-none focus:ring-2 focus:ring-gem-light bg-gem-bg-global text-sm">
-            </div>
-
-            <!-- Profile & Actions -->
-            <div class="flex items-center space-x-3 md:space-x-5">
-                <button id="createPostHeaderBtn" onclick="openModal('post')" class="hidden sm:inline-flex items-center px-4 py-2 bg-gem-primary text-gem-text-secondary rounded-full font-bold shadow-md hover:bg-gem-accent transition-all duration-300 transform hover:scale-[1.03] text-sm" disabled>
-                    <i data-lucide="edit" class="w-4 h-4 mr-2"></i> Create Post
-                </button>
-                <button class="p-2 rounded-full bg-gem-bg-card hover:bg-gem-light transition-colors duration-200">
-                    <i data-lucide="bell" class="w-6 h-6 text-gem-text-main"></i>
-                </button>
-                <div class="w-10 h-10 bg-gem-primary rounded-full border-2 border-gem-accent cursor-pointer flex items-center justify-center text-sm font-bold text-gem-text-secondary" id="profileInitials">
-                    ...
-                </div>
-            </div>
-        </div>
-    </header>
-
-    <!-- Main Content Grid (Hidden by default, shown when verified) -->
-    <main id="appMain" class="hidden container mx-auto p-3 md:p-6 lg:p-8">
-        <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
-
-            <!-- Left Sidebar (Desktop Only) -->
-            <aside class="hidden lg:block lg:col-span-1">
-                <div class="sticky top-20 space-y-4">
-                    <!-- Profile Card -->
-                    <div class="p-4 rounded-xl bg-white shadow-lg border border-gem-bg-card">
-                        <div class="flex items-center space-x-3 mb-4">
-                            <div class="w-12 h-12 bg-gem-primary rounded-full flex-shrink-0 flex items-center justify-center text-lg font-bold text-gem-text-secondary" id="sidebarProfileInitials">
-                                ...
-                            </div>
-                            <div>
-                                <!-- Display Name / Default Name -->
-                                <p class="font-bold text-gem-text-main" id="sidebarUsername">Welcome User!</p>
-                                <p class="text-xs text-gray-500">Your ID (for sharing):</p>
-                                <p class="text-[10px] text-wrap break-all font-mono text-gem-accent" id="currentUserId">
-                                    Loading...
-                                </p>
-                            </div>
-                        </div>
-                        
-                        <!-- Verification Status -->
-                        <div class="flex items-center text-sm font-semibold mt-2 border-t border-gem-bg-global pt-3" id="verificationStatusContainer">
-                            <i data-lucide="loader-circle" class="w-4 h-4 mr-2 text-gray-500 animate-spin" id="verificationIcon"></i>
-                            <span class="text-gray-500" id="verificationText">Checking status...</span>
-                        </div>
-                        
-                        <!-- QR CODE BUTTON (to show ID) -->
-                        <button onclick="showQrModal()" class="w-full mt-3 flex items-center justify-center px-3 py-2 bg-gem-bg-global text-gem-accent rounded-lg font-semibold hover:bg-gem-light transition-colors duration-200 text-sm disabled:opacity-50" id="showQrButton" disabled>
-                            <i data-lucide="scan-line" class="w-4 h-4 mr-2"></i> Show Verifiable ID QR
-                        </button>
-                        
-                        <!-- Sign Out Button -->
-                        <button onclick="signOutUser()" class="w-full mt-2 flex items-center justify-center px-3 py-2 bg-red-100 text-red-600 rounded-lg font-semibold hover:bg-red-200 transition-colors duration-200 text-sm" id="signOutButton" disabled>
-                            <i data-lucide="log-out" class="w-4 h-4 mr-2"></i> Sign Out
-                        </button>
-                    </div>
-
-                    <!-- Navigation Links -->
-                    <nav class="p-4 rounded-xl bg-white shadow-lg border border-gem-bg-card">
-                        <ul class="space-y-3">
-                            <li class="flex items-center text-gem-accent font-semibold hover:text-gem-primary cursor-pointer transition-colors duration-200">
-                                <i data-lucide="users" class="w-5 h-5 mr-3"></i> Friends
-                            </li>
-                            <li class="flex items-center text-gem-text-main hover:text-gem-primary cursor-pointer transition-colors duration-200">
-                                <i data-lucide="calendar" class="w-5 h-5 mr-3"></i> Events
-                            </li>
-                            <li class="flex items-center text-gem-text-main hover:text-gem-primary cursor-pointer transition-colors duration-200">
-                                <i data-lucide="group" class="w-5 h-5 mr-3"></i> Groups
-                            </li>
-                            <li class="flex items-center text-gem-text-main hover:text-gem-primary cursor-pointer transition-colors duration-200">
-                                <i data-lucide="history" class="w-5 h-5 mr-3"></i> Memories
-                            </li>
-                        </ul>
-                    </nav>
-                </div>
-            </aside>
-
-            <!-- Center Feed (Main Content) -->
-            <section class="lg:col-span-3 space-y-6">
-
-                <!-- Mobile Post Creation Button -->
-                <button id="createPostMobileBtn" onclick="openModal('post')" class="w-full flex sm:hidden items-center justify-center p-3 bg-gem-primary text-gem-text-secondary rounded-xl font-bold shadow-md hover:bg-gem-accent transition-colors duration-300" disabled>
-                    <i data-lucide="edit" class="w-5 h-5 mr-2"></i> Start a new post
-                </button>
-
-                <!-- Post Input Card (Desktop/Tablet) -->
-                <div class="hidden sm:block p-4 rounded-xl bg-white shadow-lg border border-gem-bg-card">
-                    <div class="flex items-center space-x-3 pb-3 border-b border-gem-bg-global">
-                        <div class="w-10 h-10 bg-gem-primary rounded-full flex-shrink-0 flex items-center justify-center text-sm font-bold text-gem-text-secondary" id="inputProfileInitials">...</div>
-                        <input type="text" placeholder="What's going on?" onclick="openModal('post')" readonly class="w-full p-2 bg-gem-bg-global rounded-full cursor-pointer hover:bg-gem-bg-card transition-colors duration-200 text-sm text-gem-text-main placeholder-gray-500 border border-gray-100 focus:outline-none" id="postInput" disabled>
-                    </div>
-                    <!-- Simplified Interactions Bar - Removed Photo/Video and Tag Friends -->
-                    <div class="flex justify-end pt-3 text-sm">
-                        <button onclick="openModal('post')" class="flex items-center text-gem-primary font-bold hover:text-gem-accent transition-colors duration-200" id="postTextBtn" disabled>
-                            Post
-                        </button>
-                    </div>
-                </div>
-                
-                <!-- Loading Indicator -->
-                <div id="loadingIndicator" class="text-center p-8 text-gem-accent font-semibold">
-                    <i data-lucide="loader-circle" class="w-6 h-6 animate-spin inline-block mr-2"></i> Loading Feed...
-                </div>
-
-                <!-- Feed Posts Container -->
-                <div id="feedContainer" class="space-y-6">
-                    <!-- Posts will be dynamically inserted here -->
-                </div>
-            </section>
-            
-        </div>
-    </main>
-
-    <footer class="mt-10 p-4 text-center text-sm text-gray-500 border-t border-gem-bg-card">
-        <p>© 2025 GreenFeed Social. All rights reserved. Persistent data via Firebase & AI powered drafts.</p>
-    </footer>
-
-
-    <script>
-        // Global variables for Firebase access
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        
-        // Custom Firebase Configuration provided by the user
-        const customFirebaseConfig = {
-            apiKey: "AIzaSyBTveXs1VEs-_tJUydTT71oDLx8o9ueMVg",
-            authDomain: "greenfeed-fire.firebaseapp.com",
-            projectId: "greenfeed-fire",
-            storageBucket: "greenfeed-fire.firebasestorage.app",
-            messagingSenderId: "1012124354290",
-            appId: "1:1012124354290:web:fdfdd602385d7d5893f26b",
-            measurementId: "G-JDPHNH2E97"
-        };
-
-        // If the environment provides a config (as __firebase_config), use it; 
-        // otherwise, use the user's custom configuration as a fallback.
-        const firebaseConfig = typeof __firebase_config !== 'undefined' && __firebase_config 
-            ? JSON.parse(__firebase_config) 
-            : customFirebaseConfig;
-            
-        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
-        
-        const DISABLED_USER_KEY = 'greenfeed_disabled_user';
-        let app;
-        let auth;
-        let db;
-        let userId = null;
-        let userName = null; // Default derived name
-        let displayName = null; // User's custom verified display name
-        let isAuthReady = false;
-        let isSigningOutIntent = false; // Flag to prevent re-auth on intentional sign out
-        let isUserVerified = false; // Track verification status
-        let currentPostId = null; // NEW: Track the post currently open in the comment modal
-
-        // --- AI Personalities Definition (Unused in JS logic, but needed for modal structure) ---
-        const aiPersonalities = {
-            'concise-analyst': { name: 'Concise Analyst', system: 'Act as a concise and factual analyst. Summarize complex topics into three easy-to-read bullet points.' },
-            'friendly-tutor': { name: 'Friendly Tutor', system: 'Act as an encouraging and friendly writing tutor. Elaborate on the user\'s idea, using clear, slightly motivational language, and always offer a conversational closing question to encourage dialogue.' },
-            'creative-storyteller': { name: 'Creative Storyteller', system: 'Act as a creative short story writer. Take the user\'s input and weave it into a short, engaging narrative suitable for a social media post, focusing on vivid descriptions and emotional resonance.' }
-        };
-        // --- End AI Personalities Definition ---
-
-
-        // UI element references
-        const appModal = document.getElementById('appModal'); 
-        const modalContent = document.getElementById('modalContent');
-        const postView = document.getElementById('postView');
-        const qrView = document.getElementById('qrView');
-        const verificationView = document.getElementById('verificationView'); // Now unused, kept for reference
-        const commentView = document.getElementById('commentView'); 
-        const postTextarea = document.getElementById('postTextarea');
-        const publishButton = document.getElementById('publishButton');
-        const generateDraftButton = document.getElementById('generateDraftButton');
-        const aiPersonalitySelect = document.getElementById('aiPersonalitySelect');
-        const modalMessage = document.getElementById('modalMessage');
-        const feedContainer = document.getElementById('feedContainer');
-        const loadingIndicator = document.getElementById('loadingIndicator');
-        const qrcodeCanvas = document.getElementById('qrcodeCanvas');
-        const qrCodeUserId = document.getElementById('qrCodeUserId');
-        const qrCodeUserName = document.getElementById('qrCodeUserName'); 
-        const showQrButton = document.getElementById('showQrButton');
-        const signOutButton = document.getElementById('signOutButton');
-        const verificationIcon = document.getElementById('verificationIcon');
-        const verificationText = document.getElementById('verificationText');
-        
-        // NEW: Onboarding UI elements
-        const onboardingDiv = document.getElementById('onboardingDiv');
-        const onboardingDisplayNameInput = document.getElementById('onboardingDisplayNameInput');
-        const onboardingVerificationCodeInput = document.getElementById('onboardingVerificationCodeInput');
-        const onboardingSetCodeButton = document.getElementById('onboardingSetCodeButton');
-        const onboardingUserId = document.getElementById('onboardingUserId');
-        const onboardingMessage = document.getElementById('onboardingMessage');
-        
-        // NEW Comment UI elements
-        const commentOriginalPostContent = document.getElementById('commentOriginalPostContent');
-        const commentsContainer = document.getElementById('commentsContainer');
-        const commentInput = document.getElementById('commentInput');
-        const addCommentButton = document.getElementById('addCommentButton');
-
-        // NEW: Auth Overlay UI references
-        const authOverlay = document.getElementById('authOverlay');
-        const appHeader = document.getElementById('appHeader');
-        const appMain = document.getElementById('appMain');
-        const emailInput = document.getElementById('emailInput');
-        const passwordInput = document.getElementById('passwordInput');
-        const signInButton = document.getElementById('signInButton');
-        const createAccountButton = document.getElementById('createAccountButton');
-        const guestButton = document.getElementById('guestButton');
-        const authMessage = document.getElementById('authMessage');
-        const googleSignInButton = document.getElementById('googleSignInButton');
-
-        // UI elements to update on auth success
-        const profileElements = {
-            profileInitials: document.getElementById('profileInitials'),
-            sidebarProfileInitials: document.getElementById('sidebarProfileInitials'),
-            inputProfileInitials: document.getElementById('inputProfileInitials'),
-            sidebarUsername: document.getElementById('sidebarUsername'),
-            currentUserId: document.getElementById('currentUserId'),
-            createPostHeaderBtn: document.getElementById('createPostHeaderBtn'),
-            createPostMobileBtn: document.getElementById('createPostMobileBtn'),
-            postInput: document.getElementById('postInput'),
-            postTextBtn: document.getElementById('postTextBtn'),
-        };
-        
-        // --- Firestore Reference Helper ---
-        const userProfileDocRef = (uid) => doc(db, `artifacts/${appId}/users/${uid}/metadata/profile`);
-        const publicIdentityDocRef = (uid) => doc(db, `artifacts/${appId}/public/data/verified_identities/${uid}`);
-        const postDocRef = (postId) => doc(db, `artifacts/${appId}/public/data/posts`, postId); 
-        const commentsCollectionRef = (postId) => collection(db, `artifacts/${appId}/public/data/posts/${postId}/comments`); 
-        
-        // --- Hashing Utility (Unchanged) ---
-        async function sha256(message) {
-            const msgBuffer = new TextEncoder().encode(message);
-            const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
-            const hashArray = Array.from(new Uint8Array(hashBuffer));
-            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-        }
-        // --- End Hashing Utility ---
-
-
-        // --- Helper Functions ---
-
-        function getInitials(name) {
-            if (!name) return '??';
-            return name.split(/\s+/).map(n => n[0]).join('').toUpperCase().substring(0, 2);
-        }
-        
-        function deriveUserName(user) {
-            if (!user) return "Anonymous User";
-            
-            if (user.displayName) {
-                return user.displayName;
-            }
-            
-            if (user.isAnonymous) {
-                const prefix = user.uid.substring(0, 4);
-                return `User ${prefix}`;
-            }
-            
-            if (user.email) {
-                const emailName = user.email.split('@')[0];
-                return emailName.charAt(0).toUpperCase() + emailName.slice(1);
-            }
-
-            return `User ${user.uid.substring(0, 4)}`;
-        }
-
-
-        function formatTimestamp(timestamp) {
-            if (!timestamp) return 'Just now';
-            const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
-            return date.toLocaleString('en-US', { hour: '2-digit', minute: '2-digit', day: 'numeric', month: 'short' });
-        }
-
-        function showMessage(msg, isSuccess = true, target = modalMessage) {
-            target.textContent = msg;
-            target.classList.remove('hidden', 'bg-red-100', 'text-red-700', 'bg-gem-bg-card', 'text-gem-text-main');
-            if (isSuccess) {
-                target.classList.add('bg-gem-bg-card', 'text-gem-text-main');
-                target.classList.remove('bg-red-100', 'text-red-700');
-            } else {
-                target.classList.add('bg-red-100', 'text-red-700');
-                target.classList.remove('bg-gem-bg-card', 'text-gem-text-main');
-            }
-        }
-
-        function hideModalMessage() {
-            modalMessage.classList.add('hidden');
-        }
-
-        function closeModal() {
-            // Stop listening to comments when closing modal
-            if (window.commentUnsubscriber) {
-                window.commentUnsubscriber();
-                window.commentUnsubscriber = null;
-            }
-            currentPostId = null;
-            
-            modalContent.classList.remove('scale-100', 'opacity-100');
-            modalContent.classList.add('scale-95', 'opacity-0');
-            setTimeout(() => {
-                appModal.classList.add('hidden');
-                hideModalMessage();
-                // Hide all views when closing
-                postView.classList.add('hidden');
-                qrView.classList.add('hidden');
-                verificationView.classList.add('hidden'); 
-                commentView.classList.add('hidden'); 
-            }, 300);
-        }
-
-        function openModal(view) {
-            // Only allow modal open if user is verified (or if it's the QR modal)
-            if (!isUserVerified && view !== 'qr') {
-                 // Attempting to post/comment when not verified will show the onboarding screen
-                 if (onboardingDiv.classList.contains('hidden') && !authOverlay.classList.contains('hidden')) {
-                    // This case should ideally not happen if UI is correctly hidden
-                    console.warn("Attempted to access feature without verification.");
-                 }
-                 return;
-            }
-            
-            // Hide all views first
-            postView.classList.add('hidden');
-            qrView.classList.add('hidden');
-            verificationView.classList.add('hidden'); 
-            commentView.classList.add('hidden'); 
-            
-            hideModalMessage();
-            
-            // Show the requested view
-            if (view === 'post') {
-                postView.classList.remove('hidden');
-                postTextarea.value = ''; 
-                publishButton.disabled = true;
-            } else if (view === 'qr') {
-                qrView.classList.remove('hidden');
-            } else if (view === 'comments') { 
-                commentView.classList.remove('hidden');
-                commentInput.value = ''; // Clear comment input
-            }
-            
-            appModal.classList.remove('hidden');
-            // Timeout to allow CSS transition
-            setTimeout(() => {
-                modalContent.classList.remove('scale-95', 'opacity-0');
-                modalContent.classList.add('scale-100', 'opacity-100');
-            }, 10);
-        }
-        
-        // NEW: Open comment modal function
-        function openCommentModal(postId, postContent) {
-            if (!isUserVerified) return; // Prevent if not verified
-            
-            currentPostId = postId;
-            commentOriginalPostContent.textContent = postContent.trim().substring(0, 100) + '...';
-            commentsContainer.innerHTML = '<p class="text-center text-gray-500 text-sm">Loading comments...</p>';
-            setupCommentsListener(postId);
-            openModal('comments');
-        }
-
-        function populatePersonalitySelector() {
-            aiPersonalitySelect.innerHTML = Object.entries(aiPersonalities)
-                .map(([id, p]) => `<option value="${id}">${p.name}</option>`)
-                .join('');
-        }
-        
-        // --- Authentication Functions (Unchanged) ---
-        async function handleSignIn() {
-            const email = emailInput.value;
-            const password = passwordInput.value;
-            if (!email || !password) {
-                showAuthError("Please enter both email and password.");
-                return;
-            }
-            authMessage.classList.add('hidden');
-            
-            try {
-                await signInWithEmailAndPassword(auth, email, password);
-            } catch (error) {
-                console.error("Sign In Error:", error);
-                if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
-                    showAuthError("Invalid email or password.");
-                } else {
-                    showAuthError(`Sign in failed: ${error.message}`);
-                }
-            }
-        }
-
-        async function handleCreateAccount() {
-            const email = emailInput.value;
-            const password = passwordInput.value;
-            if (!email || !password) {
-                showAuthError("Please enter both email and password.");
-                return;
-            }
-            if (password.length < 6) {
-                showAuthError("Password must be at least 6 characters long.");
-                return;
-            }
-            authMessage.classList.add('hidden');
-
-            try {
-                await createUserWithEmailAndPassword(auth, email, password);
-            } catch (error) {
-                console.error("Create Account Error:", error);
-                if (error.code === 'auth/email-already-in-use') {
-                    showAuthError("This email is already in use.");
-                } else if (error.code === 'auth/weak-password') {
-                    showAuthError("Password is too weak. Please use at least 6 characters.");
-                } else {
-                    showAuthError(`Account creation failed: ${error.message}`);
-                }
-            }
-        }
-
-        async function handleSignInAsGuest() {
-            authMessage.classList.add('hidden');
-            try {
-                await signInAnonymously(auth);
-            } catch (error) {
-                console.error("Guest Sign In Error:", error);
-                showAuthError(`Guest sign in failed: ${error.message}`);
-            }
-        }
-        
-        async function handleSignInWithGoogle() {
-            authMessage.classList.add('hidden');
-            try {
-                const provider = new GoogleAuthProvider();
-                await signInWithPopup(auth, provider);
-            } catch (error) {
-                console.error("Google Sign In Error:", error);
-                if (error.code === 'auth/popup-closed-by-user') {
-                    showAuthError("Sign-in cancelled. Please try again.");
-                } else if (error.code === 'auth/account-exists-with-different-credential') {
-                    showAuthError("An account already exists with this email. Please sign in with your original method.");
-                } else {
-                    showAuthError(`Google sign in failed: ${error.message}`);
-                }
-            }
-        }
-        function showAuthError(message) {
-            authMessage.textContent = message;
-            authMessage.classList.remove('hidden');
-        }
-        // --- End Authentication Functions ---
-
-
-        // --- Verification Logic (UPDATED) ---
-        async function setVerificationCode() {
-            const code = onboardingVerificationCodeInput.value.trim();
-            const newDisplayName = onboardingDisplayNameInput.value.trim();
-
-            if (!newDisplayName) {
-                showMessage("Please enter a Display Name.", false, onboardingMessage);
-                return;
-            }
-            if (code.length < 6) {
-                showMessage("The secret code must be at least 6 characters long.", false, onboardingMessage);
-                return;
-            }
-            if (!db || !userId) {
-                showMessage("Cannot set identity: Database connection or user ID is missing.", false, onboardingMessage);
-                return;
-            }
-
-            onboardingSetCodeButton.disabled = true;
-            showMessage("Hashing and securing your identity...", true, onboardingMessage);
-
-            try {
-                const codeHash = await sha256(code);
-                const privateProfileRef = userProfileDocRef(userId);
-                await setDoc(privateProfileRef, { 
-                    verificationCodeHash: codeHash,
-                    displayName: newDisplayName,
-                    verified: true,
-                    verifiedAt: serverTimestamp()
-                }, { merge: true });
-
-                const publicIdentityRef = publicIdentityDocRef(userId);
-                await setDoc(publicIdentityRef, {
-                    authorId: userId,
-                    displayName: newDisplayName,
-                    verificationCodeHash: codeHash, 
-                    verifiedAt: serverTimestamp(),
-                });
-
-                displayName = newDisplayName;
-                isUserVerified = true;
-                updateVerificationUI(true); 
-                updateUIOnAuth(userId, displayName || userName); 
-                
-                showMessage("Identity Setup successful! Welcome to the feed!", true, onboardingMessage);
-                
-                // Onboarding div is hidden by updateUIOnAuth
-
-            } catch (error) {
-                console.error("Error setting verification code and identity:", error);
-                showMessage(`Failed to set identity: ${error.message}`, false, onboardingMessage);
-            } finally {
-                onboardingSetCodeButton.disabled = false;
-            }
-        }
-
-        function updateVerificationUI(isVerified) {
-            isUserVerified = isVerified;
-            
-            verificationIcon.classList.remove('text-red-500', 'text-green-500', 'animate-spin');
-            verificationText.classList.remove('text-red-500', 'text-green-500');
-            
-            if (isVerified) {
-                verificationIcon.setAttribute('data-lucide', 'check-circle');
-                verificationIcon.classList.add('text-green-500');
-                verificationText.classList.add('text-green-500');
-                verificationText.textContent = 'Verified Identity';
-            } else {
-                verificationIcon.setAttribute('data-lucide', 'x-circle');
-                verificationIcon.classList.add('text-red-500');
-                verificationText.classList.add('text-red-500');
-                verificationText.textContent = 'Unverified - Set Identity';
-            }
-            lucide.createIcons();
-        }
-
-        function loadUserProfile() {
-            if (!db || !userId) return;
-
-            const profileRef = userProfileDocRef(userId);
-            
-            verificationIcon.setAttribute('data-lucide', 'loader-circle');
-            verificationIcon.classList.add('animate-spin', 'text-gray-500');
-            verificationText.textContent = 'Checking status...';
-            lucide.createIcons();
-
-            // Setup real-time listener for user profile
-            onSnapshot(profileRef, (docSnap) => {
-                let verified = false;
-                if (docSnap.exists()) {
-                    const data = docSnap.data();
-                    verified = !!data.verificationCodeHash; 
-                    displayName = data.displayName || null; 
-                } else {
-                    setDoc(profileRef, { createdAt: serverTimestamp() }, { merge: true }).catch(console.error);
-                }
-                
-                // IMPORTANT: Update verification status before updating the main UI
-                isUserVerified = verified; 
-                updateVerificationUI(verified);
-                updateUIOnAuth(userId, displayName || userName);
-            }, (error) => {
-                console.error("Error fetching user profile:", error);
-                verificationIcon.setAttribute('data-lucide', 'alert-triangle');
-                verificationIcon.classList.remove('animate-spin');
-                verificationIcon.classList.add('text-red-500');
-                verificationText.textContent = 'Status Error';
-                lucide.createIcons();
-            });
-        }
-        // --- End Verification Logic ---
-
-        
-        // --- Post Interaction Logic (Unchanged) ---
-
-        /**
-         * Toggles the like status for a post.
-         */
-        async function toggleLike(postId, isCurrentlyLiked) {
-            if (!db || !userId || !isUserVerified) {
-                console.error("Cannot like: DB, user ID, or verification missing.");
-                // If not verified, the button should be effectively blocked by the UI
-                return;
-            }
-            
-            const postRef = postDocRef(postId);
-            const updateOperation = isCurrentlyLiked 
-                ? arrayRemove(userId) 
-                : arrayUnion(userId);
-
-            try {
-                await updateDoc(postRef, {
-                    likes: updateOperation
-                });
-            } catch (error) {
-                console.error("Error toggling like:", error);
-            }
-        }
-        
-        /**
-         * Deletes a post document. This should only be called by the author.
-         */
-        async function deletePost(postId) {
-            if (!db || !userId || !isUserVerified) return;
-
-            if (!confirm(`Are you sure you want to delete this post? This action is permanent.`)) {
-                return;
-            }
-
-            try {
-                await deleteDoc(postDocRef(postId));
-                console.log(`Post ${postId} deleted successfully.`);
-            } catch (error) {
-                console.error("Error deleting post:", error);
-            }
-        }
-        
-        // --- Comment Logic (Unchanged) ---
-        
-        /**
-         * Renders comments for the currently viewed post.
-         */
-        function renderComments(comments) {
-            commentsContainer.innerHTML = '';
-            
-            if (comments.length === 0) {
-                commentsContainer.innerHTML = '<p class="text-center text-gray-500 text-sm p-4">No comments yet. Be the first!</p>';
-                return;
-            }
-            
-            comments.forEach(comment => {
-                const timeStr = formatTimestamp(comment.timestamp);
-                const initials = getInitials(comment.authorName);
-                
-                const commentEl = document.createElement('div');
-                commentEl.className = 'flex items-start space-x-2 p-3 bg-white rounded-lg shadow-sm border border-gem-bg-global';
-                commentEl.innerHTML = `
-                    <div class="w-8 h-8 bg-gem-light rounded-full flex-shrink-0 flex items-center justify-center text-xs font-bold text-gem-text-secondary">
-                        ${initials}
-                    </div>
-                    <div class="flex-1 min-w-0">
-                        <p class="font-semibold text-sm text-gem-text-main leading-tight">${comment.authorName}</p>
-                        <p class="text-xs text-gray-500 mb-1">${timeStr}</p>
-                        <p class="text-sm text-gem-text-main break-words whitespace-pre-wrap">${comment.content}</p>
-                    </div>
-                `;
-                commentsContainer.appendChild(commentEl);
-            });
-        }
-        
-        /**
-         * Attaches a real-time listener to the comments subcollection.
-         */
-        function setupCommentsListener(postId) {
-            if (window.commentUnsubscriber) {
-                window.commentUnsubscriber();
-            }
-            
-            const commentsRef = commentsCollectionRef(postId);
-            // Query comments ordered by timestamp ascending
-            const q = query(commentsRef, orderBy('timestamp', 'asc')); 
-            
-            window.commentUnsubscriber = onSnapshot(q, (snapshot) => {
-                const comments = [];
-                snapshot.forEach(doc => {
-                    comments.push({ id: doc.id, ...doc.data() });
-                });
-                renderComments(comments);
-            }, (error) => {
-                console.error("Error fetching comments:", error);
-                commentsContainer.innerHTML = `<p class="text-center text-red-500 text-sm p-4">Error loading comments: ${error.message}</p>`;
-            });
-        }
-        
-        /**
-         * Adds a new comment to the current post's subcollection.
-         */
-        async function addComment() {
-            const content = commentInput.value.trim();
-            if (!content || !currentPostId || !userId || !isUserVerified) return;
-
-            addCommentButton.disabled = true;
-
-            try {
-                const nameForComment = displayName || userName; 
-                const commentData = {
-                    authorId: userId,
-                    authorName: nameForComment,
-                    content: content,
-                    timestamp: serverTimestamp(),
-                };
-                
-                const commentsRef = commentsCollectionRef(currentPostId);
-                await addDoc(commentsRef, commentData);
-                
-                commentInput.value = ''; // Clear input on success
-            } catch (error) {
-                console.error("Error adding comment:", error);
-            } finally {
-                addCommentButton.disabled = false;
-            }
-        }
-
-        // --- End Post Interaction Logic ---
-
-
-        // Utility functions (pcmToWav, base64ToArrayBuffer, disableUI, updateUIOnAuth, showQrModal, signOutUser, initFirebaseAndAuth are updated for onboarding flow)
-
-        function pcmToWav(pcm16, sampleRate) {
-             // ... (WAV conversion logic - unchanged) ...
-            const numChannels = 1;
-            const bytesPerSample = 2; // 16-bit PCM
-            const dataLength = pcm16.length * bytesPerSample;
-            const buffer = new ArrayBuffer(44 + dataLength);
-            const view = new DataView(buffer);
-            let offset = 0;
-
-            // RIFF chunk
-            view.setUint32(offset, 0x52494646, false); // "RIFF"
-            offset += 4;
-            view.setUint32(offset, 36 + dataLength, true); // ChunkSize
-            offset += 4;
-            view.setUint32(offset, 0x57415645, false); // "WAVE"
-            offset += 4;
-
-            // FMT sub-chunk
-            view.setUint32(offset, 0x666d7420, false); // "fmt "
-            offset += 4;
-            view.setUint32(offset, 16, true); // Subchunk1Size (16 for PCM)
-            offset += 4;
-            view.setUint16(offset, 1, true); // AudioFormat (1 for PCM)
-            offset += 2;
-            view.setUint16(offset, numChannels, true); // NumChannels
-            offset += 2;
-            view.setUint32(offset, sampleRate, true); // SampleRate
-            offset += 4;
-            view.setUint32(offset, sampleRate * numChannels * bytesPerSample, true); // ByteRate
-            offset += 4;
-            view.setUint16(offset, numChannels * bytesPerSample, true); // BlockAlign
-            offset += 2;
-            view.setUint16(offset, 16, true); // BitsPerSample
-            offset += 2;
-
-            // DATA sub-chunk
-            view.setUint32(offset, 0x64617461, false); // "data"
-            offset += 4;
-            view.setUint32(offset, dataLength, true); // Subchunk2Size
-            offset += 4;
-
-            // Write PCM data
-            for (let i = 0; i < pcm16.length; i++) {
-                view.setInt16(offset, pcm16[i], true); // Write 16-bit signed
-                offset += 2;
-            }
-
-            return new Blob([buffer], { type: 'audio/wav' });
-        }
-
-        function base64ToArrayBuffer(base64) {
-            const binaryString = atob(base64);
-            const len = binaryString.length;
-            const bytes = new Uint8Array(len);
-            for (let i = 0; i < len; i++) {
-                bytes[i] = binaryString.charCodeAt(i);
-            }
-            return bytes.buffer;
-        }
-
-        function disableUI() {
-            isAuthReady = false;
-            // Hide everything except auth overlay
-            appHeader.classList.add('hidden');
-            appMain.classList.add('hidden');
-            onboardingDiv.classList.add('hidden');
-            authOverlay.classList.remove('hidden');
-            
-            feedContainer.innerHTML = '';
-            loadingIndicator.classList.remove('hidden');
-            loadingIndicator.textContent = "Please sign in to continue.";
-            
-            // Disable all main action buttons/inputs
-            profileElements.createPostHeaderBtn.disabled = true;
-            profileElements.createPostMobileBtn.disabled = true;
-            showQrButton.disabled = true;
-            signOutButton.disabled = true;
-            profileElements.postInput.disabled = true;
-            profileElements.postTextBtn.disabled = true;
-            
-            const initials = '??';
-            profileElements.profileInitials.textContent = initials;
-            profileElements.sidebarProfileInitials.textContent = initials;
-            profileElements.inputProfileInitials.textContent = initials;
-            profileElements.sidebarUsername.textContent = "Guest";
-            profileElements.currentUserId.textContent = "N/A";
-            profileElements.postInput.placeholder = `Sign in to post.`;
-            
-            updateVerificationUI(false);
-            verificationIcon.classList.remove('animate-spin');
-            verificationIcon.setAttribute('data-lucide', 'x-circle');
-            lucide.createIcons();
-        }
-
-        // UPDATED: Now handles the logic for showing main app vs. onboarding screen
-        function updateUIOnAuth(uid, currentName) {
-            const nameToDisplay = displayName || currentName; 
-            userName = currentName; 
-            
-            const initials = getInitials(nameToDisplay);
-            
-            // 1. Update Core Profile Elements (always visible in sidebar/header if signed in)
-            profileElements.sidebarUsername.textContent = nameToDisplay;
-            profileElements.profileInitials.textContent = initials;
-            profileElements.sidebarProfileInitials.textContent = initials;
-            profileElements.inputProfileInitials.textContent = initials;
-            profileElements.currentUserId.textContent = uid;
-
-            authOverlay.classList.add('hidden'); // Always hide auth overlay if signed in
-
-            if (isUserVerified) {
-                // 2. SHOW MAIN APP
-                appHeader.classList.remove('hidden');
-                appMain.classList.remove('hidden');
-                onboardingDiv.classList.add('hidden'); // Hide onboarding
-
-                // Enable main features
-                profileElements.createPostHeaderBtn.disabled = false;
-                profileElements.createPostMobileBtn.disabled = false;
-                showQrButton.disabled = false;
-                signOutButton.disabled = false;
-                profileElements.postInput.disabled = false;
-                profileElements.postTextBtn.disabled = false;
-                profileElements.postInput.placeholder = `What's going on, ${nameToDisplay}?`;
-
-            } else {
-                // 3. SHOW ONBOARDING SCREEN
-                appHeader.classList.add('hidden');
-                appMain.classList.add('hidden');
-                onboardingDiv.classList.remove('hidden'); 
-                
-                // Disable main features (they are hidden anyway, but good practice)
-                profileElements.createPostHeaderBtn.disabled = true;
-                profileElements.createPostMobileBtn.disabled = true;
-                showQrButton.disabled = true;
-                signOutButton.disabled = false; // Allow sign out from onboarding
-                
-                // Populate onboarding fields
-                onboardingDisplayNameInput.value = nameToDisplay;
-                onboardingUserId.textContent = uid;
-            }
-
-            lucide.createIcons();
-        }
-
-        function showQrModal() {
-            if (!userId || !isUserVerified) { // Must be verified to show QR
-                return;
-            }
-            
-            qrcodeCanvas.innerHTML = '';
-            const qrData = `greenfeed.id_check?uid=${userId}`;
-            
-            new QRCode(qrcodeCanvas, {
-                text: qrData,
-                width: 160,
-                height: 160,
-                colorDark : "#00330c", 
-                colorLight : "#ffffff", 
-                correctLevel : QRCode.CorrectLevel.H
-            });
-
-            qrCodeUserName.textContent = displayName || userName; 
-            qrCodeUserId.textContent = userId;
-            openModal('qr');
-        }
-
-        async function signOutUser() {
-            if (!auth) return;
-            isSigningOutIntent = true; 
-            loadingIndicator.textContent = "Signing out...";
-            disableUI();
-            try {
-                await signOut(auth);
-                console.log("User signed out successfully.");
-            } catch (error) {
-                console.error("Error signing out:", error);
-                isSigningOutIntent = false; 
-                loadingIndicator.textContent = `Sign out failed: ${error.message}`;
-                if(auth.currentUser) { updateUIOnAuth(auth.currentUser.uid, deriveUserName(auth.currentUser)); }
-            }
-        }
-
-        async function initFirebaseAndAuth() {
-            try {
-                if (!firebaseConfig || Object.keys(firebaseConfig).length === 0) {
-                    loadingIndicator.textContent = "Error: Firebase configuration is missing.";
-                    console.error("Firebase config is empty. Cannot initialize.");
-                    return;
-                }
-                
-                app = initializeApp(firebaseConfig);
-                auth = getAuth(app);
-                db = getFirestore(app);
-                
-                const disabledUserId = localStorage.getItem(DISABLED_USER_KEY);
-                if (disabledUserId) {
-                    loadingIndicator.textContent = `User ID ${disabledUserId.substring(0, 8)}... is disabled and cannot sign in.`;
-                    disableUI(); 
-                    showAuthError(`User ID ${disabledUserId.substring(0, 8)}... is disabled and cannot sign in.`);
-                    return;
-                }
-
-                onAuthStateChanged(auth, async (user) => {
-                    if (user) {
-                        userId = user.uid;
-                        userName = deriveUserName(user);
-                        isAuthReady = true;
-                        // loadUserProfile will determine if verified and call updateUIOnAuth
-                        loadUserProfile(); 
-                        // Start listener for posts once we know the user is signed in
-                        setupPostsListener(); 
-                    } else {
-                        isAuthReady = false;
-                        userId = null;
-                        userName = null;
-                        displayName = null;
-                        isUserVerified = false;
-                        disableUI();
-                        
-                        if (isSigningOutIntent) {
-                            isSigningOutIntent = false; 
-                            loadingIndicator.textContent = "You are currently logged out."; 
-                            return; 
-                        }
-                        console.log("No user. Waiting for user action on sign-in overlay.");
-                        loadingIndicator.textContent = "Please sign in to continue.";
-                    }
-                });
-
-            } catch (error) {
-                console.error("Fatal initialization error:", error);
-                loadingIndicator.textContent = `Initialization failed: ${error.message}`;
-                disableUI();
-            }
-        }
-
-        // Function to handle post submission
-        async function publishPost() {
-            const content = postTextarea.value.trim();
-            // Added verification check here too, though UI should prevent it
-            if (!content || !isUserVerified) { 
-                showMessage("Post content cannot be empty or you are not verified.", false); 
-                return; 
-            }
-            if (!db || !userId) { showMessage("Cannot publish: Database connection or user ID is missing.", false); return; }
-
-            publishButton.disabled = true;
-            generateDraftButton.disabled = true;
-            showMessage("Publishing post...", true);
-
-            try {
-                const nameForPost = displayName || userName; 
-                
-                const postData = {
-                    authorId: userId,
-                    authorName: nameForPost, 
-                    content: content,
-                    timestamp: serverTimestamp(),
-                    isVerified: isUserVerified,
-                    likes: [], 
-                };
-
-                const postsCollection = collection(db, `artifacts/${appId}/public/data/posts`);
-                await addDoc(postsCollection, postData);
-                
-                postTextarea.value = ''; 
-                showMessage("Post published successfully!", true);
-                
-                setTimeout(() => { closeModal(); }, 1000);
-            } catch (error) {
-                console.error("Error adding document:", error);
-                showMessage(`Error publishing post: ${error.message}`, false);
-            } finally {
-                publishButton.disabled = false;
-                generateDraftButton.disabled = false;
-            }
-        }
-
-        // --- AI Draft Generation (Unchanged) ---
-        async function generatePostDraft() {
-            const content = postTextarea.value.trim();
-            if (!content) {
-                showMessage("Please enter an idea in the text box before generating a draft.", false);
-                return;
-            }
-            if (!userId || !isUserVerified) {
-                 showMessage("You must be verified to use AI features.", false);
-                 return;
-            }
-
-            const selectedPersonalityId = aiPersonalitySelect.value;
-            const personality = aiPersonalities[selectedPersonalityId];
-            
-            const systemPrompt = personality.system;
-            const userQuery = `Using the system prompt provided, elaborate on the following idea to create a social media post: "${content}"`;
-            
-            const apiKey = ""; 
-            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
-
-            const payload = {
-                contents: [{ parts: [{ text: userQuery }] }],
-                systemInstruction: { parts: [{ text: systemPrompt }] },
-            };
-
-            publishButton.disabled = true;
-            generateDraftButton.disabled = true;
-            showMessage(`Generating draft using ${personality.name}...`, true);
-
-            try {
-                let response;
-                let success = false;
-                const maxRetries = 3;
-                let delay = 1000;
-
-                for (let i = 0; i < maxRetries; i++) {
-                    response = await fetch(apiUrl, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(payload)
-                    });
-
-                    if (response.ok) {
-                        success = true;
-                        break;
-                    }
-                    if (response.status === 429 && i < maxRetries - 1) { 
-                        await new Promise(resolve => setTimeout(resolve, delay));
-                        delay *= 2;
-                    } else {
-                        break;
-                    }
-                }
-                
-                if (!success) { throw new Error(`API call failed with status: ${response.status}`); }
-                
-                const result = await response.json();
-                const generatedText = result.candidates?.[0]?.content?.parts?.[0]?.text;
-
-                if (generatedText) {
-                    postTextarea.value = generatedText.trim();
-                    showMessage("Draft generated successfully. Review and hit publish!", true);
-                } else {
-                    throw new Error("Received an empty response from the AI model.");
-                }
-
-            } catch (error) {
-                console.error("AI Generation Error:", error);
-                showMessage(`AI draft failed: ${error.message}.`, false);
-            } finally {
-                publishButton.disabled = false;
-                generateDraftButton.disabled = false;
-            }
-        }
-
-
-        /**
-         * Renders all posts from the Firestore data, including new interaction buttons.
-         */
-        function renderPosts(posts) {
-            loadingIndicator.classList.add('hidden');
-            feedContainer.innerHTML = '';
-            
-            if (posts.length === 0) {
-                feedContainer.innerHTML = '<p class="text-center p-8 text-gray-500">The feed is empty. Be the first to post!</p>';
-                return;
-            }
-
-            posts.forEach(post => {
-                const timeStr = formatTimestamp(post.timestamp);
-                const postElement = document.createElement('div');
-                postElement.className = 'bg-white p-5 rounded-xl shadow-lg border border-gem-bg-card';
-                
-                const authorName = post.authorName || 'Anonymous';
-                const initials = getInitials(authorName);
-                const isPostVerified = post.isVerified === true;
-                const postId = post.id;
-                const currentLikes = post.likes || [];
-                const isLiked = currentLikes.includes(userId);
-                const isAuthor = post.authorId === userId;
-                
-                const verifiedBadge = isPostVerified ? `
-                    <span class="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                        <i data-lucide="check-circle" class="w-3 h-3 mr-1"></i> Verified
-                    </span>` : '';
-
-                postElement.innerHTML = `
-                    <div class="flex items-start justify-between mb-4">
-                        <div class="flex items-start space-x-3">
-                            <div class="w-10 h-10 bg-gem-accent rounded-full flex-shrink-0 flex items-center justify-center text-sm font-bold text-gem-text-secondary">
-                                ${initials}
-                            </div>
-                            <div>
-                                <p class="font-bold text-gem-text-main flex items-center">
-                                    ${authorName}
-                                    ${verifiedBadge}
-                                </p>
-                                <p class="text-xs text-gray-500">${timeStr} &bullet; ID: ${post.authorId.substring(0, 8)}...</p>
-                            </div>
-                        </div>
-                        
-                        <!-- NEW: Delete Button (Only visible to author) -->
-                        <button onclick="deletePost('${postId}')" class="p-2 text-red-400 hover:text-red-600 transition-colors ${isAuthor ? '' : 'hidden'}" title="Delete Post">
-                            <i data-lucide="trash-2" class="w-5 h-5"></i>
-                        </button>
-                    </div>
-
-                    <div class="text-gem-text-main whitespace-pre-wrap break-words">
-                        ${post.content.replace(/\n/g, '<br>')}
-                    </div>
-
-                    <!-- NEW: Interaction Bar -->
-                    <div class="flex justify-start space-x-4 pt-4 border-t border-gem-bg-global mt-4 text-gray-500 text-sm">
-                        <!-- Like Button -->
-                        <button onclick="toggleLike('${postId}', ${isLiked})" class="flex items-center transition-colors duration-200 ${isLiked ? 'text-red-500' : 'hover:text-red-500'}">
-                            <i data-lucide="${isLiked ? 'heart' : 'heart'}" class="w-4 h-4 mr-1 fill-current"></i> 
-                            <span class="${isLiked ? 'font-bold' : ''}">${currentLikes.length} Like${currentLikes.length !== 1 ? 's' : ''}</span>
-                        </button>
-
-                        <!-- Comment Button -->
-                        <button onclick="openCommentModal('${postId}', '${post.content.replace(/'/g, "\\'")}')" class="flex items-center hover:text-gem-primary transition-colors duration-200">
-                            <i data-lucide="message-square" class="w-4 h-4 mr-1"></i> Comments
-                        </button>
-                    </div>
-                `;
-                feedContainer.appendChild(postElement);
-            });
-            lucide.createIcons(); 
-        }
-
-        // Sets up real-time listener for posts
-        function setupPostsListener() {
-            if (!db || !isAuthReady || !userId) {
-                console.log("Skipping setupPostsListener: DB or Auth not ready.");
-                return;
-            }
-            
-            const postsCollection = collection(db, `artifacts/${appId}/public/data/posts`);
-            const q = query(postsCollection);
-            
-            onSnapshot(q, (snapshot) => {
-                const posts = [];
-                snapshot.forEach(doc => {
-                    const data = doc.data();
-                    posts.push({ id: doc.id, ...data });
-                });
-                
-                // Sort posts by timestamp in descending order in memory
-                posts.sort((a, b) => {
-                    const timeA = a.timestamp ? (a.timestamp.toMillis ? a.timestamp.toMillis() : a.timestamp) : 0;
-                    const timeB = b.timestamp ? (b.timestamp.toMillis ? b.timestamp.toMillis() : b.timestamp) : 0;
-                    return timeB - timeA;
-                });
-                
-                renderPosts(posts);
-            }, (error) => {
-                console.error("Error fetching real-time posts:", error);
-                loadingIndicator.textContent = `Error loading feed: ${error.message}`;
-            });
-        }
-
-
-        window.onload = function() {
-            lucide.createIcons();
-            
-            postTextarea.addEventListener('input', () => {
-                publishButton.disabled = postTextarea.value.trim() === '';
-            });
-            publishButton.addEventListener('click', publishPost);
-            
-            commentInput.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter') {
-                    e.preventDefault();
-                    addComment();
-                }
-            });
-            addCommentButton.addEventListener('click', addComment);
-
-            populatePersonalitySelector();
-            
-            // Onboarding Button Listener
-            onboardingSetCodeButton.addEventListener('click', setVerificationCode);
-
-            initFirebaseAndAuth();
-            
-            appModal.addEventListener('click', (e) => {
-                if (e.target === appModal) {
-                    closeModal();
-                }
-            });
-
-            // Expose new global functions for HTML buttons
-            window.toggleLike = toggleLike;
-            window.deletePost = deletePost;
-            window.openCommentModal = openCommentModal;
-            
-            // Add listeners for Auth Buttons
-            signInButton.addEventListener('click', handleSignIn);
-            createAccountButton.addEventListener('click', handleCreateAccount);
-            guestButton.addEventListener('click', handleSignInAsGuest);
-            googleSignInButton.addEventListener('click', handleSignInWithGoogle);
-        };
-
-    </script>
-
+    <!-- Authentication Overlay (Hidden after sign-in) -->
+    <div id="authOverlay" class="fixed inset-0 z-50 flex items-center justify-center bg-gem-bg-global p-4">
+        <div class="bg-white w-full max-w-sm p-8 rounded-xl shadow-2xl border-t-4 border-gem-primary">
+            <h2 class="text-3xl font-extrabold text-gem-primary text-center mb-6">Welcome to GreenFeed</h2>
+            
+            <div id="authMessage" class="hidden p-3 mb-4 text-sm rounded-lg bg-red-100 text-red-700"></div>
+
+            <div class="space-y-4">
+                <div>
+                    <label for="emailInput" class="block text-sm font-medium text-gem-text-main mb-1">Email</label>
+                    <input type="email" id="emailInput" class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gem-primary" placeholder="you@example.com">
+                </div>
+                <div>
+                    <label for="passwordInput" class="block text-sm font-medium text-gem-text-main mb-1">Password</label>
+                    <input type="password" id="passwordInput" class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gem-primary" placeholder="••••••••">
+                </div>
+            </div>
+
+            <div class="flex flex-col space-y-3 mt-6">
+                <button id="signInButton" class="w-full py-3 px-4 bg-gem-primary text-gem-text-secondary rounded-lg font-bold hover:bg-gem-accent transition-colors duration-200">
+                    Sign In
+                </button>
+                <button id="createAccountButton" class="w-full py-3 px-4 bg-gem-light text-gem-text-secondary rounded-lg font-semibold hover:bg-gem-primary transition-colors duration-200">
+                    Create Account
+                </button>
+                
+                <!-- GOOGLE BUTTON -->
+                <button id="googleSignInButton" class="w-full py-3 px-4 bg-white border border-gray-300 text-gray-700 rounded-lg font-semibold hover:bg-gray-100 transition-colors duration-200 flex items-center justify-center">
+                    <svg class="w-5 h-5 mr-3" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg"><path fill="#FFC107" d="M43.611 20.083H42V20H24v8h11.303c-1.68 5.473-6.84 9.473-13.303 9.473-7.72 0-14-6.28-14-14s6.28-14 14-14c3.14 0 6.02 1.08 8.24 2.86l6.51-6.51C34.63 2.36 29.5 0 24 0 10.74 0 0 10.74 0 24s10.74 24 24 24c12.55 0 22.7-9.59 23.99-21.92l-1.38-1.997z"/><path fill="#FF3D00" d="M6.306 14.691c2.16-5.85 7.85-9.691 14.694-9.691 3.14 0 6.02 1.08 8.24 2.86l6.51-6.51C34.63 2.36 29.5 0 24 0 10.74 0 0 10.74 0 24s10.74 24 24 24c12.55 0 22.7-9.59 23.99-21.92l-1.38-1.997z"/><path fill="#4CAF50" d="M24 48c13.26 0 24-10.74 24-24 0-1.74-.18-3.43-.51-5.06l-6.51 6.51C40.92 21.08 42 22.46 42 24c0 4.08-1.68 7.74-4.38 10.38l6.38 6.38C46.86 37.07 48 30.73 48 24c0-3.32-.67-6.47-1.85-9.35l-6.51 6.51c.32 1.15.51 2.36.51 3.63 0 7.72-6.28 14-14 14-4.93 0-9.27-2.58-11.83-6.48l-6.66 6.66C8.86 45.47 15.93 48 24 48z"/><path fill="#1976D2" d="M43.611 20.083H42V20H24v8h11.303c-1.68 5.473-6.84 9.473-13.303 9.473-7.72 0-14-6.28-14-14s6.28-14 14-14c3.14 0 6.02 1.08 8.24 2.86l6.51-6.51C34.63 2.36 29.5 0 24 0 10.74 0 0 10.74 0 24s10.74 24 24 24c12.55 0 22.7-9.59 23.99-21.92l-1.38-1.997z"/></svg>
+                    Sign In with Google
+                </button>
+            </div>
+
+            <div class="relative my-6">
+                <div class="absolute inset-0 flex items-center">
+                    <div class="w-full border-t border-gray-300"></div>
+                </div>
+                <div class="relative flex justify-center text-sm">
+                    <span class="px-2 bg-white text-gray-500">or</span>
+                </div>
+            </div>
+
+            <button id="guestButton" class="w-full py-3 px-4 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300 transition-colors duration-200">
+                Continue as Guest
+            </button>
+        </div>
+    </div>
+    <!-- End of Authentication Overlay -->
+    
+    <!-- ONBOARDING OVERLAY (Hidden initially, shown if signed in but not verified) -->
+    <div id="onboardingDiv" class="hidden fixed inset-0 z-40 flex items-center justify-center bg-gem-bg-global p-4">
+        <div class="bg-white w-full max-w-2xl p-8 rounded-xl shadow-2xl border-t-4 border-gem-accent text-center">
+            <i data-lucide="shield-check" class="w-12 h-12 text-gem-accent mx-auto mb-4"></i>
+            <h2 class="text-3xl font-extrabold text-gem-text-main mb-2">Secure Your Identity on GreenFeed</h2>
+            <p class="text-lg text-gray-600 mb-6">
+                To ensure trust and accountability, please set a permanent, verified identity.
+            </p>
+            
+            <div class="p-4 bg-gem-bg-card rounded-lg mb-6 text-left">
+                <p class="text-sm font-medium text-gray-500 mb-2">Your current temporary ID:</p>
+                <p id="onboardingUserId" class="font-mono text-gem-accent text-sm break-all">Loading...</p>
+            </div>
+            
+            <div class="space-y-4 text-left">
+                <!-- 1. Display Name Input -->
+                <div>
+                    <label for="onboardingDisplayNameInput" class="block text-sm font-bold text-gem-text-main mb-1">1. Public Display Name:</label>
+                    <input type="text" id="onboardingDisplayNameInput" class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gem-primary text-gem-text-main" placeholder="e.g., The Real John Doe">
+                    <p class="text-xs text-gray-500 mt-1">This name will be permanently displayed next to your posts.</p>
+                </div>
+
+                <!-- 2. Secret Code Input -->
+                <div>
+                    <label for="onboardingVerificationCodeInput" class="block text-sm font-bold text-gem-text-main mb-1">2. Secret Verification Code (Minimum 6 characters):</label>
+                    <input type="password" id="onboardingVerificationCodeInput" class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 text-gem-text-main" placeholder="Enter your secret code">
+                    <p class="text-xs text-gray-500 mt-1">This is a secret key only you know, used to generate your verifiable ID. (Required for full posting access).</p>
+                </div>
+                
+                <div id="onboardingMessage" class="hidden p-3 text-sm rounded-lg text-gem-text-secondary bg-red-100 mt-4"></div>
+            </div>
+
+            <button id="onboardingSetCodeButton" class="w-full mt-6 py-3 px-4 bg-gem-primary text-gem-text-secondary rounded-lg font-bold text-lg shadow-xl hover:bg-gem-accent transition-colors duration-200 disabled:opacity-50">
+                <i data-lucide="lock" class="w-5 h-5 mr-2 inline-block"></i> Confirm Identity & Unlock Feed
+            </button>
+        </div>
+    </div>
+    <!-- END ONBOARDING OVERLAY -->
+
+
+    <!-- Post/QR/Comments Modal (Verification view removed from modal) -->
+    <div id="appModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 transition-opacity duration-300 p-4">
+        <div class="bg-white p-6 md:p-8 rounded-xl shadow-2xl w-full max-w-lg transition-transform duration-300 transform scale-95 opacity-0" id="modalContent">
+            
+            <!-- Post Creation View -->
+            <div id="postView" class="hidden">
+                <h2 class="text-xl font-bold text-gem-accent mb-4">Create New Post</h2>
+                
+                <!-- AI Personality Selector -->
+                <div class="mb-4">
+                    <label for="aiPersonalitySelect" class="block text-sm font-medium text-gray-700 mb-1">AI Personality:</label>
+                    <select id="aiPersonalitySelect" class="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gem-primary text-gem-text-main bg-white">
+                        <!-- Options populated by JS -->
+                    </select>
+                </div>
+
+                <textarea id="postTextarea" class="w-full h-32 p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gem-primary resize-none text-gem-text-main" placeholder="Type a short idea here, or write your full post."></textarea>
+                
+                <p class="text-xs text-gray-500 mt-2 mb-4">
+                    * If you enter a short idea, use the "Generate Draft" button below.
+                </p>
+
+                <div class="flex flex-col sm:flex-row justify-end mt-4 space-x-0 sm:space-x-3 space-y-3 sm:space-y-0">
+                    <button id="generateDraftButton" onclick="generatePostDraft()" class="px-4 py-2 bg-gem-light text-gem-text-secondary rounded-lg font-semibold hover:bg-gem-primary transition-colors duration-200 flex items-center justify-center disabled:opacity-50">
+                        <i data-lucide="sparkles" class="w-4 h-4 mr-2"></i> Generate Draft
+                    </button>
+                    <button onclick="closeModal()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors duration-200 font-semibold">Cancel</button>
+                    <button id="publishButton" onclick="publishPost()" class="px-4 py-2 bg-gem-primary text-gem-text-secondary rounded-lg font-bold hover:bg-gem-accent transition-colors duration-200 disabled:opacity-50" disabled>Publish</button>
+                </div>
+            </div>
+
+            <!-- QR Code View -->
+            <div id="qrView" class="hidden text-center">
+                <h2 class="text-xl font-bold text-gem-accent mb-4">Your Verifiable Identity</h2>
+                <p class="text-sm text-gray-600 mb-4">
+                    Scan this code to let others confirm your **Display Name** and unique GreenFeed ID.
+                </p>
+                
+                <!-- ADDED STYLING TO MAKE THE FRAME POP -->
+                <div id="qrcodeCanvas" class="p-5 bg-white border-4 border-gem-accent inline-block rounded-xl shadow-2xl transition-all duration-300 transform hover:scale-[1.02]">
+                    <!-- QR Code will be drawn here -->
+                </div>
+                
+                <div class="mt-4 p-3 bg-gem-bg-global rounded-lg inline-block min-w-[200px]">
+                    <p class="text-sm text-gray-500 font-medium">Display Name:</p>
+                    <!-- Display Name is now critical identity info -->
+                    <p id="qrCodeUserName" class="text-2xl font-bold text-gem-text-main">Loading...</p> 
+                    <p class="text-xs text-gray-500 mt-2">User ID (for lookup):</p>
+                    <p id="qrCodeUserId" class="font-mono text-gem-accent text-[10px] break-all">Loading...</p>
+                </div>
+
+                <button onclick="closeModal()" class="mt-6 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors duration-200 font-semibold">Close</button>
+            </div>
+            
+            <!-- Identity Setup View (REMOVED: Moved to onboardingDiv) -->
+            <div id="verificationView" class="hidden"></div>
+            
+            <!-- NEW: Comment View -->
+            <div id="commentView" class="hidden">
+                <h2 class="text-xl font-bold text-gem-accent mb-4">Comments</h2>
+                
+                <!-- The original post content being commented on -->
+                <div class="p-3 bg-gem-bg-global rounded-lg mb-4 max-h-24 overflow-y-auto border border-gem-light">
+                    <p class="text-sm font-semibold text-gem-text-main mb-1">Replying to:</p>
+                    <p id="commentOriginalPostContent" class="text-xs text-gray-700 line-clamp-2"></p>
+                </div>
+
+                <!-- Comments List -->
+                <div id="commentsContainer" class="space-y-3 max-h-64 overflow-y-auto mb-4 p-2">
+                    <p class="text-center text-gray-500 text-sm">Loading comments...</p>
+                    <!-- Comments will be injected here -->
+                </div>
+                
+                <!-- Add Comment Input -->
+                <div class="border-t pt-4">
+                    <input type="text" id="commentInput" class="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gem-primary text-gem-text-main" placeholder="Write a comment...">
+                    <div class="flex justify-end mt-3 space-x-3">
+                        <button onclick="closeModal()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors duration-200 font-semibold">Cancel</button>
+                        <button id="addCommentButton" onclick="addComment()" class="px-4 py-2 bg-gem-primary text-gem-text-secondary rounded-lg font-bold hover:bg-gem-accent transition-colors duration-200 disabled:opacity-50" disabled>Post Comment</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="modalMessage" class="hidden mt-3 p-3 text-sm rounded-lg bg-gem-bg-card text-gem-text-main"></div>
+        </div>
+    </div>
+
+    <!-- Header / Navigation Bar (Hidden by default, shown when verified) -->
+    <header id="appHeader" class="hidden sticky top-0 z-40 bg-white shadow-md">
+        <div class="container mx-auto flex items-center justify-between p-3 md:p-4">
+            <h1 class="text-3xl font-extrabold text-gem-primary cursor-pointer">
+                GreenFeed
+            </h1>
+
+            <!-- Search Bar (Desktop/Tablet) -->
+            <div class="hidden lg:flex flex-1 max-w-md mx-6">
+                <input type="text" placeholder="Search friends, posts, or groups..." class="w-full p-2 border border-gray-200 rounded-full focus:outline-none focus:ring-2 focus:ring-gem-light bg-gem-bg-global text-sm">
+            </div>
+
+            <!-- Profile & Actions -->
+            <div class="flex items-center space-x-3 md:space-x-5">
+                <button id="createPostHeaderBtn" onclick="openModal('post')" class="hidden sm:inline-flex items-center px-4 py-2 bg-gem-primary text-gem-text-secondary rounded-full font-bold shadow-md hover:bg-gem-accent transition-all duration-300 transform hover:scale-[1.03] text-sm" disabled>
+                    <i data-lucide="edit" class="w-4 h-4 mr-2"></i> Create Post
+                </button>
+                <button class="p-2 rounded-full bg-gem-bg-card hover:bg-gem-light transition-colors duration-200">
+                    <i data-lucide="bell" class="w-6 h-6 text-gem-text-main"></i>
+                </button>
+                <div class="w-10 h-10 bg-gem-primary rounded-full border-2 border-gem-accent cursor-pointer flex items-center justify-center text-sm font-bold text-gem-text-secondary" id="profileInitials">
+                    ...
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Grid (Hidden by default, shown when verified) -->
+    <main id="appMain" class="hidden container mx-auto p-3 md:p-6 lg:p-8">
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+
+            <!-- Left Sidebar (Desktop Only) -->
+            <aside class="hidden lg:block lg:col-span-1">
+                <div class="sticky top-20 space-y-4">
+                    <!-- Profile Card -->
+                    <div class="p-4 rounded-xl bg-white shadow-lg border border-gem-bg-card">
+                        <div class="flex items-center space-x-3 mb-4">
+                            <div class="w-12 h-12 bg-gem-primary rounded-full flex-shrink-0 flex items-center justify-center text-lg font-bold text-gem-text-secondary" id="sidebarProfileInitials">
+                                ...
+                            </div>
+                            <div>
+                                <!-- Display Name / Default Name -->
+                                <p class="font-bold text-gem-text-main" id="sidebarUsername">Welcome User!</p>
+                                <p class="text-xs text-gray-500">Your ID (for sharing):</p>
+                                <p class="text-[10px] text-wrap break-all font-mono text-gem-accent" id="currentUserId">
+                                    Loading...
+                                </p>
+                            </div>
+                        </div>
+                        
+                        <!-- Verification Status -->
+                        <div class="flex items-center text-sm font-semibold mt-2 border-t border-gem-bg-global pt-3" id="verificationStatusContainer">
+                            <i data-lucide="loader-circle" class="w-4 h-4 mr-2 text-gray-500 animate-spin" id="verificationIcon"></i>
+                            <span class="text-gray-500" id="verificationText">Checking status...</span>
+                        </div>
+                        
+                        <!-- QR CODE BUTTON (to show ID) -->
+                        <button onclick="showQrModal()" class="w-full mt-3 flex items-center justify-center px-3 py-2 bg-gem-bg-global text-gem-accent rounded-lg font-semibold hover:bg-gem-light transition-colors duration-200 text-sm disabled:opacity-50" id="showQrButton" disabled>
+                            <i data-lucide="scan-line" class="w-4 h-4 mr-2"></i> Show Verifiable ID QR
+                        </button>
+                        
+                        <!-- Sign Out Button -->
+                        <button onclick="signOutUser()" class="w-full mt-2 flex items-center justify-center px-3 py-2 bg-red-100 text-red-600 rounded-lg font-semibold hover:bg-red-200 transition-colors duration-200 text-sm" id="signOutButton" disabled>
+                            <i data-lucide="log-out" class="w-4 h-4 mr-2"></i> Sign Out
+                        </button>
+                    </div>
+
+                    <!-- Navigation Links -->
+                    <nav class="p-4 rounded-xl bg-white shadow-lg border border-gem-bg-card">
+                        <ul class="space-y-3">
+                            <li class="flex items-center text-gem-accent font-semibold hover:text-gem-primary cursor-pointer transition-colors duration-200">
+                                <i data-lucide="users" class="w-5 h-5 mr-3"></i> Friends
+                            </li>
+                            <li class="flex items-center text-gem-text-main hover:text-gem-primary cursor-pointer transition-colors duration-200">
+                                <i data-lucide="calendar" class="w-5 h-5 mr-3"></i> Events
+                            </li>
+                            <li class="flex items-center text-gem-text-main hover:text-gem-primary cursor-pointer transition-colors duration-200">
+                                <i data-lucide="group" class="w-5 h-5 mr-3"></i> Groups
+                            </li>
+                            <li class="flex items-center text-gem-text-main hover:text-gem-primary cursor-pointer transition-colors duration-200">
+                                <i data-lucide="history" class="w-5 h-5 mr-3"></i> Memories
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
+            </aside>
+
+            <!-- Center Feed (Main Content) -->
+            <section class="lg:col-span-3 space-y-6">
+
+                <!-- Mobile Post Creation Button -->
+                <button id="createPostMobileBtn" onclick="openModal('post')" class="w-full flex sm:hidden items-center justify-center p-3 bg-gem-primary text-gem-text-secondary rounded-xl font-bold shadow-md hover:bg-gem-accent transition-colors duration-300" disabled>
+                    <i data-lucide="edit" class="w-5 h-5 mr-2"></i> Start a new post
+                </button>
+
+                <!-- Post Input Card (Desktop/Tablet) -->
+                <div class="hidden sm:block p-4 rounded-xl bg-white shadow-lg border border-gem-bg-card">
+                    <div class="flex items-center space-x-3 pb-3 border-b border-gem-bg-global">
+                        <div class="w-10 h-10 bg-gem-primary rounded-full flex-shrink-0 flex items-center justify-center text-sm font-bold text-gem-text-secondary" id="inputProfileInitials">...</div>
+                        <input type="text" placeholder="What's going on?" onclick="openModal('post')" readonly class="w-full p-2 bg-gem-bg-global rounded-full cursor-pointer hover:bg-gem-bg-card transition-colors duration-200 text-sm text-gem-text-main placeholder-gray-500 border border-gray-100 focus:outline-none" id="postInput" disabled>
+                    </div>
+                    <!-- Simplified Interactions Bar - Removed Photo/Video and Tag Friends -->
+                    <div class="flex justify-end pt-3 text-sm">
+                        <button onclick="openModal('post')" class="flex items-center text-gem-primary font-bold hover:text-gem-accent transition-colors duration-200" id="postTextBtn" disabled>
+                            Post
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Loading Indicator -->
+                <div id="loadingIndicator" class="text-center p-8 text-gem-accent font-semibold">
+                    <i data-lucide="loader-circle" class="w-6 h-6 animate-spin inline-block mr-2"></i> Loading Feed...
+                </div>
+
+                <!-- Feed Posts Container -->
+                <div id="feedContainer" class="space-y-6">
+                    <!-- Posts will be dynamically inserted here -->
+                </div>
+            </section>
+            
+        </div>
+    </main>
+
+    <footer class="mt-10 p-4 text-center text-sm text-gray-500 border-t border-gem-bg-card">
+        <p>© 2025 GreenFeed Social. All rights reserved. Persistent data via Firebase & AI powered drafts.</p>
+    </footer>
+
+
+    <script>
+        // Global variables for Firebase access
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        
+        // Custom Firebase Configuration provided by the user
+        const customFirebaseConfig = {
+            apiKey: "AIzaSyBTveXs1VEs-_tJUydTT71oDLx8o9ueMVg",
+            authDomain: "greenfeed-fire.firebaseapp.com",
+            projectId: "greenfeed-fire",
+            storageBucket: "greenfeed-fire.firebasestorage.app",
+            messagingSenderId: "1012124354290",
+            appId: "1:1012124354290:web:fdfdd602385d7d5893f26b",
+            measurementId: "G-JDPHNH2E97"
+        };
+
+        // If the environment provides a config (as __firebase_config), use it; 
+        // otherwise, use the user's custom configuration as a fallback.
+        const firebaseConfig = typeof __firebase_config !== 'undefined' && __firebase_config 
+            ? JSON.parse(__firebase_config) 
+            : customFirebaseConfig;
+            
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+        
+        const DISABLED_USER_KEY = 'greenfeed_disabled_user';
+        let app;
+        let auth;
+        let db;
+        let currentFirebaseUser = null; // The User object from Firebase Auth
+        let userId = null;
+        let userName = null; // Default derived name (e.g., Guest-xyz)
+        let displayName = null; // User's custom verified display name
+        let isAuthReady = false;
+        let isSigningOutIntent = false; // Flag to prevent re-auth on intentional sign out
+        let isUserVerified = false; // Track verification status
+        let currentPostId = null; // NEW: Track the post currently open in the comment modal
+
+        // --- AI Personalities Definition ---
+        const aiPersonalities = {
+            'concise-analyst': { name: 'Concise Analyst', system: 'Act as a concise and factual analyst. Summarize complex topics into three easy-to-read bullet points.' },
+            'friendly-tutor': { name: 'Friendly Tutor', system: 'Act as an encouraging and friendly writing tutor. Elaborate on the user\'s idea, using clear, slightly motivational language, and always offer a conversational closing question to encourage dialogue.' },
+            'creative-storyteller': { name: 'Creative Storyteller', system: 'Act as a creative short story writer. Take the user\'s input and weave it into a short, engaging narrative suitable for a social media post, focusing on vivid descriptions and emotional resonance.' }
+        };
+        // --- End AI Personalities Definition ---
+
+
+        // UI element references
+        const authOverlay = document.getElementById('authOverlay');
+        const authMessage = document.getElementById('authMessage');
+        const emailInput = document.getElementById('emailInput');
+        const passwordInput = document.getElementById('passwordInput');
+        const signInButton = document.getElementById('signInButton');
+        const createAccountButton = document.getElementById('createAccountButton');
+        const googleSignInButton = document.getElementById('googleSignInButton');
+        const guestButton = document.getElementById('guestButton');
+
+        const appModal = document.getElementById('appModal'); 
+        const modalContent = document.getElementById('modalContent');
+        const postView = document.getElementById('postView');
+        const qrView = document.getElementById('qrView');
+        const verificationView = document.getElementById('verificationView'); // Now unused, kept for reference
+        const commentView = document.getElementById('commentView'); 
+        const postTextarea = document.getElementById('postTextarea');
+        const publishButton = document.getElementById('publishButton');
+        const generateDraftButton = document.getElementById('generateDraftButton');
+        const aiPersonalitySelect = document.getElementById('aiPersonalitySelect');
+        const modalMessage = document.getElementById('modalMessage');
+        const feedContainer = document.getElementById('feedContainer');
+        const loadingIndicator = document.getElementById('loadingIndicator');
+        const qrcodeCanvas = document.getElementById('qrcodeCanvas');
+        const qrCodeUserId = document.getElementById('qrCodeUserId');
+        const qrCodeUserName = document.getElementById('qrCodeUserName'); 
+        const showQrButton = document.getElementById('showQrButton');
+        const signOutButton = document.getElementById('signOutButton');
+        const verificationIcon = document.getElementById('verificationIcon');
+        const verificationText = document.getElementById('verificationText');
+        const appHeader = document.getElementById('appHeader');
+        const appMain = document.getElementById('appMain');
+        
+        // NEW: Onboarding UI elements
+        const onboardingDiv = document.getElementById('onboardingDiv');
+        const onboardingDisplayNameInput = document.getElementById('onboardingDisplayNameInput');
+        const onboardingVerificationCodeInput = document.getElementById('onboardingVerificationCodeInput');
+        const onboardingSetCodeButton = document.getElementById('onboardingSetCodeButton');
+        const onboardingUserId = document.getElementById('onboardingUserId');
+        const onboardingMessage = document.getElementById('onboardingMessage');
+        
+        // NEW Comment UI elements
+        const commentOriginalPostContent = document.getElementById('commentOriginalPostContent');
+        const commentsContainer = document.getElementById('commentsContainer');
+        const commentInput = document.getElementById('commentInput');
+        const addCommentButton = document.getElementById('addCommentButton');
+
+        // --- Utility Functions ---
+
+        /**
+        * Generates two initials from a name string.
+        * @param {string} name 
+        * @returns {string} Two uppercase initials.
+        */
+        function getInitials(name) {
+            if (!name) return '??';
+            const parts = name.split(' ').filter(p => p.length > 0);
+            if (parts.length >= 2) {
+                return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+            }
+            return name.substring(0, 2).toUpperCase();
+        }
+
+        /**
+        * Retries a function with exponential backoff on failure.
+        * @param {Function} fn The function to execute.
+        * @param {number} maxRetries Maximum number of retries.
+        * @param {number} delay Initial delay in milliseconds.
+        */
+        async function retryWithBackoff(fn, maxRetries = 3, delay = 1000) {
+            for (let i = 0; i < maxRetries; i++) {
+                try {
+                    return await fn();
+                } catch (error) {
+                    if (i === maxRetries - 1) throw error;
+                    await new Promise(resolve => setTimeout(resolve, delay * (2 ** i)));
+                }
+            }
+        }
+
+        /**
+        * Sets up the AI Personality options in the post modal.
+        */
+        function setupAIPersonalities() {
+            aiPersonalitySelect.innerHTML = '';
+            for (const key in aiPersonalities) {
+                const option = document.createElement('option');
+                option.value = key;
+                option.textContent = aiPersonalities[key].name;
+                aiPersonalitySelect.appendChild(option);
+            }
+        }
+
+        // --- Modal Control ---
+
+        /**
+        * Opens the application modal to a specific view.
+        * @param {'post'|'qr'|'comments'} viewName The view to display.
+        * @param {string | null} postId Optional post ID for comment view.
+        */
+        function openModal(viewName, postId = null) {
+            if (!isUserVerified && viewName !== 'qr') {
+                showCustomMessage('You must confirm your identity to create posts.', 'bg-yellow-100 text-yellow-700', authMessage);
+                return;
+            }
+            
+            const views = { post: postView, qr: qrView, comments: commentView };
+            for (const key in views) {
+                views[key].classList.add('hidden');
+            }
+            modalMessage.classList.add('hidden');
+            
+            const selectedView = views[viewName];
+            if (selectedView) {
+                selectedView.classList.remove('hidden');
+                appModal.classList.remove('hidden');
+                setTimeout(() => {
+                    appModal.classList.add('opacity-100');
+                    modalContent.classList.remove('scale-95', 'opacity-0');
+                    modalContent.classList.add('scale-100', 'opacity-100');
+                }, 10);
+            }
+
+            if (viewName === 'post') {
+                postTextarea.value = '';
+                publishButton.disabled = true;
+            } else if (viewName === 'comments' && postId) {
+                currentPostId = postId;
+                setupCommentsListener(postId);
+                addCommentButton.disabled = !isUserVerified;
+            }
+        }
+
+        function closeModal() {
+            modalContent.classList.remove('scale-100', 'opacity-100');
+            modalContent.classList.add('scale-95', 'opacity-0');
+            appModal.classList.remove('opacity-100');
+            currentPostId = null;
+            setTimeout(() => {
+                appModal.classList.add('hidden');
+            }, 300);
+        }
+
+        function showCustomMessage(message, classes, element) {
+            element.textContent = message;
+            element.className = `p-3 mb-4 text-sm rounded-lg ${classes}`;
+            element.classList.remove('hidden');
+            setTimeout(() => element.classList.add('hidden'), 5000);
+        }
+        
+        // --- AI Draft Generation ---
+        
+        async function generatePostDraft() {
+            const userQuery = postTextarea.value.trim();
+            if (userQuery.length < 5) {
+                showCustomMessage('Please enter at least a few keywords to generate a draft.', 'bg-red-100 text-red-700', modalMessage);
+                return;
+            }
+
+            generateDraftButton.disabled = true;
+            publishButton.disabled = true;
+            const originalButtonText = generateDraftButton.innerHTML;
+            generateDraftButton.innerHTML = `<i data-lucide="loader-circle" class="w-4 h-4 mr-2 animate-spin"></i> Generating...`;
+            lucide.createIcons();
+            postTextarea.placeholder = 'Drafting your masterpiece...';
+
+            const selectedKey = aiPersonalitySelect.value;
+            const systemInstruction = aiPersonalities[selectedKey]?.system || aiPersonalities['friendly-tutor'].system;
+            
+            const apiKey = "";
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+
+            const payload = {
+                contents: [{ parts: [{ text: userQuery }] }],
+                tools: [{ "google_search": {} }],
+                systemInstruction: { parts: [{ text: systemInstruction }] },
+            };
+
+            try {
+                const response = await retryWithBackoff(() => fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                }));
+                const result = await response.json();
+                const text = result.candidates?.[0]?.content?.parts?.[0]?.text || "Failed to generate content.";
+                
+                postTextarea.value = text;
+                publishButton.disabled = text.length < 10;
+                showCustomMessage(`Draft generated by ${aiPersonalities[selectedKey].name}. Review and publish!`, 'bg-gem-bg-card text-gem-text-main', modalMessage);
+
+            } catch (error) {
+                console.error("Gemini API Error:", error);
+                showCustomMessage('Failed to generate draft. Please check the console for API errors.', 'bg-red-100 text-red-700', modalMessage);
+                postTextarea.placeholder = 'Type a short idea here, or write your full post.';
+            } finally {
+                generateDraftButton.disabled = false;
+                generateDraftButton.innerHTML = originalButtonText;
+                lucide.createIcons();
+            }
+        }
+        window.generatePostDraft = generatePostDraft; // Expose globally for onclick
+
+        // --- Post CRUD & Listeners ---
+
+        /**
+        * Publishes a new post to the public posts collection.
+        */
+        async function publishPost() {
+            const content = postTextarea.value.trim();
+            if (!isUserVerified || !userId || !displayName) {
+                showCustomMessage('You must be a verified user to publish posts.', 'bg-red-100 text-red-700', modalMessage);
+                return;
+            }
+            if (content.length < 10) {
+                showCustomMessage('Post content must be at least 10 characters long.', 'bg-red-100 text-red-700', modalMessage);
+                return;
+            }
+
+            publishButton.disabled = true;
+            const originalButtonText = publishButton.textContent;
+            publishButton.textContent = 'Posting...';
+
+            try {
+                await addDoc(collection(db, `artifacts/${appId}/public/data/posts`), {
+                    content: content,
+                    authorId: userId,
+                    authorName: displayName,
+                    likes: [], // Array of user IDs who liked the post
+                    commentCount: 0,
+                    timestamp: serverTimestamp()
+                });
+                closeModal();
+                postTextarea.value = '';
+            } catch (error) {
+                console.error("Error adding document: ", error);
+                showCustomMessage('Error publishing post. Check security rules/console.', 'bg-red-100 text-red-700', modalMessage);
+            } finally {
+                publishButton.textContent = originalButtonText;
+                publishButton.disabled = true;
+            }
+        }
+
+        window.publishPost = publishPost; // Expose globally for onclick
+
+        /**
+        * Renders a single post element.
+        * @param {object} post The post data including its ID.
+        * @returns {string} HTML string for the post card.
+        */
+        function renderPost(post) {
+            const timestamp = post.timestamp ? new Date(post.timestamp.toDate()).toLocaleString() : 'Just now';
+            const isLiked = post.likes.includes(userId);
+            const likeButtonClass = isLiked ? 'text-red-500 hover:text-red-600' : 'text-gray-500 hover:text-red-500';
+            const likeIcon = isLiked ? 'heart' : 'heart'; // Still using heart, but color indicates state
+            const initials = getInitials(post.authorName || 'Guest');
+            const canDelete = userId === post.authorId;
+            
+            return `
+                <div id="post-${post.id}" class="post-card p-4 md:p-6 bg-white rounded-xl shadow-lg border border-gem-bg-card transition-all duration-300 transform hover:shadow-xl">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-10 h-10 bg-gem-primary rounded-full flex-shrink-0 flex items-center justify-center text-sm font-bold text-gem-text-secondary">${initials}</div>
+                            <div>
+                                <p class="font-bold text-gem-text-main">${post.authorName || 'Anonymous'}</p>
+                                <p class="text-xs text-gray-500">${timestamp}</p>
+                            </div>
+                        </div>
+                        ${canDelete ? `
+                            <button onclick="deletePost('${post.id}')" class="p-1 text-red-400 hover:text-red-600 transition-colors duration-200" title="Delete Post">
+                                <i data-lucide="trash-2" class="w-5 h-5"></i>
+                            </button>
+                        ` : ''}
+                    </div>
+
+                    <div class="post-content text-lg mb-4 whitespace-pre-wrap">${post.content}</div>
+
+                    <div class="flex items-center space-x-6 border-t pt-4">
+                        <!-- Like Button -->
+                        <button onclick="toggleLike('${post.id}', ${isLiked})" class="flex items-center font-semibold text-sm transition-colors duration-200 ${likeButtonClass}" ${isUserVerified ? '' : 'disabled'}>
+                            <i data-lucide="${likeIcon}" class="w-4 h-4 mr-1 fill-current"></i>
+                            <span>${post.likes.length} Likes</span>
+                        </button>
+                        
+                        <!-- Comment Button -->
+                        <button onclick="openModal('comments', '${post.id}')" class="flex items-center font-semibold text-sm text-gem-accent hover:text-gem-primary transition-colors duration-200">
+                            <i data-lucide="message-circle" class="w-4 h-4 mr-1"></i>
+                            <span>${post.commentCount || 0} Comments</span>
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        /**
+        * Toggles the like status of a post.
+        * @param {string} postId The ID of the post.
+        * @param {boolean} isCurrentlyLiked The current like state.
+        */
+        async function toggleLike(postId, isCurrentlyLiked) {
+            if (!isUserVerified) return;
+
+            const postRef = doc(db, `artifacts/${appId}/public/data/posts/${postId}`);
+            const updateData = {};
+
+            if (isCurrentlyLiked) {
+                updateData.likes = arrayRemove(userId);
+            } else {
+                updateData.likes = arrayUnion(userId);
+            }
+
+            try {
+                await updateDoc(postRef, updateData);
+            } catch (error) {
+                console.error("Error toggling like: ", error);
+            }
+        }
+        window.toggleLike = toggleLike; // Expose globally
+
+        /**
+        * Deletes a post.
+        * @param {string} postId The ID of the post to delete.
+        */
+        async function deletePost(postId) {
+            if (!confirm('Are you sure you want to delete this post and all its comments?')) return;
+
+            try {
+                // Delete the post document
+                await deleteDoc(doc(db, `artifacts/${appId}/public/data/posts/${postId}`));
+                console.log("Post deleted successfully.");
+                
+                // NOTE: For simplicity, we assume Firestore security rules will handle comment cascade
+                // or that a backend job would clean up comments. In a client-only app,
+                // we would delete them manually, but that often hits limits.
+                // For now, we trust the `onSnapshot` listener to remove the UI element.
+            } catch (error) {
+                console.error("Error deleting post: ", error);
+            }
+        }
+        window.deletePost = deletePost;
+
+        /**
+        * Sets up the real-time listener for the public feed.
+        */
+        function setupFeedListener() {
+            if (!db || !userId) return;
+
+            loadingIndicator.classList.remove('hidden');
+            feedContainer.innerHTML = '';
+            
+            const postsColRef = collection(db, `artifacts/${appId}/public/data/posts`);
+            // Query: Order by timestamp descending
+            const q = query(postsColRef);
+
+            onSnapshot(q, (snapshot) => {
+                loadingIndicator.classList.add('hidden');
+                
+                // Process changes
+                snapshot.docChanges().forEach(change => {
+                    const postData = { id: change.doc.id, ...change.doc.data() };
+                    const existingElement = document.getElementById(`post-${postData.id}`);
+
+                    if (change.type === 'added') {
+                        const newPostHtml = renderPost(postData);
+                        const tempDiv = document.createElement('div');
+                        tempDiv.innerHTML = newPostHtml;
+                        feedContainer.prepend(tempDiv.firstChild);
+                    } else if (change.type === 'modified') {
+                        if (existingElement) {
+                            // Simple re-render for updates like like count or content
+                            existingElement.outerHTML = renderPost(postData);
+                        }
+                    } else if (change.type === 'removed') {
+                        if (existingElement) {
+                            existingElement.remove();
+                        }
+                    }
+                });
+
+                // Re-initialize lucide icons after DOM manipulation
+                lucide.createIcons();
+            }, (error) => {
+                console.error("Feed Listener Error:", error);
+                loadingIndicator.innerHTML = '<span class="text-red-500">Error loading feed. Check your connection or console.</span>';
+            });
+        }
+
+        // --- Comments Logic ---
+
+        /**
+        * Sets up the real-time listener for comments on a specific post.
+        * @param {string} postId The ID of the post to listen to.
+        */
+        async function setupCommentsListener(postId) {
+            commentsContainer.innerHTML = '<p class="text-center text-gray-500 text-sm">Loading comments...</p>';
+            commentInput.value = '';
+            
+            try {
+                // 1. Get original post data for the header
+                const postDocRef = doc(db, `artifacts/${appId}/public/data/posts/${postId}`);
+                const postSnap = await getDoc(postDocRef);
+                if (!postSnap.exists()) {
+                    commentOriginalPostContent.textContent = 'Post not found.';
+                    return;
+                }
+                const postData = postSnap.data();
+                commentOriginalPostContent.textContent = postData.content;
+
+                // 2. Setup real-time listener for comments
+                const commentsColRef = collection(db, `artifacts/${appId}/public/data/posts/${postId}/comments`);
+                // Use orderBy for comments
+                const q = query(commentsColRef, orderBy('timestamp', 'asc'));
+
+                onSnapshot(q, (snapshot) => {
+                    commentsContainer.innerHTML = '';
+                    const comments = [];
+                    snapshot.forEach(doc => {
+                        comments.push({ id: doc.id, ...doc.data() });
+                    });
+
+                    if (comments.length === 0) {
+                        commentsContainer.innerHTML = '<p class="text-center text-gray-500 text-sm">Be the first to comment!</p>';
+                    } else {
+                        comments.forEach(comment => {
+                            const commentElement = document.createElement('div');
+                            commentElement.className = 'p-3 bg-gem-bg-global rounded-lg border border-gem-bg-card';
+                            commentElement.innerHTML = `
+                                <div class="font-bold text-sm text-gem-text-main">${comment.authorName || 'Anonymous'}</div>
+                                <p class="text-xs text-gray-500 mb-1">${comment.timestamp ? new Date(comment.timestamp.toDate()).toLocaleTimeString() : 'Just now'}</p>
+                                <p class="text-sm text-gray-700 whitespace-pre-wrap">${comment.content}</p>
+                            `;
+                            commentsContainer.appendChild(commentElement);
+                        });
+                    }
+                });
+            } catch (error) {
+                console.error("Error setting up comments listener: ", error);
+                commentsContainer.innerHTML = '<p class="text-center text-red-500 text-sm">Failed to load comments.</p>';
+            }
+        }
+
+        /**
+        * Adds a comment to the currently open post.
+        */
+        async function addComment() {
+            const content = commentInput.value.trim();
+            if (!isUserVerified || !userId || !displayName || !currentPostId) return;
+            if (content.length < 1) {
+                showCustomMessage('Comment cannot be empty.', 'bg-red-100 text-red-700', modalMessage);
+                return;
+            }
+
+            addCommentButton.disabled = true;
+            const originalButtonText = addCommentButton.textContent;
+            addCommentButton.textContent = 'Posting...';
+
+            try {
+                // 1. Add comment to the subcollection
+                const commentsColRef = collection(db, `artifacts/${appId}/public/data/posts/${currentPostId}/comments`);
+                await addDoc(commentsColRef, {
+                    content: content,
+                    authorId: userId,
+                    authorName: displayName,
+                    timestamp: serverTimestamp()
+                });
+
+                // 2. Increment comment counter on the main post (optional but good practice)
+                // NOTE: Firebase doesn't have an easy way to increment counts from client side
+                // without custom logic. We'll rely on the comment listener for now.
+
+                commentInput.value = ''; // Clear input on success
+            } catch (error) {
+                console.error("Error adding comment: ", error);
+                showCustomMessage('Error posting comment. Check console.', 'bg-red-100 text-red-700', modalMessage);
+            } finally {
+                addCommentButton.textContent = originalButtonText;
+                addCommentButton.disabled = false;
+            }
+        }
+        window.addComment = addComment; // Expose globally for onclick
+
+        // --- Verification & User Profile Management ---
+
+        /**
+        * Checks the public user profile document for verification status.
+        * @param {string} uid The Firebase Auth UID.
+        */
+        async function checkUserVerification(uid) {
+            try {
+                const userDocRef = doc(db, `artifacts/${appId}/public/data/users/${uid}`);
+                const userSnap = await getDoc(userDocRef);
+
+                if (userSnap.exists() && userSnap.data().isVerified) {
+                    // User is verified
+                    isUserVerified = true;
+                    displayName = userSnap.data().displayName;
+                    setVerificationStatus(true);
+                    onboardingDiv.classList.add('hidden');
+                    setupFeedListener(); // Start listening to the feed
+                } else {
+                    // User not verified, force onboarding
+                    isUserVerified = false;
+                    setVerificationStatus(false);
+                    handleOnboarding(uid);
+                }
+            } catch (error) {
+                console.error("Error checking verification: ", error);
+                setVerificationStatus(false, 'Error checking profile.');
+            }
+        }
+
+        /**
+        * Displays or hides the onboarding overlay and sets ID.
+        * @param {string} uid The Firebase Auth UID.
+        */
+        function handleOnboarding(uid) {
+            onboardingUserId.textContent = uid;
+            onboardingDiv.classList.remove('hidden');
+        }
+
+        /**
+        * Writes the user's display name and verification status to Firestore.
+        */
+        onboardingSetCodeButton.onclick = async () => {
+            const name = onboardingDisplayNameInput.value.trim();
+            const code = onboardingVerificationCodeInput.value.trim();
+            
+            if (name.length < 3) {
+                showCustomMessage('Display name must be at least 3 characters.', 'bg-red-100 text-red-700', onboardingMessage);
+                return;
+            }
+            if (code.length < 6) {
+                showCustomMessage('Secret code must be at least 6 characters.', 'bg-red-100 text-red-700', onboardingMessage);
+                return;
+            }
+
+            onboardingSetCodeButton.disabled = true;
+            const originalText = onboardingSetCodeButton.innerHTML;
+            onboardingSetCodeButton.innerHTML = `<i data-lucide="loader-circle" class="w-5 h-5 mr-2 inline-block animate-spin"></i> Confirming...`;
+            lucide.createIcons();
+
+            try {
+                const userDocRef = doc(db, `artifacts/${appId}/public/data/users/${userId}`);
+                await setDoc(userDocRef, {
+                    displayName: name,
+                    isVerified: true,
+                    createdAt: serverTimestamp()
+                }, { merge: true }); // Use merge: true to avoid overwriting
+
+                // Success: Update local state and UI
+                isUserVerified = true;
+                displayName = name;
+                onboardingDiv.classList.add('hidden');
+                setVerificationStatus(true);
+                setupFeedListener();
+            } catch (error) {
+                console.error("Error setting user profile: ", error);
+                showCustomMessage('Profile setup failed. Try again or check console.', 'bg-red-100 text-red-700', onboardingMessage);
+            } finally {
+                onboardingSetCodeButton.innerHTML = originalText;
+                onboardingSetCodeButton.disabled = false;
+                lucide.createIcons();
+            }
+        };
+
+        /**
+        * Updates the verification UI status and enables/disables features.
+        * @param {boolean} verified 
+        * @param {string} [message]
+        */
+        function setVerificationStatus(verified, message = null) {
+            isUserVerified = verified;
+
+            // Update Sidebar Status
+            verificationIcon.setAttribute('data-lucide', verified ? 'check-circle' : 'alert-triangle');
+            verificationIcon.className = `w-4 h-4 mr-2 transition-colors ${verified ? 'text-gem-accent' : 'text-red-500'}`;
+            verificationText.textContent = message || (verified ? 'Identity Confirmed' : 'Verification Required');
+            verificationText.className = verified ? 'text-gem-accent' : 'text-red-500';
+
+            // Toggle Post Buttons
+            const postButtons = [
+                document.getElementById('createPostHeaderBtn'),
+                document.getElementById('createPostMobileBtn'),
+                document.getElementById('postInput'),
+                document.getElementById('postTextBtn'),
+                showQrButton
+            ];
+            postButtons.forEach(btn => btn.disabled = !verified);
+            
+            // Re-create icons to ensure they update their attributes
+            lucide.createIcons();
+        }
+
+
+        // --- QR Code Generator ---
+
+        function showQrModal() {
+            openModal('qr');
+            
+            // Clear previous QR Code
+            qrcodeCanvas.innerHTML = '';
+            
+            qrCodeUserId.textContent = userId;
+            qrCodeUserName.textContent = displayName || userName;
+
+            // Data for the QR Code (User ID and Display Name)
+            const qrData = `GreenFeed ID: ${userId}, Name: ${displayName || userName}`;
+
+            // Generate QR Code (Global QRCodeJS library is available)
+            new QRCode(qrcodeCanvas, {
+                text: qrData,
+                width: 200,
+                height: 200,
+                colorDark: "#00330c", // gem-text-main
+                colorLight: "#ffffff", // White background
+                correctLevel: QRCode.CorrectLevel.H
+            });
+        }
+        window.showQrModal = showQrModal; // Expose globally
+
+        // --- Core Auth Handling ---
+
+        /**
+        * Updates UI based on the current user status.
+        * @param {object | null} user Firebase User object or null.
+        */
+        async function handleAuth(user) {
+            currentFirebaseUser = user;
+            isAuthReady = true;
+
+            if (user) {
+                userId = user.uid;
+                authOverlay.classList.add('hidden');
+                appHeader.classList.remove('hidden');
+                appMain.classList.remove('hidden');
+                signOutButton.disabled = false;
+
+                // Determine user name for display
+                if (user.isAnonymous) {
+                    userName = `Guest-${user.uid.substring(0, 4)}`;
+                } else if (user.displayName) {
+                    userName = user.displayName;
+                } else {
+                    userName = user.email || `User-${user.uid.substring(0, 4)}`;
+                }
+
+                // Set initial display fields
+                const initials = getInitials(userName);
+                document.querySelectorAll('[id$="Initials"]').forEach(el => el.textContent = initials);
+                document.getElementById('currentUserId').textContent = user.uid;
+                document.getElementById('sidebarUsername').textContent = `Welcome, ${userName}!`;
+                
+                // Check for user verification (Display Name set in public profile)
+                await checkUserVerification(user.uid);
+            } else {
+                // No user signed in
+                userId = null;
+                displayName = null;
+                isUserVerified = false;
+                appHeader.classList.add('hidden');
+                appMain.classList.add('hidden');
+                onboardingDiv.classList.add('hidden');
+                
+                if (!isSigningOutIntent) {
+                    authOverlay.classList.remove('hidden');
+                    loadingIndicator.classList.add('hidden');
+                } else {
+                    isSigningOutIntent = false;
+                }
+            }
+        }
+
+        /**
+        * Signs out the current user and shows the auth overlay.
+        */
+        async function signOutUser() {
+            isSigningOutIntent = true;
+            try {
+                await signOut(auth);
+                showCustomMessage('Successfully signed out.', 'bg-gem-bg-card text-gem-text-main', authMessage);
+            } catch (error) {
+                console.error("Sign out error: ", error);
+            }
+        }
+        window.signOutUser = signOutUser;
+
+        // --- Firebase Initialization ---
+
+        function initFirebase() {
+            try {
+                setLogLevel('debug');
+                app = initializeApp(firebaseConfig);
+                auth = getAuth(app);
+                db = getFirestore(app);
+
+                // Listen for auth state changes
+                onAuthStateChanged(auth, async (user) => {
+                    await handleAuth(user);
+                });
+
+                // Custom token sign-in (Canvas environment)
+                if (initialAuthToken) {
+                    signInWithCustomToken(auth, initialAuthToken).catch(error => {
+                        console.error("Custom token sign-in failed:", error);
+                        signInAnonymously(auth); // Fallback to anonymous
+                    });
+                } else if (!auth.currentUser) {
+                    // If no user, show auth overlay (handled by onAuthStateChanged)
+                    loadingIndicator.classList.add('hidden');
+                    authOverlay.classList.remove('hidden');
+                }
+            } catch (e) {
+                console.error("Firebase Initialization Error: ", e);
+                showCustomMessage('Fatal Error: Firebase failed to initialize.', 'bg-red-200 text-red-800', authMessage);
+            }
+        }
+
+        // --- Event Listeners & Setup ---
+
+        document.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+            setupAIPersonalities();
+            initFirebase();
+        });
+
+        // Auth Overlay Listeners
+        signInButton.onclick = async () => {
+            const email = emailInput.value;
+            const password = passwordInput.value;
+            try {
+                await signInWithEmailAndPassword(auth, email, password);
+            } catch (error) {
+                showCustomMessage(`Sign In Failed: ${error.message.substring(0, 50)}...`, 'bg-red-100 text-red-700', authMessage);
+                console.error(error);
+            }
+        };
+
+        createAccountButton.onclick = async () => {
+            const email = emailInput.value;
+            const password = passwordInput.value;
+            try {
+                await createUserWithEmailAndPassword(auth, email, password);
+            } catch (error) {
+                showCustomMessage(`Account Creation Failed: ${error.message.substring(0, 50)}...`, 'bg-red-100 text-red-700', authMessage);
+                console.error(error);
+            }
+        };
+        
+        googleSignInButton.onclick = async () => {
+            const provider = new GoogleAuthProvider();
+            try {
+                await signInWithPopup(auth, provider);
+            } catch (error) {
+                showCustomMessage(`Google Sign-In Failed: ${error.message.substring(0, 50)}...`, 'bg-red-100 text-red-700', authMessage);
+                console.error(error);
+            }
+        };
+
+        guestButton.onclick = async () => {
+            try {
+                await signInAnonymously(auth);
+            } catch (error) {
+                showCustomMessage(`Guest Sign-In Failed: ${error.message.substring(0, 50)}...`, 'bg-red-100 text-red-700', authMessage);
+                console.error(error);
+            }
+        };
+
+        // Post Textarea Listener to enable Publish button
+        postTextarea.oninput = () => {
+            if (postTextarea.value.trim().length >= 10 && isUserVerified) {
+                publishButton.disabled = false;
+            } else {
+                publishButton.disabled = true;
+            }
+        };
+
+        // Comment Input Listener (Optional, but good practice for UX)
+        commentInput.oninput = () => {
+            addCommentButton.disabled = commentInput.value.trim().length === 0 || !isUserVerified;
+        };
+    </script>
 </body>
 </html>
