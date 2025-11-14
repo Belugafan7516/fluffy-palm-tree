@@ -15,7 +15,7 @@
     <script type="module">
         // --- Firebase Core Modules ---
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getFirestore, doc, addDoc, onSnapshot, collection, query, serverTimestamp, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, doc, addDoc, onSnapshot, collection, query, serverTimestamp, setLogLevel, updateDoc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         // --- Firebase Auth Modules (GitHub removed) ---
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, signOut, createUserWithEmailAndPassword, signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         
@@ -31,6 +31,9 @@
         window.serverTimestamp = serverTimestamp;
         window.signOut = signOut;
         window.setLogLevel = setLogLevel;
+        window.updateDoc = updateDoc; // NEW
+        window.setDoc = setDoc;     // NEW
+        window.getDoc = getDoc;     // NEW
         
         // Expose Email/Password auth functions
         window.createUserWithEmailAndPassword = createUserWithEmailAndPassword;
@@ -118,7 +121,7 @@
                     Create Account
                 </button>
                 
-                <!-- GOOGLE BUTTON (Kept) -->
+                <!-- GOOGLE BUTTON -->
                 <button id="googleSignInButton" class="w-full py-3 px-4 bg-white border border-gray-300 text-gray-700 rounded-lg font-semibold hover:bg-gray-100 transition-colors duration-200 flex items-center justify-center">
                     <svg class="w-5 h-5 mr-3" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg"><path fill="#FFC107" d="M43.611 20.083H42V20H24v8h11.303c-1.68 5.473-6.84 9.473-13.303 9.473-7.72 0-14-6.28-14-14s6.28-14 14-14c3.14 0 6.02 1.08 8.24 2.86l6.51-6.51C34.63 2.36 29.5 0 24 0 10.74 0 0 10.74 0 24s10.74 24 24 24c12.55 0 22.7-9.59 23.99-21.92l-1.38-1.997z"/><path fill="#FF3D00" d="M6.306 14.691c2.16-5.85 7.85-9.691 14.694-9.691 3.14 0 6.02 1.08 8.24 2.86l6.51-6.51C34.63 2.36 29.5 0 24 0 10.74 0 0 10.74 0 24s10.74 24 24 24c12.55 0 22.7-9.59 23.99-21.92l-1.38-1.997z"/><path fill="#4CAF50" d="M24 48c13.26 0 24-10.74 24-24 0-1.74-.18-3.43-.51-5.06l-6.51 6.51C40.92 21.08 42 22.46 42 24c0 4.08-1.68 7.74-4.38 10.38l6.38 6.38C46.86 37.07 48 30.73 48 24c0-3.32-.67-6.47-1.85-9.35l-6.51 6.51c.32 1.15.51 2.36.51 3.63 0 7.72-6.28 14-14 14-4.93 0-9.27-2.58-11.83-6.48l-6.66 6.66C8.86 45.47 15.93 48 24 48z"/><path fill="#1976D2" d="M43.611 20.083H42V20H24v8h11.303c-1.68 5.473-6.84 9.473-13.303 9.473-7.72 0-14-6.28-14-14s6.28-14 14-14c3.14 0 6.02 1.08 8.24 2.86l6.51-6.51C34.63 2.36 29.5 0 24 0 10.74 0 0 10.74 0 24s10.74 24 24 24c12.55 0 22.7-9.59 23.99-21.92l-1.38-1.997z"/></svg>
                     Sign In with Google
@@ -178,7 +181,7 @@
             <!-- QR Code View -->
             <div id="qrView" class="hidden text-center">
                 <h2 class="text-xl font-bold text-gem-accent mb-4">Verify Your Account (QR Code)</h2>
-                <p class="text-sm text-gray-600 mb-4">Scan this code to verify your GreenFeed ID via the external URL: <span class="font-bold text-gem-accent">greenfeed.eugeneevons.com?verify=[ID]</span></p>
+                <p class="text-sm text-gray-600 mb-4">Scan this code to view your GreenFeed ID via the external URL: <span class="font-bold text-gem-accent">greenfeed.eugeneevons.com?id=[ID]</span></p>
                 
                 <div id="qrcodeCanvas" class="p-4 bg-white border border-gray-200 inline-block rounded-xl shadow-inner">
                     <!-- QR Code will be drawn here -->
@@ -241,12 +244,23 @@
                                 </p>
                             </div>
                         </div>
-                        <a href="#" class="block text-gem-accent hover:text-gem-primary text-sm font-medium">View Profile</a>
                         
-                        <!-- QR CODE BUTTON -->
+                        <!-- NEW: Verification Status -->
+                        <div class="flex items-center text-sm font-semibold mt-2 border-t border-gem-bg-global pt-3" id="verificationStatusContainer">
+                            <i data-lucide="loader-circle" class="w-4 h-4 mr-2 text-gray-500 animate-spin" id="verificationIcon"></i>
+                            <span class="text-gray-500" id="verificationText">Checking status...</span>
+                        </div>
+                        
+                        <!-- QR CODE BUTTON (to show ID) -->
                         <button onclick="showQrModal()" class="w-full mt-3 flex items-center justify-center px-3 py-2 bg-gem-bg-global text-gem-accent rounded-lg font-semibold hover:bg-gem-light transition-colors duration-200 text-sm disabled:opacity-50" id="showQrButton" disabled>
-                            <i data-lucide="scan-line" class="w-4 h-4 mr-2"></i> Show Verification QR
+                            <i data-lucide="scan-line" class="w-4 h-4 mr-2"></i> Show ID QR Code
                         </button>
+                        
+                        <!-- NEW: Toggle Verification Button (Simulates Verification Fix) -->
+                         <button onclick="toggleVerificationStatus()" class="w-full mt-2 flex items-center justify-center px-3 py-2 bg-gem-primary text-white rounded-lg font-semibold hover:bg-gem-accent transition-colors duration-200 text-sm disabled:opacity-50" id="toggleVerifyButton" disabled>
+                            <i data-lucide="shield" class="w-4 h-4 mr-2"></i> Toggle Verification Status
+                        </button>
+
 
                         <!-- Sign Out Button -->
                         <button onclick="signOutUser()" class="w-full mt-2 flex items-center justify-center px-3 py-2 bg-red-100 text-red-600 rounded-lg font-semibold hover:bg-red-200 transition-colors duration-200 text-sm" id="signOutButton" disabled>
@@ -348,6 +362,7 @@
         let userName = null;
         let isAuthReady = false;
         let isSigningOutIntent = false; // Flag to prevent re-auth on intentional sign out
+        let isUserVerified = false; // NEW: Track verification status
         
         // --- AI Personalities Definition (Unused in JS logic, but needed for modal structure) ---
         const aiPersonalities = {
@@ -374,6 +389,9 @@
         const qrCodeUserId = document.getElementById('qrCodeUserId');
         const showQrButton = document.getElementById('showQrButton');
         const signOutButton = document.getElementById('signOutButton');
+        const toggleVerifyButton = document.getElementById('toggleVerifyButton'); // NEW
+        const verificationIcon = document.getElementById('verificationIcon'); // NEW
+        const verificationText = document.getElementById('verificationText'); // NEW
 
         // NEW: Auth Overlay UI references
         const authOverlay = document.getElementById('authOverlay');
@@ -400,6 +418,10 @@
             postTextBtn: document.getElementById('postTextBtn'),
         };
         
+        // --- Firestore Reference Helper ---
+        const userProfileDocRef = (uid) => doc(db, `artifacts/${appId}/users/${uid}/metadata/profile`);
+
+
         // --- Helper Functions ---
 
         // Function to get initials from a name
@@ -474,6 +496,8 @@
                 postView.classList.remove('hidden');
                 qrView.classList.add('hidden');
             } else if (view === 'qr') {
+                postTextarea.value = ''; // Clear textarea if switching to QR
+                publishButton.disabled = true;
                 postView.classList.add('hidden');
                 qrView.classList.remove('hidden');
             }
@@ -584,9 +608,98 @@
 
         // --- Firebase Functions ---
         /**
-         * Converts base64 encoded PCM audio data to a playable WAV Blob.
-         * The API returns Signed 16-bit PCM at a sample rate specified in the mimeType.
+         * Updates the UI to reflect the current verification status.
          */
+        function updateVerificationUI(isVerified) {
+            isUserVerified = isVerified;
+            
+            // Update badge appearance
+            verificationIcon.setAttribute('data-lucide', isVerified ? 'check-circle' : 'x-circle');
+            verificationIcon.classList.remove('text-red-500', 'text-green-500', 'animate-spin');
+            verificationText.classList.remove('text-red-500', 'text-green-500');
+            
+            if (isVerified) {
+                verificationIcon.classList.add('text-green-500');
+                verificationText.classList.add('text-green-500');
+                verificationText.textContent = 'Verified Account';
+                toggleVerifyButton.textContent = 'Unverify Status (for testing)';
+                toggleVerifyButton.classList.remove('bg-gem-primary');
+                toggleVerifyButton.classList.add('bg-red-500', 'hover:bg-red-700');
+            } else {
+                verificationIcon.classList.add('text-red-500');
+                verificationText.classList.add('text-red-500');
+                verificationText.textContent = 'Unverified';
+                toggleVerifyButton.textContent = 'Verify Status (for testing)';
+                toggleVerifyButton.classList.remove('bg-red-500', 'hover:bg-red-700');
+                toggleVerifyButton.classList.add('bg-gem-primary');
+            }
+            lucide.createIcons(); // Re-render icons
+        }
+
+        /**
+         * Toggles the user's verification status in Firestore.
+         */
+        async function toggleVerificationStatus() {
+            if (!db || !userId) return;
+
+            toggleVerifyButton.disabled = true;
+            showMessage(`Toggling status to ${isUserVerified ? 'Unverified' : 'Verified'}...`, true);
+
+            try {
+                const profileRef = userProfileDocRef(userId);
+                const newStatus = !isUserVerified;
+
+                await setDoc(profileRef, { verified: newStatus }, { merge: true });
+                // The onSnapshot listener in loadUserProfile will update the UI.
+
+                showMessage(`Status successfully updated to ${newStatus ? 'Verified' : 'Unverified'}.`, true);
+
+            } catch (error) {
+                console.error("Error toggling verification status:", error);
+                showMessage(`Failed to toggle status: ${error.message}`, false);
+            } finally {
+                setTimeout(() => hideModalMessage(), 2000);
+                toggleVerifyButton.disabled = false;
+            }
+        }
+
+        /**
+         * Sets up a real-time listener for the user's private profile document.
+         */
+        function loadUserProfile() {
+            if (!db || !userId) return;
+
+            const profileRef = userProfileDocRef(userId);
+            
+            // Show initial loading state
+            verificationIcon.setAttribute('data-lucide', 'loader-circle');
+            verificationIcon.classList.add('animate-spin', 'text-gray-500');
+            verificationText.textContent = 'Checking status...';
+            lucide.createIcons();
+
+            onSnapshot(profileRef, (docSnap) => {
+                let verified = false;
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    verified = !!data.verified; // Ensure it's a boolean
+                } else {
+                    // Document doesn't exist, treat as unverified and create a minimal document
+                    // This is optional but ensures the document exists for future updates
+                    setDoc(profileRef, { verified: false, createdAt: serverTimestamp() }, { merge: true }).catch(console.error);
+                }
+                updateVerificationUI(verified);
+            }, (error) => {
+                console.error("Error fetching user profile:", error);
+                verificationIcon.setAttribute('data-lucide', 'alert-triangle');
+                verificationIcon.classList.remove('animate-spin');
+                verificationIcon.classList.add('text-red-500');
+                verificationText.textContent = 'Status Error';
+                lucide.createIcons();
+            });
+        }
+
+
+        // Converts base64 encoded PCM audio data to a playable WAV Blob.
         function pcmToWav(pcm16, sampleRate) {
             const numChannels = 1;
             const bytesPerSample = 2; // 16-bit PCM
@@ -667,6 +780,7 @@
             profileElements.createPostMobileBtn.disabled = true;
             showQrButton.disabled = true;
             signOutButton.disabled = true;
+            toggleVerifyButton.disabled = true; // NEW
             profileElements.postInput.disabled = true;
             profileElements.postTextBtn.disabled = true;
             
@@ -678,6 +792,12 @@
             profileElements.sidebarUsername.textContent = "Guest";
             profileElements.currentUserId.textContent = "N/A";
             profileElements.postInput.placeholder = `Sign in to post.`;
+            
+            // Reset verification status UI
+            updateVerificationUI(false);
+            verificationIcon.classList.remove('animate-spin');
+            verificationIcon.setAttribute('data-lucide', 'x-circle');
+            lucide.createIcons();
         }
 
         /**
@@ -696,6 +816,7 @@
             profileElements.createPostMobileBtn.disabled = false;
             showQrButton.disabled = false;
             signOutButton.disabled = false;
+            toggleVerifyButton.disabled = false; // NEW
             profileElements.postInput.disabled = false;
             profileElements.postTextBtn.disabled = false;
 
@@ -707,6 +828,9 @@
             appMain.classList.remove('hidden');
 
             lucide.createIcons();
+            
+            // NEW: Load user profile (which handles the verification listener)
+            loadUserProfile(); 
         }
 
         // Shows the QR code modal
@@ -719,8 +843,8 @@
             // Clear previous QR code
             qrcodeCanvas.innerHTML = '';
             
-            // Generate the QR code data string
-            const qrData = `greenfeed.eugeneevons.com?verify=${userId}`;
+            // Generate the QR code data string (Changed to show ID, not verify)
+            const qrData = `greenfeed.eugeneevons.com?id=${userId}`;
             
             // Draw the QR code
             new QRCode(qrcodeCanvas, {
@@ -845,7 +969,7 @@
                     authorName: userName, 
                     content: content,
                     timestamp: serverTimestamp(),
-                    // Add other fields as needed (e.g., likes: 0)
+                    isVerified: isUserVerified, // NEW: Include verification status on post
                 };
 
                 const postsCollection = collection(db, `artifacts/${appId}/public/data/posts`);
@@ -964,6 +1088,13 @@
                 postElement.className = 'bg-white p-5 rounded-xl shadow-lg border border-gem-bg-card';
                 
                 const initials = getInitials(post.authorName || 'Anon');
+                const isPostVerified = post.isVerified === true; // Check if the post author was verified
+                
+                const verifiedBadge = isPostVerified ? `
+                    <span class="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                        <i data-lucide="check-circle" class="w-3 h-3 mr-1"></i> Verified
+                    </span>` : '';
+
 
                 postElement.innerHTML = `
                     <div class="flex items-start space-x-3 mb-4">
@@ -971,7 +1102,10 @@
                             ${initials}
                         </div>
                         <div>
-                            <p class="font-bold text-gem-text-main">${post.authorName || 'Anonymous'}</p>
+                            <p class="font-bold text-gem-text-main flex items-center">
+                                ${post.authorName || 'Anonymous'}
+                                ${verifiedBadge}
+                            </p>
                             <p class="text-xs text-gray-500">${timeStr} &bullet; ID: ${post.authorId.substring(0, 8)}...</p>
                         </div>
                     </div>
@@ -1038,6 +1172,9 @@
             });
             publishButton.addEventListener('click', publishPost);
             populatePersonalitySelector();
+            
+            // NEW: Add listener for the new toggle button
+            toggleVerifyButton.addEventListener('click', toggleVerificationStatus);
 
             // 3. Initialize Firebase and Authentication
             initFirebaseAndAuth();
