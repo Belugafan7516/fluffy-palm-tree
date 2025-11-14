@@ -185,16 +185,20 @@
                 </div>
             </div>
 
-            <!-- QR Code View -->
+            <!-- QR Code View - UPDATED FOR IDENTITY/AUTHENTICITY -->
             <div id="qrView" class="hidden text-center">
-                <h2 class="text-xl font-bold text-gem-accent mb-4">Verify Your Account (QR Code)</h2>
-                <p class="text-sm text-gray-600 mb-4">Scan this code to view your GreenFeed ID via the external URL: <span class="font-bold text-gem-accent">greenfeed.eugeneevons.com?id=[ID]</span></p>
+                <h2 class="text-xl font-bold text-gem-accent mb-4">Confirm Your Identity / Get Connected</h2>
+                <p class="text-sm text-gray-600 mb-4">Scan this code to let others confirm your unique GreenFeed ID and identity.</p>
                 
-                <div id="qrcodeCanvas" class="p-4 bg-white border border-gray-200 inline-block rounded-xl shadow-inner">
+                <!-- ADDED STYLING TO MAKE THE FRAME POP -->
+                <div id="qrcodeCanvas" class="p-5 bg-white border-4 border-gem-accent inline-block rounded-xl shadow-2xl transition-all duration-300 transform hover:scale-[1.02]">
                     <!-- QR Code will be drawn here -->
                 </div>
                 
-                <p class="text-xs text-gray-500 mt-4">User ID: <span id="qrCodeUserId" class="font-mono text-gem-text-main text-[10px] break-all"></span></p>
+                <!-- NEW: Include User Name -->
+                <p class="text-xs text-gray-500 mt-4 font-semibold">User: <span id="qrCodeUserName" class="text-gem-text-main"></span></p>
+
+                <p class="text-xs text-gray-500 mt-1">User ID: <span id="qrCodeUserId" class="font-mono text-gem-text-main text-[10px] break-all"></span></p>
 
                 <button onclick="closeModal()" class="mt-6 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors duration-200 font-semibold">Close</button>
             </div>
@@ -240,7 +244,7 @@
                     <!-- Profile Card -->
                     <div class="p-4 rounded-xl bg-white shadow-lg border border-gem-bg-card">
                         <div class="flex items-center space-x-3 mb-4">
-                            <div class="w-12 h-12 bg-gem-primary rounded-full flex items-center justify-center text-lg font-bold text-gem-text-secondary" id="sidebarProfileInitials">
+                            <div class="w-12 h-12 bg-gem-primary rounded-full flex-shrink-0 flex items-center justify-center text-lg font-bold text-gem-text-secondary" id="sidebarProfileInitials">
                                 ...
                             </div>
                             <div>
@@ -394,6 +398,7 @@
         const loadingIndicator = document.getElementById('loadingIndicator');
         const qrcodeCanvas = document.getElementById('qrcodeCanvas');
         const qrCodeUserId = document.getElementById('qrCodeUserId');
+        const qrCodeUserName = document.getElementById('qrCodeUserName'); // NEW
         const showQrButton = document.getElementById('showQrButton');
         const signOutButton = document.getElementById('signOutButton');
         const toggleVerifyButton = document.getElementById('toggleVerifyButton'); // NEW
@@ -863,6 +868,8 @@
                 correctLevel : QRCode.CorrectLevel.H
             });
 
+            // Set the user name and ID in the modal
+            qrCodeUserName.textContent = userName; // Set the user's friendly name
             qrCodeUserId.textContent = userId;
             openModal('qr');
         }
