@@ -1,408 +1,323 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Green Feed - Social Media (Firebase + AI)</title>
-    <!-- Load Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Load Lucide Icons -->
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <!-- Load QR Code Generator Library -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-    <!-- Firebase SDK Imports (MUST be defined before script block) -->
-    <script type="module">
-        // --- Firebase Core Modules ---
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        // CRITICAL FIX: Ensure all necessary Firestore functions are imported and exposed
-        import { 
-            getFirestore, 
-            doc, 
-            addDoc, 
-            onSnapshot, 
-            collection, 
-            query, 
-            serverTimestamp, 
-            setLogLevel, 
-            updateDoc, 
-            setDoc, 
-            getDoc,
-            arrayUnion,      // NEW: For adding to the likes array
-            arrayRemove,     // NEW: For removing from the likes array
-            deleteDoc,       // NEW: For deleting posts
-            orderBy          // NEW: For ordering comments (optional, but good practice)
-        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-        // --- Firebase Auth Modules ---
-        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, signOut, createUserWithEmailAndPassword, signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        
-
-        // Global Firebase variables accessible within the main script
-        window.initializeApp = initializeApp;
-        window.getAuth = getAuth;
-        window.signInAnonymously = signInAnonymously;
-        window.signInWithCustomToken = signInWithCustomToken;
-        window.onAuthStateChanged = onAuthStateChanged;
-        window.getFirestore = getFirestore;
-        window.doc = doc;
-        window.serverTimestamp = serverTimestamp;
-        window.signOut = signOut;
-        window.setLogLevel = setLogLevel;
-        window.updateDoc = updateDoc;
-        window.setDoc = setDoc;
-        window.getDoc = getDoc;
-        
-        // --- CRITICAL FIX: Expose collection and query and array operations ---
-        window.collection = collection;
-        window.query = query;           
-        window.onSnapshot = onSnapshot; 
-        window.addDoc = addDoc;
-        window.arrayUnion = arrayUnion; // NEW
-        window.arrayRemove = arrayRemove; // NEW
-        window.deleteDoc = deleteDoc; // NEW
-        window.orderBy = orderBy; // NEW
-        
-        // Expose Auth functions
-        window.createUserWithEmailAndPassword = createUserWithEmailAndPassword;
-        window.signInWithEmailAndPassword = signInWithEmailAndPassword;
-        window.GoogleAuthProvider = GoogleAuthProvider;
-        window.signInWithPopup = signInWithPopup;
-    </script>
-    
-    <style>
-        /* Custom Colors based on the user's palette */
-        :root {
-            --palette-color-1: #18e767; /* Primary Green */
-            --palette-color-2: #62ea9d; /* Light Accent */
-            --palette-color-3: #0ca640; /* Darker Primary */
-            --palette-color-4: #aaeecb; /* Very Light Green */
-            --palette-color-5: #05611f; /* Dark Text/Hover */
-            --palette-color-6: #d7f4e6; /* Card Background */
-            --palette-color-7: #00330c; /* Main Text */
-            --palette-color-8: #ecf9f3; /* Global Background */
-        }
-
-        /* Set up Tailwind configuration to use the custom CSS variables */
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
-                    },
-                    colors: {
-                        'gem-primary': 'var(--palette-color-1)',
-                        'gem-accent': 'var(--palette-color-3)',
-                        'gem-light': 'var(--palette-color-2)',
-                        'gem-bg-global': 'var(--palette-color-8)',
-                        'gem-bg-card': 'var(--palette-color-6)',
-                        'gem-text-main': 'var(--palette-color-7)',
-                        'gem-text-secondary': 'var(--palette-color-5)',
-                    },
-                }
-            }
-        }
-
-        /* Basic global styles */
-        body {
-            background-color: var(--palette-color-8);
-            color: var(--palette-color-7);
-            min-height: 100vh;
-        }
-        /* Custom scrollbar for a nicer look */
-        ::-webkit-scrollbar {
-            width: 8px;
-        }
-        ::-webkit-scrollbar-thumb {
-            background-color: var(--palette-color-2);
-            border-radius: 10px;
-        }
-        /* Hide number spinners */
-        input[type=number]::-webkit-outer-spin-button,
-        input[type=number]::-webkit-inner-spin-button {
-            -webkit-appearance: none;
-            margin: 0;
-        }
-        input[type=number] {
-            -moz-appearance: textfield;
-        }
-    </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GreenFeed - Client TTL</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f7f9fb;
+        }
+    </style>
 </head>
-<body class="font-sans">
+<body>
+    <div class="min-h-screen p-4 sm:p-8">
+        <div class="max-w-3xl mx-auto">
+            <header class="mb-8">
+                <h1 class="text-4xl font-extrabold text-green-700">GreenFeed 🌱</h1>
+                <p class="text-gray-500 mt-1">Share something positive today.</p>
+                
+                <div class="text-sm text-indigo-700 mt-3 p-3 bg-indigo-100 rounded-lg shadow-inner flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 mr-2 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                    **TTL Active:** This app automatically deletes posts older than **30 days** on load. Check the console for cleanup status!
+                </div>
+                <p id="userIdDisplay" class="text-xs text-gray-400 mt-2"></p>
+            </header>
 
-    <!-- Authentication Overlay (Hidden after sign-in) -->
-    <div id="authOverlay" class="fixed inset-0 z-50 flex items-center justify-center bg-gem-bg-global p-4">
-        <div class="bg-white w-full max-w-sm p-8 rounded-xl shadow-2xl border-t-4 border-gem-primary">
-            <h2 class="text-3xl font-extrabold text-gem-primary text-center mb-6">Welcome to GreenFeed</h2>
-            
-            <div id="authMessage" class="hidden p-3 mb-4 text-sm rounded-lg bg-red-100 text-red-700"></div>
+            <div id="loadingIndicator" class="flex justify-center items-center h-20 text-indigo-600 font-semibold text-lg">
+                <svg class="animate-spin h-5 w-5 mr-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+                Initializing Feed...
+            </div>
 
-            <div class="space-y-4">
-                <div>
-                    <label for="emailInput" class="block text-sm font-medium text-gem-text-main mb-1">Email</label>
-                    <input type="email" id="emailInput" class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gem-primary" placeholder="you@example.com">
-                </div>
-                <div>
-                    <label for="passwordInput" class="block text-sm font-medium text-gem-text-main mb-1">Password</label>
-                    <input type="password" id="passwordInput" class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gem-primary" placeholder="••••••••">
-                </div>
-            </div>
+            <div id="mainContent" class="hidden">
+                <!-- Input Form -->
+                <form id="postForm" class="mb-8 bg-white p-6 rounded-xl shadow-lg border border-gray-100">
+                    <textarea
+                        id="newItemText"
+                        placeholder="What's your positive thought for the day?"
+                        rows="3"
+                        class="w-full p-3 border border-gray-300 rounded-lg focus:ring-green-500 focus:border-green-500 transition-shadow resize-none"
+                        required
+                    ></textarea>
+                    <button
+                        type="submit"
+                        id="postBtn"
+                        class="mt-3 w-full flex items-center justify-center px-6 py-2 bg-green-600 text-white font-semibold rounded-lg shadow-md hover:bg-green-700 transition duration-150 disabled:bg-green-300"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+                        Post to Feed
+                    </button>
+                </form>
 
-            <div class="flex flex-col space-y-3 mt-6">
-                <button id="signInButton" class="w-full py-3 px-4 bg-gem-primary text-gem-text-secondary rounded-lg font-bold hover:bg-gem-accent transition-colors duration-200">
-                    Sign In
-                </button>
-                <button id="createAccountButton" class="w-full py-3 px-4 bg-gem-light text-gem-text-secondary rounded-lg font-semibold hover:bg-gem-primary transition-colors duration-200">
-                    Create Account
-                </button>
-                
-                <!-- GOOGLE BUTTON -->
-                <button id="googleSignInButton" class="w-full py-3 px-4 bg-white border border-gray-300 text-gray-700 rounded-lg font-semibold hover:bg-gray-100 transition-colors duration-200 flex items-center justify-center">
-                    <svg class="w-5 h-5 mr-3" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg"><path fill="#FFC107" d="M43.611 20.083H42V20H24v8h11.303c-1.68 5.473-6.84 9.473-13.303 9.473-7.72 0-14-6.28-14-14s6.28-14 14-14c3.14 0 6.02 1.08 8.24 2.86l6.51-6.51C34.63 2.36 29.5 0 24 0 10.74 0 0 10.74 0 24s10.74 24 24 24c12.55 0 22.7-9.59 23.99-21.92l-1.38-1.997z"/><path fill="#FF3D00" d="M6.306 14.691c2.16-5.85 7.85-9.691 14.694-9.691 3.14 0 6.02 1.08 8.24 2.86l6.51-6.51C34.63 2.36 29.5 0 24 0 10.74 0 0 10.74 0 24s10.74 24 24 24c12.55 0 22.7-9.59 23.99-21.92l-1.38-1.997z"/><path fill="#4CAF50" d="M24 48c13.26 0 24-10.74 24-24 0-1.74-.18-3.43-.51-5.06l-6.51 6.51C40.92 21.08 42 22.46 42 24c0 4.08-1.68 7.74-4.38 10.38l6.38 6.38C46.86 37.07 48 30.73 48 24c0-3.32-.67-6.47-1.85-9.35l-6.51 6.51c.32 1.15.51 2.36.51 3.63 0 7.72-6.28 14-14 14-4.93 0-9.27-2.58-11.83-6.48l-6.66 6.66C8.86 45.47 15.93 48 24 48z"/><path fill="#1976D2" d="M43.611 20.083H42V20H24v8h11.303c-1.68 5.473-6.84 9.473-13.303 9.473-7.72 0-14-6.28-14-14s6.28-14 14-14c3.14 0 6.02 1.08 8.24 2.86l6.51-6.51C34.63 2.36 29.5 0 24 0 10.74 0 0 10.74 0 24s10.74 24 24 24c12.55 0 22.7-9.59 23.99-21.92l-1.38-1.997z"/></svg>
-                    Sign In with Google
-                </button>
-            </div>
+                <!-- Feed List -->
+                <h2 class="text-2xl font-bold text-gray-700 mb-4 border-b pb-2">Feed History (<span id="feedCount">0</span> Items)</h2>
+                
+                <div id="feedList" class="space-y-4">
+                    <p class="text-gray-500 p-4 text-center border-dashed border-2 rounded-xl">
+                        The feed is empty. Post the first item!
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
 
-            <div class="relative my-6">
-                <div class="absolute inset-0 flex items-center">
-                    <div class="w-full border-t border-gray-300"></div>
-                </div>
-                <div class="relative flex justify-center text-sm">
-                    <span class="px-2 bg-white text-gray-500">or</span>
-                </div>
-            </div>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { 
+            getFirestore, collection, onSnapshot, query, where, 
+            addDoc, writeBatch, getDocs, doc
+        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-            <button id="guestButton" class="w-full py-3 px-4 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300 transition-colors duration-200">
-                Continue as Guest
-            </button>
-        </div>
-    </div>
-    <!-- End of Authentication Overlay -->
-    
-    <!-- ONBOARDING OVERLAY (Hidden initially, shown if signed in but not verified) -->
-    <div id="onboardingDiv" class="hidden fixed inset-0 z-40 flex items-center justify-center bg-gem-bg-global p-4">
-        <!-- 
-            MOBILE FIX: Added 'sm:max-w-2xl'
-            Removed 'max-w-2xl' and replaced it with 'sm:max-w-2xl'.
-            This makes the card 'w-full' on mobile and 'max-w-2xl' on screens 'sm' (640px) and up.
-        -->
-        <div class="bg-white w-full sm:max-w-2xl p-8 rounded-xl shadow-2xl border-t-4 border-gem-accent text-center">
-            <i data-lucide="shield-check" class="w-12 h-12 text-gem-accent mx-auto mb-4"></i>
-            <h2 class="text-3xl font-extrabold text-gem-text-main mb-2">Secure Your Identity on GreenFeed</h2>
-            <p class="text-lg text-gray-600 mb-6">
-                To ensure trust and accountability, please set a permanent, verified identity.
-            </p>
-            
-            <div class="p-4 bg-gem-bg-card rounded-lg mb-6 text-left">
-                <p class="text-sm font-medium text-gray-500 mb-2">Your current temporary ID:</p>
-                <p id="onboardingUserId" class="font-mono text-gem-accent text-sm break-all">Loading...</p>
-            </div>
-            
-            <div class="space-y-4 text-left">
-                <!-- 1. Display Name Input -->
-                <div>
-                    <label for="onboardingDisplayNameInput" class="block text-sm font-bold text-gem-text-main mb-1">1. Public Display Name:</label>
-                    <input type="text" id="onboardingDisplayNameInput" class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gem-primary text-gem-text-main" placeholder="e.g., The Real John Doe">
-                    <p class="text-xs text-gray-500 mt-1">This name will be permanently displayed next to your posts.</p>
-                </div>
+        // --- Configuration & Global State ---
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+        
+        const TTL_DAYS = 30;
+        const COLLECTION_NAME = 'green_feed_items';
 
-                <!-- 2. Secret Code Input -->
-                <div>
-                    <label for="onboardingVerificationCodeInput" class="block text-sm font-bold text-gem-text-main mb-1">2. 6-Digit PIN (Number):</label>
-                    <input type="number" id="onboardingVerificationCodeInput" maxlength="6" inputmode="numeric" class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 text-gem-text-main text-center text-xl tracking-widest" placeholder="••••••">
-                    <p class="text-xs text-gray-500 mt-1">This PIN will be used for future identity checks. (Required for full posting access).</p>
-                </div>
-                
-                <div id="onboardingMessage" class="hidden p-3 text-sm rounded-lg text-gem-text-secondary bg-red-100 mt-4"></div>
-            </div>
+        let app;
+        let db;
+        let auth;
+        let userId = null;
+        let isAuthReady = false;
 
-            <button id="onboardingSetCodeButton" class="w-full mt-6 py-3 px-4 bg-gem-primary text-gem-text-secondary rounded-lg font-bold text-lg shadow-xl hover:bg-gem-accent transition-colors duration-200 disabled:opacity-50">
-                <i data-lucide="lock" class="w-5 h-5 mr-2 inline-block"></i> Confirm Identity & Unlock Feed
-            </button>
-        </div>
-    </div>
-    <!-- END ONBOARDING OVERLAY -->
+        // --- DOM Elements ---
+        const loadingIndicator = document.getElementById('loadingIndicator');
+        const mainContent = document.getElementById('mainContent');
+        const userIdDisplay = document.getElementById('userIdDisplay');
+        const postForm = document.getElementById('postForm');
+        const newItemText = document.getElementById('newItemText');
+        const postBtn = document.getElementById('postBtn');
+        const feedList = document.getElementById('feedList');
+        const feedCount = document.getElementById('feedCount');
+
+        // --- Utility Functions ---
+
+        /** Determines the correct private Firestore path. */
+        function getCollectionPath() {
+            if (!userId) {
+                console.error("User ID is not available.");
+                return null;
+            }
+            // Private path: /artifacts/{appId}/users/{userId}/collectionName
+            return `artifacts/${appId}/users/${userId}/${COLLECTION_NAME}`;
+        }
+
+        /** Formats a timestamp (ms) into a readable date string. */
+        function formatTimestamp(ms) {
+            return new Date(ms).toLocaleString();
+        }
+
+        // --- Core Firestore Functions ---
+
+        /**
+         * Cleans up documents older than TTL_DAYS using a batch write.
+         */
+        async function checkAndDeleteOldData() {
+            if (!isAuthReady || !userId) return;
+
+            console.log("--- GreenFeed TTL Check Initiated ---");
+
+            // Calculate the cutoff time (30 days ago in milliseconds)
+            const cutoffTime = Date.now() - (TTL_DAYS * 24 * 60 * 60 * 1000);
+            
+            const dataPath = getCollectionPath();
+            if (!dataPath) return;
+
+            // 1. Query for items to be deleted
+            const q = query(
+                collection(db, dataPath),
+                where('createdAt', '<', cutoffTime)
+            );
+
+            try {
+                const snapshot = await getDocs(q);
+                
+                if (snapshot.empty) {
+                    console.log(`✅ TTL: No items found older than ${TTL_DAYS} days. Feed is clean.`);
+                    return;
+                }
+
+                // 2. Prepare batch deletion
+                const batch = writeBatch(db);
+                const deletedIds = [];
+
+                snapshot.forEach((docSnap) => {
+                    batch.delete(docSnap.ref);
+                    deletedIds.push(docSnap.id);
+                });
+
+                // 3. Commit the deletion
+                await batch.commit();
+                console.log(`🔥 TTL Cleanup Success: Deleted ${snapshot.size} item(s) older than ${TTL_DAYS} days.`);
+            } catch (error) {
+                console.error("❌ Error during client-side TTL cleanup:", error);
+            }
+        }
+
+        /**
+         * Adds a new feed item to Firestore.
+         * @param {number} timestamp - The creation timestamp in milliseconds.
+         */
+        async function addFeedItem(timestamp) {
+            const text = newItemText.value.trim();
+            if (!text) return;
+
+            const dataPath = getCollectionPath();
+            if (!dataPath) return;
+
+            postBtn.disabled = true;
+
+            try {
+                await addDoc(collection(db, dataPath), {
+                    text: text,
+                    createdAt: timestamp,
+                });
+                newItemText.value = '';
+            } catch (error) {
+                console.error("Error adding document:", error);
+            } finally {
+                postBtn.disabled = false;
+            }
+        }
+
+        /**
+         * Renders the feed items based on the data array.
+         * @param {Array} items - The list of feed documents.
+         */
+        function renderFeedItems(items) {
+            feedCount.textContent = items.length;
+            feedList.innerHTML = '';
+
+            if (items.length === 0) {
+                feedList.innerHTML = `
+                    <p class="text-gray-500 p-4 text-center border-dashed border-2 rounded-xl">
+                        The feed is empty. Post the first item!
+                    </p>`;
+                return;
+            }
+
+            // Sort by newest first
+            items.sort((a, b) => b.createdAt - a.createdAt).forEach(item => {
+                const li = document.createElement('div');
+                const isOld = (Date.now() - item.createdAt) > (TTL_DAYS * 24 * 60 * 60 * 1000);
+                
+                let statusIcon = isOld 
+                    ? '<svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3 mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>'
+                    : '<svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3 mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>';
+
+                let statusBadge = isOld
+                    ? `<span class="flex items-center text-xs font-semibold px-2 py-1 rounded-full bg-red-100 text-red-600">${statusIcon} OLD (Check TTL)</span>`
+                    : `<span class="flex items-center text-xs font-semibold px-2 py-1 rounded-full bg-green-100 text-green-600">${statusIcon} Active Item</span>`;
 
 
-    <!-- Post/QR/Comments Modal (Verification view removed from modal) -->
-    <div id="appModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 transition-opacity duration-300 p-4">
-        <!-- 
-            MOBILE FIX: Added 'sm:max-w-lg'
-            Removed 'max-w-lg' and replaced it with 'sm:max-w-lg'.
-            This makes the card 'w-full' on mobile and 'max-w-lg' on screens 'sm' (640px) and up.
-        -->
-        <div class="bg-white p-6 md:p-8 rounded-xl shadow-2xl w-full sm:max-w-lg transition-transform duration-300 transform scale-95 opacity-0" id="modalContent">
-            
-            <!-- Post Creation View -->
-            <div id="postView" class="hidden">
-                <h2 class="text-xl font-bold text-gem-accent mb-4">Create New Post</h2>
-                
-                <!-- AI Personality Selector -->
-                <div class="mb-4">
-                    <label for="aiPersonalitySelect" class="block text-sm font-medium text-gray-700 mb-1">AI Personality:</label>
-                    <select id="aiPersonalitySelect" class="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gem-primary text-gem-text-main bg-white">
-                        <!-- Options populated by JS -->
-                    </select>
-                </div>
+                li.className = `p-4 rounded-xl shadow-md transition-all duration-300 ${isOld ? 'bg-red-50 border-red-200' : 'bg-white border-gray-100'}`;
+                li.innerHTML = `
+                    <p class="text-gray-800 font-medium mb-2">${item.text}</p>
+                    <div class="flex justify-between items-center text-xs pt-2 border-t border-dashed border-gray-200">
+                        <span class="text-gray-500 flex items-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3 mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                            ${formatTimestamp(item.createdAt)}
+                        </span>
+                        ${statusBadge}
+                    </div>
+                `;
+                feedList.appendChild(li);
+            });
+        }
 
-                <textarea id="postTextarea" class="w-full h-32 p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gem-primary resize-none text-gem-text-main" placeholder="Type a short idea here, or write your full post."></textarea>
-                
-                <p class="text-xs text-gray-500 mt-2 mb-4">
-                    * If you enter a short idea, use the "Generate Draft" button below.
-                </p>
 
-                <div class="flex flex-col sm:flex-row justify-end mt-4 space-x-0 sm:space-x-3 space-y-3 sm:space-y-0">
-          _http_chunk_receiver_ready_milestone
-                    <button id="generateDraftButton" onclick="generatePostDraft()" class="px-4 py-2 bg-gem-light text-gem-text-secondary rounded-lg font-semibold hover:bg-gem-primary transition-colors duration-200 flex items-center justify-center disabled:opacity-50">
-                        <i data-lucide="sparkles" class="w-4 h-4 mr-2"></i> Generate Draft
-                    </button>
-                    <button onclick="closeModal()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors duration-200 font-semibold">Cancel</button>
-                    <button id="publishButton" onclick="publishPost()" class="px-4 py-2 bg-gem-primary text-gem-text-secondary rounded-lg font-bold hover:bg-gem-accent transition-colors duration-200 disabled:opacity-50" disabled>Publish</button>
-                </div>
-            </div>
+        /**
+         * Sets up the real-time listener for the feed data.
+         */
+        function setupRealtimeListener() {
+            if (!isAuthReady || !userId) return;
 
-            <!-- QR Code View -->
-            <div id="qrView" class="hidden text-center">
-                <h2 class="text-xl font-bold text-gem-accent mb-4">Your Verifiable Identity</h2>
-                <p class="text-sm text-gray-600 mb-4">
-                    Scan this code to let others confirm your **Display Name** and unique GreenFeed ID.
-                </p>
-                
-                <!-- ADDED STYLING TO MAKE THE FRAME POP -->
-                <div id="qrcodeCanvas" class="p-5 bg-white border-4 border-gem-accent inline-block rounded-xl shadow-2xl transition-all duration-300 transform hover:scale-[1.02]">
-                    <!-- QR Code will be drawn here -->
-                </div>
-                
-                <div class="mt-4 p-3 bg-gem-bg-global rounded-lg inline-block min-w-[200px]">
-                    <p class="text-sm text-gray-500 font-medium">Display Name:</p>
-                    <!-- Display Name is now critical identity info -->
-                    <p id="qrCodeUserName" class="text-2xl font-bold text-gem-text-main">Loading...</p>
-                    <p class="text-xs text-gray-500 mt-2">User ID (for lookup):</p>
-                    <p id="qrCodeUserId" class="font-mono text-gem-accent text-[10px] break-all">Loading...</p>
-                </div>
+            const dataPath = getCollectionPath();
+            if (!dataPath) return;
 
-                <button onclick="closeModal()" class="mt-6 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors duration-200 font-semibold">Close</button>
-            </div>
-            
-            <!-- Identity Setup View (REMOVED: Moved to onboardingDiv) -->
-            <div id="verificationView" class="hidden"></div>
-            
-            <!-- NEW: Comment View -->
-            <div id="commentView" class="hidden">
-                <h2 class="text-xl font-bold text-gem-accent mb-4">Comments</h2>
-                
-                <!-- The original post content being commented on -->
-                <div class="p-3 bg-gem-bg-global rounded-lg mb-4 max-h-24 overflow-y-auto border border-gem-light">
-                    <p class="text-sm font-semibold text-gem-text-main mb-1">Replying to:</p>
-                    <p id="commentOriginalPostContent" class="text-xs text-gray-700 line-clamp-2"></p>
-C:\Users\eugene\Downloads\index.html
-                </div>
+            const q = query(collection(db, dataPath));
 
-                <!-- Comments List -->
-                <div id="commentsContainer" class="space-y-3 max-h-64 overflow-y-auto mb-4 p-2">
-                    <p class="text-center text-gray-500 text-sm">Loading comments...</p>
-                    <!-- Comments will be injected here -->
-                </div>
-                
-  G             <!-- Add Comment Input -->
-                <div class="border-t pt-4">
-                    <input type="text" id="commentInput" class="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gem-primary text-gem-text-main" placeholder="Write a comment...">
-                    <div class="flex justify-end mt-3 space-x-3">
-                        <button onclick="closeModal()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors duration-200 font-semibold">Cancel</button>
-                        <button id="addCommentButton" onclick="addComment()" class="px-4 py-2 bg-gem-primary text-gem-text-secondary rounded-lg font-bold hover:bg-gem-accent transition-colors duration-200 disabled:opacity-50" disabled>Post Comment</button>
-                    </div>
-                </div>
-            </div>
+            onSnapshot(q, (snapshot) => {
+                const items = [];
+                snapshot.forEach((doc) => {
+                    const data = doc.data();
+                    items.push({
+                        id: doc.id,
+                        text: data.text,
+                        createdAt: data.createdAt,
+                    });
+                });
 
-            <div id="modalMessage" class="hidden mt-3 p-3 text-sm rounded-lg bg-gem-bg-card text-gem-text-main"></div>
-        </div>
-    </div>
+                renderFeedItems(items);
+            }, (error) => {
+                console.error("Error setting up snapshot listener:", error);
+            });
+        }
 
-    <!-- Header / Navigation Bar (Hidden by default, shown when verified) -->
-    <header id="appHeader" class="hidden sticky top-0 z-40 bg-white shadow-md">
-        <div class="container mx-auto flex items-center justify-between p-3 md:p-4">
-            <h1 class="text-3xl font-extrabold text-gem-primary cursor-pointer">
-                GreenFeed
-            </h1>
+        // --- Event Handlers ---
 
-            <!-- Search Bar (Desktop/Tablet) -->
-            <div class="hidden lg:flex flex-1 max-w-md mx-6">
-                <input type="text" placeholder="Search friends, posts, or groups..." class="w-full p-2 border border-gray-200 rounded-full focus:outline-none focus:ring-2 focus:ring-gem-light bg-gem-bg-global text-sm">
-            </div>
+        postForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            addFeedItem(Date.now()); // New item, current time
+        });
 
-            <!-- Profile & Actions -->
-          D <div class="flex items-center space-x-3 md:space-x-5">
-                <button id="createPostHeaderBtn" onclick="openModal('post')" class="hidden sm:inline-flex items-center px-4 py-2 bg-gem-primary text-gem-text-secondary rounded-full font-bold shadow-md hover:bg-gem-accent transition-all duration-300 transform hover:scale-[1.03] text-sm" disabled>
-                    <i data-lucide="edit" class="w-4 h-4 mr-2"></i> Create Post
-                </button>
-                <button class="p-2 rounded-full bg-gem-bg-card hover:bg-gem-light transition-colors duration-200">
-S                 <i data-lucide="bell" class="w-6 h-6 text-gem-text-main"></i>
-                </button>
-                <div class="w-10 h-10 bg-gem-primary rounded-full border-2 border-gem-accent cursor-pointer flex items-center justify-center text-sm font-bold text-gem-text-secondary" id="profileInitials">
-                    ...
-                </div>
-            </div>
-        </div>
-    </header>
+        // --- Initialization ---
 
-    <!-- Main Content Grid (Hidden by default, shown when verified) -->
-Indented block
-    <main id="appMain" class="hidden container mx-auto p-3 md:p-6 lg:p-8">
-        <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        function initFirebaseAndAuth() {
+            try {
+                app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
 
-            <!-- Left Sidebar (Desktop Only) -->
-            <aside class="hidden lg:block lg:col-span-1">
-                <div class="sticky top-20 space-y-4">
-                    <!-- Profile Card -->
-                    <div class="p-4 rounded-xl bg-white shadow-lg border border-gem-bg-card">
-                        <div class="flex items-center space-x-3 mb-4">
-                            <div class="w-12 h-12 bg-gem-primary rounded-full flex-shrink-0 flex items-center justify-center text-lg font-bold text-gem-text-secondary" id="sidebarProfileInitials">
-                          D   ...
-                            </div>
-                            <div>
-                                <!-- Display Name / Default Name -->
-                                <p class="font-bold text-gem-text-main" id="sidebarUsername">Welcome User!</p>
-                                <p class="text-xs text-gray-500">Your ID (for sharing):</p>
-                                <p class="text-[10px] text-wrap break-all font-mono text-gem-accent" id="currentUserId">
-D                               Loading...
-                                </p>
-Indented block
-                            </div>
-                        </div>
-                        
-                        <!-- Verification Status -->
-What                   <div class="flex items-center text-sm font-semibold mt-2 border-t border-gem-bg-global pt-3" id="verificationStatusContainer">
-                            <i data-lucide="loader-circle" class="w-4 h-4 mr-2 text-gray-500 animate-spin" id="verificationIcon"></i>
-                            <span class="text-gray-500" id="verificationText">Checking status...</span>
-Indented block
-                        </div>
-                        
-                        <!-- QR CODE BUTTON (to show ID) -->
-s                     <button onclick="showQrModal()" class="w-full mt-3 flex items-center justify-center px-3 py-2 bg-gem-bg-global text-gem-accent rounded-lg font-semibold hover:bg-gem-light transition-colors duration-200 text-sm disabled:opacity-50" id="showQrButton" disabled>
-                  _http_chunk_receiver_ready_milestone
-            D         <i data-lucide="scan-line" class="w-4 h-4 mr-2"></i> Show Verifiable ID QR
-                        </button>
-                        
-                        <!-- Sign Out Button -->
-TODO                 <button onclick="signOutUser()" class="w-full mt-2 flex items-center justify-center px-3 py-2 bg-red-100 text-red-600 rounded-lg font-semibold hover:bg-red-200 transition-colors duration-200 text-sm" id="signOutButton" disabled>
-                            <i data-lucide="log-out" class="w-4 h-4 mr-2"></i> Sign Out
-                        </button>
-                    </div>
+                // Initial Sign-In
+                if (initialAuthToken) {
+                    signInWithCustomToken(auth, initialAuthToken)
+                        .catch(error => {
+                            console.error("Custom token sign-in failed. Falling back to anonymous.", error);
+                            signInAnonymously(auth);
+                        });
+                } else {
+                    signInAnonymously(auth);
+                }
 
-                    <!-- Navigation Links -->
-ndented block
-                    <nav class="p-4 rounded-xl bg-white shadow-lg border border-gem-bg-card">
-                        <ul class="space-y-3">
-                            <li class="flex items-center text-gem-accent font-semibold hover:text-gem-primary cursor-pointer transition-colors duration-200">
-                                <i data-lucide="users" class="w-5 h-5 mr-3"></i> Friends
-Read                       </li>
-Indented block
-Indented block
-                            <li class="flex items-center text-gem-text-main hover:text-gem-primary cursor-pointer transition-colors duration-200">
-S                           <i data-lucide="calendar" class="w-5 h-5 mr-3"></i> Events
-                            </li>
-                            <li class="flex items-center text-gem-text-main hover:text-gem-primary cursor-pointer transition-colors duration-200">
-Indented block
-Indented block
-G Note                     <i data-lucide="group" class="w-5 h-5 mr-3"></i> Groups
-                            </li>
-      Next 500 lines
+                // Auth State Listener
+                onAuthStateChanged(auth, (user) => {
+                    if (user) {
+                        userId = user.uid;
+                        isAuthReady = true;
+                        
+                        // Update UI
+                        loadingIndicator.classList.add('hidden');
+                        mainContent.classList.remove('hidden');
+                        userIdDisplay.textContent = `User ID (for path): ${userId}`;
+
+                        // 1. **MANDATORY**: RUN THE TTL CHECK
+                        checkAndDeleteOldData();
+
+                        // 2. Start Real-time Data Display
+                        setupRealtimeListener();
+                    } else {
+                        isAuthReady = false;
+                        userId = null;
+                        loadingIndicator.textContent = "Authentication failed.";
+                    }
+                });
+
+            } catch (error) {
+                console.error("Firebase initialization failed:", error);
+                loadingIndicator.textContent = "Error initializing Firebase. Check console for details.";
+            }
+        }
+
+        window.onload = initFirebaseAndAuth;
+
+    </script>
+</body>
+</html>
+
