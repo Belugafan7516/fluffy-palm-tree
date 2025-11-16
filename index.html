@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GreenFeed - Client TTL</title>
+    <title>GreenFeed - Multi-Auth & TTL</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
     <style>
@@ -11,21 +11,41 @@
             font-family: 'Inter', sans-serif;
             background-color: #f7f9fb;
         }
+        .modal {
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+        .modal:not(.open) {
+            opacity: 0;
+            visibility: hidden;
+        }
+        .modal.open {
+            opacity: 1;
+            visibility: visible;
+        }
     </style>
 </head>
 <body>
     <div class="min-h-screen p-4 sm:p-8">
         <div class="max-w-3xl mx-auto">
-            <header class="mb-8">
-                <h1 class="text-4xl font-extrabold text-green-700">GreenFeed 🌱</h1>
-                <p class="text-gray-500 mt-1">Share something positive today.</p>
-                
-                <div class="text-sm text-indigo-700 mt-3 p-3 bg-indigo-100 rounded-lg shadow-inner flex items-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 mr-2 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-                    **TTL Active:** This app automatically deletes posts older than **30 days** on load. Check the console for cleanup status!
+            
+            <!-- Header and Navigation -->
+            <header class="mb-8 flex justify-between items-center">
+                <div>
+                    <h1 class="text-3xl font-extrabold text-green-700">GreenFeed 🌱</h1>
+                    <p class="text-gray-500 mt-1 text-sm">Share something positive today.</p>
                 </div>
-                <p id="userIdDisplay" class="text-xs text-gray-400 mt-2"></p>
+                <button id="authBtn" class="flex items-center px-4 py-2 bg-indigo-600 text-white font-semibold rounded-lg shadow-md hover:bg-indigo-700 transition duration-150">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                    <span id="authBtnText">Sign In / Profile</span>
+                </button>
             </header>
+
+            <div class="text-sm text-indigo-700 mt-3 p-3 bg-indigo-100 rounded-lg shadow-inner flex items-center mb-6">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 mr-2 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                **TTL Active:** This app automatically deletes posts older than **30 days** on load.
+            </div>
+            
+            <p id="userIdDisplay" class="text-xs text-gray-400 mt-2 mb-4"></p>
 
             <div id="loadingIndicator" class="flex justify-center items-center h-20 text-indigo-600 font-semibold text-lg">
                 <svg class="animate-spin h-5 w-5 mr-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
@@ -45,10 +65,11 @@
                     <button
                         type="submit"
                         id="postBtn"
-                        class="mt-3 w-full flex items-center justify-center px-6 py-2 bg-green-600 text-white font-semibold rounded-lg shadow-md hover:bg-green-700 transition duration-150 disabled:bg-green-300"
+                        disabled
+                        class="mt-3 w-full flex items-center justify-center px-6 py-2 bg-green-600 text-white font-semibold rounded-lg shadow-md hover:bg-green-700 transition duration-150 disabled:bg-gray-400 disabled:cursor-not-allowed"
                     >
                         <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
-                        Post to Feed
+                        Post to Feed (Sign in required)
                     </button>
                 </form>
 
@@ -64,37 +85,97 @@
         </div>
     </div>
 
+    <!-- Authentication Modal -->
+    <div id="authModal" class="modal fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-xl w-full max-w-md shadow-2xl p-6 relative">
+            <button id="closeModalBtn" class="absolute top-4 right-4 text-gray-500 hover:text-gray-800">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+            
+            <h2 id="modalTitle" class="text-2xl font-bold mb-6 text-gray-800">Sign In / Profile</h2>
+            
+            <div id="authMessage" class="p-3 mb-4 rounded-lg hidden"></div>
+
+            <!-- Profile View (Visible when signed in) -->
+            <div id="profileView" class="hidden">
+                <p class="text-sm text-gray-600 mb-2">Logged in as: <span id="currentUserName" class="font-semibold text-indigo-600"></span></p>
+                <p class="text-xs text-gray-500 mb-4">User ID: <span id="currentUserId" class="font-mono text-gray-700 text-xs"></span></p>
+
+                <h3 class="text-lg font-semibold border-t pt-4 mt-4 mb-3">Update Display Name</h3>
+                <form id="updateNameForm" class="flex flex-col space-y-3">
+                    <input type="text" id="newDisplayName" class="p-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500" placeholder="Enter new display name" required>
+                    <button type="submit" class="p-3 bg-indigo-500 text-white rounded-lg font-semibold hover:bg-indigo-600 transition">Update Name</button>
+                </form>
+                
+                <button id="signOutBtn" class="mt-6 w-full p-3 bg-red-500 text-white rounded-lg font-semibold hover:bg-red-600 transition">Sign Out</button>
+            </div>
+
+            <!-- Sign In/Up View (Visible when signed out) -->
+            <div id="signInView">
+                <h3 class="text-lg font-semibold mb-3">Sign In Options</h3>
+
+                <!-- Google Sign In -->
+                <button id="googleSignInBtn" class="w-full flex items-center justify-center p-3 mb-3 border border-gray-300 rounded-lg font-semibold bg-white hover:bg-gray-50 transition">
+                    <svg class="w-5 h-5 mr-3" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.61,20.083H42V20H24v8h11.343c-1.723,4.643-6.096,8-11.343,8c-6.627,0-12-5.373-12-12s5.373-12,12-12c3.048,0,5.774,1.146,7.943,3.327l4.524-4.246C34.34,6.596,29.47,4,24,4C12.954,4,4,12.954,4,24c0,11.046,8.954,20,20,20c11.046,0,20-8.954,20-20C44,22.684,43.834,21.36,43.61,20.083z"/><path fill="#FF3D00" d="M6.306 14.691L14.07 18.25c2.478-2.607 5.92-4.109 9.93-4.109c3.048 0 5.774 1.146 7.943 3.327l4.524-4.246C34.34 6.596 29.47 4 24 4C18.667 4 14.015 6.095 10.368 9.227L6.306 14.691z"/><path fill="#4CAF50" d="M24 44c5.166 0 9.86-1.977 13.4-5.192l-4.524-4.246c-2.169 2.18-4.895 3.327-7.943 3.327c-5.347 0-9.72-3.357-11.343-8H42v-3H24v-8h11.343c.105-.596.161-1.203.161-1.817 0-1.396-.253-2.736-.71-3.99H24v-8h19.61c.224 1.323.35 2.67.39 4H24v3H4v3h2.306c.071.493.164.98.283 1.458L6.306 14.691z"/><path fill="#1976D2" d="M24 4C18.667 4 14.015 6.095 10.368 9.227L14.07 18.25c2.478-2.607 5.92-4.109 9.93-4.109c3.048 0 5.774 1.146 7.943 3.327l4.524-4.246C34.34 6.596 29.47 4 24 4z"/></svg>
+                    Sign in with Google
+                </button>
+
+                <div class="flex items-center my-4">
+                    <div class="flex-grow border-t border-gray-300"></div>
+                    <span class="flex-shrink mx-4 text-gray-500 text-sm">OR</span>
+                    <div class="flex-grow border-t border-gray-300"></div>
+                </div>
+
+                <!-- Email/Password Sign In/Up -->
+                <form id="emailAuthForm" class="flex flex-col space-y-3">
+                    <input type="email" id="emailInput" class="p-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500" placeholder="Email" required>
+                    <input type="password" id="passwordInput" class="p-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500" placeholder="Password" required>
+                    <button type="submit" id="signInEmailBtn" class="p-3 bg-indigo-600 text-white rounded-lg font-semibold hover:bg-indigo-700 transition">Sign In with Email</button>
+                    <button type="button" id="signUpEmailBtn" class="p-3 bg-indigo-400 text-white rounded-lg font-semibold hover:bg-indigo-500 transition">Sign Up with Email</button>
+                </form>
+
+                <div class="flex items-center my-4">
+                    <div class="flex-grow border-t border-gray-300"></div>
+                    <span class="flex-shrink mx-4 text-gray-500 text-sm">OR</span>
+                    <div class="flex-grow border-t border-gray-300"></div>
+                </div>
+
+                <!-- Anonymous Sign In -->
+                <button id="anonymousSignInBtn" class="w-full p-3 bg-gray-200 text-gray-800 rounded-lg font-semibold hover:bg-gray-300 transition">
+                    Continue Anonymously
+                </button>
+            </div>
+        </div>
+    </div>
+
+
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { 
+            getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, signOut,
+            GoogleAuthProvider, signInWithPopup, 
+            createUserWithEmailAndPassword, signInWithEmailAndPassword, 
+            updateProfile
+        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { 
             getFirestore, collection, onSnapshot, query, where, 
-            addDoc, writeBatch, getDocs, doc
+            addDoc, setDoc, doc, writeBatch, getDocs 
         } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // --- Configuration & Global State ---
+        // --- Configuration & Global State: Using secure environment variables ---
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
         const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
         
-        // ** USING USER-PROVIDED FIREBASE CONFIGURATION **
-        const firebaseConfig = {
-            apiKey: "AIzaSyDaw63IFCbBz4T8COOgBOmddpPODLYdWuc",
-            authDomain: "pixeldraw-b8692.firebaseapp.com",
-            projectId: "pixeldraw-b8692",
-            storageBucket: "pixeldraw-b8692.firebasestorage.app",
-            messagingSenderId: "1003659579933",
-            appId: "1:1003659579933:web:58af7b0898298e9d7d6cf4",
-            measurementId: "G-0DGFSBS7Y2"
-        };
-        // --------------------------------------------------
-
         const TTL_DAYS = 30;
-        const COLLECTION_NAME = 'green_feed_items';
+        const FEED_COLLECTION_NAME = 'green_feed_items';
+        const USER_PROFILE_COLLECTION = 'user_profiles';
 
         let app;
         let db;
         let auth;
         let userId = null;
+        let userName = 'Anonymous User';
         let isAuthReady = false;
 
         // --- DOM Elements ---
@@ -106,17 +187,53 @@
         const postBtn = document.getElementById('postBtn');
         const feedList = document.getElementById('feedList');
         const feedCount = document.getElementById('feedCount');
+        
+        // Modal Elements
+        const authModal = document.getElementById('authModal');
+        const authBtn = document.getElementById('authBtn');
+        const authBtnText = document.getElementById('authBtnText');
+        const closeModalBtn = document.getElementById('closeModalBtn');
+        const modalTitle = document.getElementById('modalTitle');
+        const authMessage = document.getElementById('authMessage');
+
+        // Sign In View
+        const signInView = document.getElementById('signInView');
+        const googleSignInBtn = document.getElementById('googleSignInBtn');
+        const emailAuthForm = document.getElementById('emailAuthForm');
+        const emailInput = document.getElementById('emailInput');
+        const passwordInput = document.getElementById('passwordInput');
+        const signInEmailBtn = document.getElementById('signInEmailBtn');
+        const signUpEmailBtn = document.getElementById('signUpEmailBtn');
+        const anonymousSignInBtn = document.getElementById('anonymousSignInBtn');
+
+        // Profile View
+        const profileView = document.getElementById('profileView');
+        const currentUserName = document.getElementById('currentUserName');
+        const currentUserId = document.getElementById('currentUserId');
+        const updateNameForm = document.getElementById('updateNameForm');
+        const newDisplayName = document.getElementById('newDisplayName');
+        const signOutBtn = document.getElementById('signOutBtn');
 
         // --- Utility Functions ---
 
-        /** Determines the correct private Firestore path. */
-        function getCollectionPath() {
+        /** Determines the correct private Firestore path for the feed. */
+        function getFeedCollectionPath() {
             if (!userId) {
-                console.error("User ID is not available.");
+                console.error("User ID is not available for feed path.");
                 return null;
             }
-            // Private path: /artifacts/{appId}/users/{userId}/collectionName
-            return `artifacts/${appId}/users/${userId}/${COLLECTION_NAME}`;
+            // Private path: /artifacts/{appId}/users/{userId}/feed_items
+            return `artifacts/${appId}/users/${userId}/${FEED_COLLECTION_NAME}`;
+        }
+        
+        /** Determines the correct private Firestore path for the user profile document. */
+        function getUserProfileDocPath(uid) {
+            if (!uid) {
+                console.error("User ID is not available for profile path.");
+                return null;
+            }
+            // Private path: /artifacts/{appId}/users/{userId}/user_profiles/documentId
+            return `artifacts/${appId}/users/${uid}/${USER_PROFILE_COLLECTION}/${uid}`;
         }
 
         /** Formats a timestamp (ms) into a readable date string. */
@@ -124,23 +241,53 @@
             return new Date(ms).toLocaleString();
         }
 
-        // --- Core Firestore Functions ---
+        /** Shows a message in the auth modal. */
+        function showMessage(text, isError = false) {
+            authMessage.textContent = text;
+            authMessage.className = `p-3 mb-4 rounded-lg text-sm ${isError ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`;
+            authMessage.classList.remove('hidden');
+        }
 
-        /**
-         * Cleans up documents older than TTL_DAYS using a batch write.
-         */
+        /** Hides the message in the auth modal. */
+        function hideMessage() {
+            authMessage.classList.add('hidden');
+        }
+        
+        // --- Modal Control ---
+        authBtn.addEventListener('click', () => {
+            if (isAuthReady && auth.currentUser) {
+                // Open to Profile View
+                currentUserName.textContent = userName;
+                currentUserId.textContent = userId;
+                newDisplayName.value = userName.startsWith('Anonymous') ? '' : userName;
+                profileView.classList.remove('hidden');
+                signInView.classList.add('hidden');
+                modalTitle.textContent = "User Profile";
+            } else {
+                // Open to Sign In View
+                profileView.classList.add('hidden');
+                signInView.classList.remove('hidden');
+                modalTitle.textContent = "Sign In / Sign Up";
+            }
+            hideMessage();
+            authModal.classList.add('open');
+        });
+
+        closeModalBtn.addEventListener('click', () => {
+            authModal.classList.remove('open');
+        });
+        
+        // --- Firestore Cleanup (TTL) ---
+
+        /** Cleans up documents older than TTL_DAYS using a batch write. */
         async function checkAndDeleteOldData() {
             if (!isAuthReady || !userId) return;
 
             console.log("--- GreenFeed TTL Check Initiated ---");
-
-            // Calculate the cutoff time (30 days ago in milliseconds)
             const cutoffTime = Date.now() - (TTL_DAYS * 24 * 60 * 60 * 1000);
-            
-            const dataPath = getCollectionPath();
+            const dataPath = getFeedCollectionPath();
             if (!dataPath) return;
 
-            // 1. Query for items to be deleted
             const q = query(
                 collection(db, dataPath),
                 where('createdAt', '<', cutoffTime)
@@ -154,32 +301,121 @@
                     return;
                 }
 
-                // 2. Prepare batch deletion
                 const batch = writeBatch(db);
-                const deletedIds = [];
-
                 snapshot.forEach((docSnap) => {
                     batch.delete(docSnap.ref);
-                    deletedIds.push(docSnap.id);
                 });
 
-                // 3. Commit the deletion
                 await batch.commit();
                 console.log(`🔥 TTL Cleanup Success: Deleted ${snapshot.size} item(s) older than ${TTL_DAYS} days.`);
             } catch (error) {
                 console.error("❌ Error during client-side TTL cleanup:", error);
             }
         }
+        
+        // --- User Profile Management ---
+        
+        /** Retrieves the display name from the Auth object, defaulting for Anonymous users. */
+        function getDisplayName(user) {
+            const defaultName = user.isAnonymous ? 'Anonymous User' : 'Unnamed User';
+            return user.displayName || defaultName;
+        }
 
-        /**
-         * Adds a new feed item to Firestore.
-         * @param {number} timestamp - The creation timestamp in milliseconds.
-         */
-        async function addFeedItem(timestamp) {
+        /** Updates the user's display name in Firebase Auth and local state. */
+        updateNameForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const newName = newDisplayName.value.trim();
+            if (!newName || !auth.currentUser) return;
+            
+            try {
+                await updateProfile(auth.currentUser, { displayName: newName });
+                userName = newName;
+                currentUserName.textContent = userName;
+                authBtnText.textContent = userName;
+                showMessage(`Display name updated to "${newName}"!`);
+            } catch (error) {
+                console.error("Error updating profile:", error);
+                showMessage(`Failed to update name: ${error.message}`, true);
+            }
+        });
+        
+        /** Handle Sign Out */
+        signOutBtn.addEventListener('click', async () => {
+            try {
+                await signOut(auth);
+                authModal.classList.remove('open');
+                showMessage("Signed out successfully!"); // This is only visible if the modal is open, but we close it.
+            } catch (error) {
+                console.error("Error signing out:", error);
+                // Use custom message box instead of alert if we were using one
+            }
+        });
+
+        // --- Authentication Methods ---
+
+        /** Anonymous Sign In */
+        anonymousSignInBtn.addEventListener('click', async () => {
+            try {
+                await signInAnonymously(auth);
+                authModal.classList.remove('open');
+            } catch (error) {
+                showMessage(`Anonymous sign in failed: ${error.message}`, true);
+            }
+        });
+
+        /** Google Sign In */
+        googleSignInBtn.addEventListener('click', async () => {
+            const provider = new GoogleAuthProvider();
+            try {
+                await signInWithPopup(auth, provider);
+                authModal.classList.remove('open');
+            } catch (error) {
+                console.error("Google sign in failed:", error);
+                showMessage(`Google sign in failed: ${error.message}`, true);
+            }
+        });
+
+        /** Email/Password Sign Up */
+        signUpEmailBtn.addEventListener('click', async () => {
+            const email = emailInput.value;
+            const password = passwordInput.value;
+            if (!email || !password) return showMessage("Email and Password are required.", true);
+
+            try {
+                await createUserWithEmailAndPassword(auth, email, password);
+                authModal.classList.remove('open');
+            } catch (error) {
+                console.error("Email sign up failed:", error);
+                showMessage(`Sign Up Failed: ${error.message}`, true);
+            }
+        });
+
+        /** Email/Password Sign In */
+        signInEmailBtn.addEventListener('click', async (e) => {
+            e.preventDefault(); // Prevent form default submit for the button click
+            const email = emailInput.value;
+            const password = passwordInput.value;
+            if (!email || !password) return showMessage("Email and Password are required.", true);
+
+            try {
+                await signInWithEmailAndPassword(auth, email, password);
+                authModal.classList.remove('open');
+            } catch (error) {
+                console.error("Email sign in failed:", error);
+                showMessage(`Sign In Failed: ${error.message}`, true);
+            }
+        });
+
+
+        // --- Feed Logic ---
+
+        /** Adds a new feed item to Firestore. */
+        postForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
             const text = newItemText.value.trim();
-            if (!text) return;
+            if (!text || !auth.currentUser) return;
 
-            const dataPath = getCollectionPath();
+            const dataPath = getFeedCollectionPath();
             if (!dataPath) return;
 
             postBtn.disabled = true;
@@ -187,7 +423,9 @@
             try {
                 await addDoc(collection(db, dataPath), {
                     text: text,
-                    createdAt: timestamp,
+                    createdAt: Date.now(),
+                    userId: auth.currentUser.uid,
+                    userName: auth.currentUser.displayName || 'Anon',
                 });
                 newItemText.value = '';
             } catch (error) {
@@ -195,12 +433,9 @@
             } finally {
                 postBtn.disabled = false;
             }
-        }
+        });
 
-        /**
-         * Renders the feed items based on the data array.
-         * @param {Array} items - The list of feed documents.
-         */
+        /** Renders the feed items based on the data array. */
         function renderFeedItems(items) {
             feedCount.textContent = items.length;
             feedList.innerHTML = '';
@@ -225,7 +460,9 @@
                 let statusBadge = isOld
                     ? `<span class="flex items-center text-xs font-semibold px-2 py-1 rounded-full bg-red-100 text-red-600">${statusIcon} OLD (Check TTL)</span>`
                     : `<span class="flex items-center text-xs font-semibold px-2 py-1 rounded-full bg-green-100 text-green-600">${statusIcon} Active Item</span>`;
-
+                
+                // Show poster name
+                const posterName = item.userName || 'Anon';
 
                 li.className = `p-4 rounded-xl shadow-md transition-all duration-300 ${isOld ? 'bg-red-50 border-red-200' : 'bg-white border-gray-100'}`;
                 li.innerHTML = `
@@ -237,19 +474,18 @@
                         </span>
                         ${statusBadge}
                     </div>
+                    <p class="text-xs text-indigo-500 mt-2">Posted by: ${posterName}</p>
                 `;
                 feedList.appendChild(li);
             });
         }
 
 
-        /**
-         * Sets up the real-time listener for the feed data.
-         */
+        /** Sets up the real-time listener for the feed data. */
         function setupRealtimeListener() {
             if (!isAuthReady || !userId) return;
 
-            const dataPath = getCollectionPath();
+            const dataPath = getFeedCollectionPath();
             if (!dataPath) return;
 
             const q = query(collection(db, dataPath));
@@ -262,6 +498,8 @@
                         id: doc.id,
                         text: data.text,
                         createdAt: data.createdAt,
+                        userName: data.userName,
+                        userId: data.userId
                     });
                 });
 
@@ -271,23 +509,16 @@
             });
         }
 
-        // --- Event Handlers ---
-
-        postForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            addFeedItem(Date.now()); // New item, current time
-        });
-
         // --- Initialization ---
 
         function initFirebaseAndAuth() {
             try {
-                // Initialize using the user's explicit firebaseConfig
+                // Use the environment-provided configuration
                 app = initializeApp(firebaseConfig);
                 db = getFirestore(app);
                 auth = getAuth(app);
 
-                // Initial Sign-In
+                // Initial Sign-In using custom token if provided
                 if (initialAuthToken) {
                     signInWithCustomToken(auth, initialAuthToken)
                         .catch(error => {
@@ -302,12 +533,17 @@
                 onAuthStateChanged(auth, (user) => {
                     if (user) {
                         userId = user.uid;
+                        userName = getDisplayName(user);
                         isAuthReady = true;
                         
                         // Update UI
                         loadingIndicator.classList.add('hidden');
                         mainContent.classList.remove('hidden');
-                        userIdDisplay.textContent = `User ID (for path): ${userId}`;
+                        userIdDisplay.textContent = `Current User ID: ${userId}`;
+                        authBtnText.textContent = userName;
+                        
+                        postBtn.disabled = false;
+                        postBtn.textContent = 'Post to Feed';
 
                         // 1. **MANDATORY**: RUN THE TTL CHECK
                         checkAndDeleteOldData();
@@ -315,9 +551,19 @@
                         // 2. Start Real-time Data Display
                         setupRealtimeListener();
                     } else {
+                        // User is signed out
                         isAuthReady = false;
                         userId = null;
-                        loadingIndicator.textContent = "Authentication failed.";
+                        userName = 'Anonymous User';
+                        
+                        authBtnText.textContent = 'Sign In / Profile';
+                        postBtn.disabled = true;
+                        postBtn.textContent = 'Post to Feed (Sign in required)';
+                        userIdDisplay.textContent = 'Current User ID: Not Signed In';
+                        renderFeedItems([]); // Clear feed when signed out
+                        
+                        loadingIndicator.classList.add('hidden');
+                        mainContent.classList.remove('hidden');
                     }
                 });
 
