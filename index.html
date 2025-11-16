@@ -3,257 +3,414 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GreenFeed - Client TTL & Auth</title>
+    <title>GreenFeed - Social Media</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
     <style>
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f7f9fb;
-        }
-        .modal {
-            transition: opacity 0.3s ease, visibility 0.3s ease;
-        }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
     </style>
 </head>
-<body>
-    <div class="min-h-screen p-4 sm:p-8">
-        <div class="max-w-3xl mx-auto">
-            <header class="mb-8 flex justify-between items-center">
-                <div>
-                    <h1 class="text-4xl font-extrabold text-green-700">GreenFeed 🌱</h1>
-                    <p class="text-gray-500 mt-1">Share something positive today.</p>
-                </div>
-                <button id="profileBtn" class="flex items-center space-x-2 px-4 py-2 bg-indigo-600 text-white font-semibold rounded-lg shadow-md hover:bg-indigo-700 transition duration-150">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                    <span id="profileBtnText">Sign In / Profile</span>
+<body class="bg-gray-50 min-h-screen">
+
+    <!-- Main Application Container -->
+    <div id="app" class="p-4 sm:p-8 max-w-4xl mx-auto">
+        <header class="flex justify-between items-center py-4 mb-8 border-b border-green-200">
+            <h1 class="text-3xl font-extrabold text-green-700 flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6 mr-2 text-green-500">
+                    <path d="M7.9 20A10 10 0 1 0 3 15.1"/>
+                    <path d="M12 21v-4"/>
+                    <path d="M15 17h-6"/>
+                    <path d="M15 3.5a6.5 6.5 0 0 0-4.6 1.9"/>
+                    <path d="M16 11c0-1.77 1-4 1-4s1 2.23 1 4"/>
+                    <path d="M8 11c0-1.77-1-4-1-4s-1 2.23-1 4"/>
+                </svg>
+                GreenFeed 🌱
+            </h1>
+            <button id="auth-button" class="flex items-center px-4 py-2 bg-indigo-500 text-white text-sm font-semibold rounded-lg shadow-md hover:bg-indigo-600 transition duration-150">
+                Sign In / Profile
+            </button>
+        </header>
+
+        <!-- Status Message Area -->
+        <div id="status-message" class="hidden mb-4 p-3 rounded-lg text-sm transition-all duration-300"></div>
+
+        <!-- Posting Form -->
+        <div id="post-form-container" class="mb-8 bg-white p-6 rounded-xl shadow-lg border border-gray-100 opacity-50 pointer-events-none transition-opacity duration-300">
+            <p id="post-user-info" class="text-sm text-gray-500 mb-3"></p>
+            <form id="post-form">
+                <textarea
+                    id="new-post-text"
+                    placeholder="What's your positive thought for the day? (Max 280 chars)"
+                    rows="3"
+                    maxlength="280"
+                    class="w-full p-3 border border-gray-300 rounded-lg focus:ring-green-500 focus:border-green-500 transition-shadow resize-none"
+                    required
+                ></textarea>
+                <button
+                    type="submit"
+                    id="post-button"
+                    class="mt-3 w-full sm:w-auto flex items-center justify-center px-6 py-2 bg-green-600 text-white font-semibold rounded-lg shadow-md hover:bg-green-700 transition duration-150 disabled:bg-green-300 disabled:cursor-not-allowed"
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2">
+                        <line x1="22" y1="2" x2="11" y2="13"></line>
+                        <polygon points="22 2 15 22 11 14 2 10 22 2"></polygon>
+                    </svg>
+                    Post to Feed
                 </button>
-            </header>
+            </form>
+        </div>
 
-            <div class="text-sm text-indigo-700 mt-3 p-3 bg-indigo-100 rounded-lg shadow-inner flex items-center">
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 mr-2 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-                **TTL Active:** This app automatically deletes posts older than **30 days** on load.
-            </div>
-
-            <div id="loadingIndicator" class="flex justify-center items-center h-20 text-indigo-600 font-semibold text-lg">
-                <svg class="animate-spin h-5 w-5 mr-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
-                Initializing Feed...
-            </div>
-
-            <div id="mainContent" class="hidden">
-                <!-- Input Form -->
-                <form id="postForm" class="mb-8 mt-6 bg-white p-6 rounded-xl shadow-lg border border-gray-100">
-                    <textarea
-                        id="newItemText"
-                        placeholder="What's your positive thought for the day?"
-                        rows="3"
-                        class="w-full p-3 border border-gray-300 rounded-lg focus:ring-green-500 focus:border-green-500 transition-shadow resize-none"
-                        required
-                    ></textarea>
-                    <button
-                        type="submit"
-                        id="postBtn"
-                        disabled
-                        class="mt-3 w-full flex items-center justify-center px-6 py-2 bg-green-600 text-white font-semibold rounded-lg shadow-md hover:bg-green-700 transition duration-150 disabled:bg-green-300"
-                    >
-                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
-                        Post to Feed
-                    </button>
-                </form>
-
-                <!-- Feed List -->
-                <h2 class="text-2xl font-bold text-gray-700 mb-4 border-b pb-2">Feed History (<span id="feedCount">0</span> Items)</h2>
-                
-                <div id="feedList" class="space-y-4">
-                    <p class="text-gray-500 p-4 text-center border-dashed border-2 rounded-xl">
-                        The feed is empty. Post the first item!
-                    </p>
-                </div>
-            </div>
+        <!-- Feed List -->
+        <h2 class="text-2xl font-bold text-gray-700 mb-4 border-b pb-2">Recent Posts <span id="feed-count" class="text-lg font-normal text-gray-400"></span></h2>
+        
+        <div id="feed-list" class="space-y-4">
+            <p class="text-gray-500 p-4 text-center border-dashed border-2 rounded-xl">
+                Loading posts...
+            </p>
         </div>
     </div>
 
-    <!-- Authentication Modal -->
-    <div id="authModal" class="modal fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center p-4 z-50 invisible opacity-0">
-        <div class="bg-white rounded-xl shadow-2xl w-full max-w-md transform transition-all p-6">
-            <h2 id="modalTitle" class="text-2xl font-bold text-gray-800 mb-4 border-b pb-2">Sign In / Profile</h2>
+    <!-- Modal Overlay -->
+    <div id="modal-overlay" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+        <div id="auth-modal" class="bg-white rounded-xl shadow-2xl p-6 w-11/12 max-w-md transform scale-95 transition-transform duration-300">
+            <div class="flex justify-between items-center mb-6 border-b pb-3">
+                <h2 id="modal-title" class="text-2xl font-bold text-gray-700">Account Access</h2>
+                <button id="close-modal" class="text-gray-500 hover:text-gray-800">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+            </div>
             
-            <div id="profileSection" class="hidden">
-                <p class="text-gray-600 mb-4">You are signed in as: <span id="currentEmail" class="font-medium text-indigo-600"></span></p>
-                <p class="text-sm text-gray-400 mb-4">User ID: <span id="currentUid" class="font-mono text-xs"></span></p>
+            <!-- Auth Content (Default View) -->
+            <div id="auth-content-default">
+                <div id="auth-error-message" class="hidden bg-red-100 text-red-700 p-3 rounded-lg mb-4 text-sm"></div>
 
-                <form id="updateNameForm" class="mb-4">
-                    <label for="displayNameInput" class="block text-sm font-medium text-gray-700">Display Name</label>
-                    <input type="text" id="displayNameInput" class="mt-1 block w-full p-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500" required>
-                    <button type="submit" class="mt-3 w-full px-4 py-2 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700">
-                        Update Display Name
+                <div class="space-y-3 mb-6">
+                    <button id="google-sign-in" class="w-full flex items-center justify-center px-4 py-3 bg-red-500 text-white font-semibold rounded-lg hover:bg-red-600 transition duration-150 shadow-md">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" class="w-5 h-5 mr-3 bg-white rounded-full">
+                            <path fill="#FFC107" d="M43.61 20.08v3.52H48c-1.63 7.82-8.58 13.56-17.65 13.56-11.41 0-20.67-9.26-20.67-20.67S18.94 2.72 30.35 2.72c5.44 0 9.77 2.15 13.1 5.34l-3.3 3.3c-2.3-2.19-5.32-3.66-9.8-3.66-7.85 0-14.2 6.35-14.2 14.2s6.35 14.2 14.2 14.2c9.2 0 13.6-6.12 14.1-12.75H24.35v-4.14H43.61z"/>
+                        </svg>
+                        Sign in with Google
+                    </button>
+                    <button id="anonymous-sign-in" class="w-full flex items-center justify-center px-4 py-3 bg-gray-500 text-white font-semibold rounded-lg hover:bg-gray-600 transition duration-150 shadow-md">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-3"><path d="M10 5l-2 2-3-3"/><path d="M22 17l-3-3-2 2"/><path d="M9.51 11.23a4 4 0 1 1 5.48 0"/></svg>
+                        Continue Anonymously
+                    </button>
+                </div>
+
+                <div class="relative flex items-center justify-center my-6">
+                    <div class="absolute inset-0 flex items-center">
+                        <div class="w-full border-t border-gray-300"></div>
+                    </div>
+                    <div class="relative bg-white px-4 text-sm text-gray-500">OR</div>
+                </div>
+
+                <form id="email-auth-form" class="space-y-4">
+                    <input type="email" id="email-input" placeholder="Email Address" required class="w-full p-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500">
+                    <input type="password" id="password-input" placeholder="Password (min 6 chars)" required class="w-full p-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500">
+                    <button type="submit" id="email-sign-in-up" class="w-full px-4 py-3 bg-indigo-500 text-white font-semibold rounded-lg hover:bg-indigo-600 transition duration-150 shadow-md">
+                        Sign In / Register with Email
+                    </button>
+                </form>
+            </div>
+
+            <!-- Profile Content (Signed In View) -->
+            <div id="auth-content-profile" class="hidden">
+                <p class="text-md text-gray-600 mb-4">You are signed in as:</p>
+                <div class="bg-gray-100 p-4 rounded-lg mb-6 break-words">
+                    <p class="font-mono text-xs text-gray-500">User ID:</p>
+                    <p id="profile-user-id" class="text-sm font-semibold mb-2"></p>
+                    <p class="font-mono text-xs text-gray-500">Email:</p>
+                    <p id="profile-user-email" class="text-sm font-semibold"></p>
+                </div>
+
+                <form id="update-profile-form" class="space-y-4">
+                    <label for="display-name-input" class="block text-sm font-medium text-gray-700">Display Name</label>
+                    <input type="text" id="display-name-input" placeholder="Enter your display name" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-green-500 focus:border-green-500">
+                    <button type="submit" class="w-full px-4 py-3 bg-green-500 text-white font-semibold rounded-lg hover:bg-green-600 transition duration-150 shadow-md">
+                        Update Profile
                     </button>
                 </form>
 
-                <button id="signOutBtn" class="w-full px-4 py-2 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700">
+                <button id="sign-out-button" class="mt-6 w-full px-4 py-2 bg-red-500 text-white font-semibold rounded-lg hover:bg-red-600 transition duration-150 shadow-md">
                     Sign Out
                 </button>
             </div>
-
-            <div id="signInSection">
-                <!-- Social Sign-in -->
-                <div class="space-y-3 mb-6">
-                    <button id="googleSignInBtn" class="w-full flex items-center justify-center px-4 py-3 border border-gray-300 rounded-lg shadow-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition">
-                        <svg class="w-5 h-5 mr-3" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill="#FFC107" d="M43.611 20.083H42V20H24v8h11.341c-1.637 5.765-7.018 9.923-13.341 9.923-8.834 0-15.992-7.158-15.992-15.992S14.166 12.008 23 12.008c3.88 0 7.317 1.258 10.002 3.332l5.657-5.657C34.092 5.86 28.537 3.992 23 3.992 11.4 3.992 1.992 13.4 1.992 25s9.408 21.008 21.008 21.008c11.758 0 20.898-8.995 20.898-20.898 0-1.254-.105-2.5-.286-3.719z" clip-rule="evenodd"/><path fill="#FF3D00" d="M6.307 28.008c-.024-1.921-.04-3.856 0-5.789-.004-.378-.008-.756-.008-1.135 0-.582.022-1.163.064-1.742h-3.331c-.131.782-.204 1.576-.204 2.385 0 1.284.14 2.56.402 3.793z"/><path fill="#4CAF50" d="M23 45.008c5.463 0 10.384-2.124 14.168-5.467l-5.657-5.657c-2.486 1.708-5.672 2.724-8.511 2.724-4.821 0-8.98-2.618-11.144-6.417h-5.657c3.27 6.425 9.771 10.82 17.101 10.82z"/><path fill="#1976D2" d="M43.611 20.083h-20.619v-8h11.341c-.435-1.916-1.146-3.791-2.222-5.454l-5.657-5.657c-2.736-2.074-6.173-3.332-10.002-3.332C11.4 4.008 1.992 13.416 1.992 25c0 1.284.14 2.56.402 3.793l5.657-5.657c1.472-2.73 3.655-5.068 6.273-6.903z"/></svg>
-                        Sign in with Google
-                    </button>
-                    <button id="anonSignInBtn" class="w-full px-4 py-3 bg-gray-200 text-gray-700 font-semibold rounded-lg shadow-sm hover:bg-gray-300 transition">
-                        Sign in Anonymously
-                    </button>
-                </div>
-                
-                <div class="flex items-center my-4">
-                    <div class="flex-grow border-t border-gray-300"></div>
-                    <span class="flex-shrink mx-4 text-gray-500 text-sm">OR</span>
-                    <div class="flex-grow border-t border-gray-300"></div>
-                </div>
-
-                <!-- Email/Password Form -->
-                <form id="emailAuthForm" class="space-y-4">
-                    <input type="email" id="emailInput" placeholder="Email" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500" required>
-                    <input type="password" id="passwordInput" placeholder="Password (min 6 chars)" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500" required minlength="6">
-                    <button type="submit" id="emailSubmitBtn" class="w-full px-4 py-3 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700">
-                        Sign In / Sign Up
-                    </button>
-                    <p id="authMessage" class="text-sm text-center text-red-500"></p>
-                </form>
-            </div>
-
-            <div class="flex justify-end mt-4">
-                <button id="closeModalBtn" class="text-gray-500 hover:text-gray-800 transition">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                </button>
-            </div>
         </div>
     </div>
 
+    <!-- Firebase Initialization Script -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { 
             getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, 
-            signInWithPopup, GoogleAuthProvider, 
-            createUserWithEmailAndPassword, signInWithEmailAndPassword, 
-            signOut, updateProfile
+            GoogleAuthProvider, signInWithPopup, createUserWithEmailAndPassword, 
+            signInWithEmailAndPassword, updateProfile, signOut 
         } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { 
-            getFirestore, collection, onSnapshot, query, where, 
-            addDoc, writeBatch, getDocs, doc, setDoc
+            getFirestore, doc, addDoc, setDoc, onSnapshot, collection, query, 
+            where, writeBatch, getDocs, setLogLevel, getDoc 
         } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // --- Configuration & Global State: Using secure environment variables ---
+        // Global variables provided by the Canvas environment
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
         const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
         const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
         
-        const TTL_DAYS = 30;
-        const POSTS_COLLECTION = 'green_feed_posts';
-        const PROFILES_COLLECTION = 'profiles';
-
-        let app;
-        let db;
-        let auth;
-        let currentUser = null;
+        // Firebase Instances
+        let app, auth, db;
+        let currentUserId = null;
         let isAuthReady = false;
 
-        // --- DOM Elements ---
-        const loadingIndicator = document.getElementById('loadingIndicator');
-        const mainContent = document.getElementById('mainContent');
-        const postForm = document.getElementById('postForm');
-        const newItemText = document.getElementById('newItemText');
-        const postBtn = document.getElementById('postBtn');
-        const feedList = document.getElementById('feedList');
-        const feedCount = document.getElementById('feedCount');
-        
-        // Modal Elements
-        const authModal = document.getElementById('authModal');
-        const profileBtn = document.getElementById('profileBtn');
-        const profileBtnText = document.getElementById('profileBtnText');
-        const closeModalBtn = document.getElementById('closeModalBtn');
-        const profileSection = document.getElementById('profileSection');
-        const signInSection = document.getElementById('signInSection');
-        const currentEmail = document.getElementById('currentEmail');
-        const currentUid = document.getElementById('currentUid');
-        const displayNameInput = document.getElementById('displayNameInput');
-        const updateNameForm = document.getElementById('updateNameForm');
-        const signOutBtn = document.getElementById('signOutBtn');
-        const googleSignInBtn = document.getElementById('googleSignInBtn');
-        const anonSignInBtn = document.getElementById('anonSignInBtn');
-        const emailAuthForm = document.getElementById('emailAuthForm');
-        const emailInput = document.getElementById('emailInput');
-        const passwordInput = document.getElementById('passwordInput');
-        const authMessage = document.getElementById('authMessage');
+        // Configuration
+        const TTL_DAYS = 30; // Posts older than 30 days are deleted
+        const POSTS_COLLECTION = "green_feed_posts";
+        const PROFILES_COLLECTION = "user_profiles";
+        // setLogLevel('debug'); // Disabled for cleaner console output
+
+        // DOM Elements
+        const D = (id) => document.getElementById(id);
+        const elements = {
+            authButton: D('auth-button'),
+            modalOverlay: D('modal-overlay'),
+            closeModal: D('close-modal'),
+            authContentDefault: D('auth-content-default'),
+            authContentProfile: D('auth-content-profile'),
+            authErrorMessage: D('auth-error-message'),
+            googleSignIn: D('google-sign-in'),
+            anonymousSignIn: D('anonymous-sign-in'),
+            emailAuthForm: D('email-auth-form'),
+            emailSignInUp: D('email-sign-in-up'),
+            emailInput: D('email-input'),
+            passwordInput: D('password-input'),
+            profileUserId: D('profile-user-id'),
+            profileUserEmail: D('profile-user-email'),
+            displayNameInput: D('display-name-input'),
+            updateProfileForm: D('update-profile-form'),
+            signOutButton: D('sign-out-button'),
+            postFormContainer: D('post-form-container'),
+            postForm: D('post-form'),
+            postButton: D('post-button'),
+            newPostText: D('new-post-text'),
+            postUserInfo: D('post-user-info'),
+            feedList: D('feed-list'),
+            feedCount: D('feed-count'),
+            statusMessage: D('status-message'),
+        };
 
         // --- Utility Functions ---
 
-        /** Determines the correct private Firestore path for the user's data. */
-        function getCollectionPath(collectionName) {
-            if (!currentUser) return null;
-            // Private path: /artifacts/{appId}/users/{userId}/collectionName
-            return `artifacts/${appId}/users/${currentUser.uid}/${collectionName}`;
-        }
+        const showStatus = (message, type = 'info') => {
+            elements.statusMessage.textContent = message;
+            elements.statusMessage.className = `mb-4 p-3 rounded-lg text-sm transition-all duration-300 flex items-center`;
+            
+            if (type === 'success') {
+                elements.statusMessage.classList.add('bg-green-100', 'text-green-700', 'border', 'border-green-300');
+            } else if (type === 'error') {
+                elements.statusMessage.classList.add('bg-red-100', 'text-red-700', 'border', 'border-red-300');
+            } else { // info
+                elements.statusMessage.classList.add('bg-indigo-100', 'text-indigo-700', 'border', 'border-indigo-300');
+            }
+            elements.statusMessage.classList.remove('hidden');
+        };
 
-        /** Formats a timestamp (ms) into a readable date string. */
-        function formatTimestamp(ms) {
+        const getPrivateCollectionPath = (collectionName) => {
+            if (!currentUserId) return null;
+            return `artifacts/${appId}/users/${currentUserId}/${collectionName}`;
+        };
+
+        const formatTimestamp = (ms) => {
             return new Date(ms).toLocaleString();
-        }
+        };
 
-        /** Shows a message in the auth modal and clears it after a delay. */
-        function displayAuthMessage(message, isError = true) {
-            authMessage.textContent = message;
-            authMessage.className = `text-sm text-center mt-2 ${isError ? 'text-red-500' : 'text-green-500'}`;
-            setTimeout(() => { authMessage.textContent = ''; }, 3000);
-        }
+        // --- Data Persistence (Firestore) ---
 
-        // --- Firestore Profile Management ---
-        /** Saves or updates the user's profile document with display name and email. */
-        async function saveUserProfile(user) {
-            const profilePath = getCollectionPath(PROFILES_COLLECTION);
+        /**
+         * Saves or updates a user's profile document.
+         * This is crucial because Firebase Auth profile data (like displayName) is not always reliable
+         * immediately after sign-in, and this collection allows us to store extra data.
+         */
+        const saveUserProfile = async (user) => {
+            if (!db || !user) return;
+            const profilePath = getPrivateCollectionPath(PROFILES_COLLECTION);
             if (!profilePath) return;
 
-            const profileDocRef = doc(db, profilePath, 'data');
-
-            // Determine display name: use Firebase Auth display name or default
-            const nameToSave = user.displayName || 'Anonymous User';
-
+            // Use the user's UID for the document ID in the profiles collection
+            const profileDocRef = doc(db, profilePath, user.uid);
+            
+            const profileData = {
+                uid: user.uid,
+                email: user.email || 'N/A',
+                displayName: user.displayName || 'Anonymous User',
+                lastLogin: Date.now(),
+            };
+            
             try {
-                await setDoc(profileDocRef, {
-                    uid: user.uid,
-                    displayName: nameToSave,
-                    email: user.email || 'N/A',
-                    isAnonymous: user.isAnonymous,
-                    lastLogin: Date.now()
-                }, { merge: true });
+                // Check if profile exists
+                const existingProfile = await getDoc(profileDocRef);
+                
+                if (existingProfile.exists()) {
+                    // Update existing profile (merge: true is implied by setDoc without merge option)
+                    await setDoc(profileDocRef, profileData, { merge: true });
+                } else {
+                    // Create new profile
+                    await setDoc(profileDocRef, profileData);
+                }
+                
+                // Manually update the user's display name locally if it was null/empty
+                if (!user.displayName) {
+                    user.displayName = profileData.displayName;
+                }
+                console.log("Profile data saved/updated for:", profileData.displayName);
             } catch (error) {
                 console.error("Error saving user profile:", error);
             }
-        }
+        };
 
-        // --- TTL and Cleanup Logic ---
+        /**
+         * Fetches a user's display name from the Firestore profile collection.
+         */
+        const getDisplayName = async (userId) => {
+            if (!db || !userId) return 'Unknown User';
+            const profilePath = `artifacts/${appId}/users/${userId}/${PROFILES_COLLECTION}`;
+            
+            try {
+                const profileDocRef = doc(db, profilePath, userId);
+                const profileSnap = await getDoc(profileDocRef);
+                
+                if (profileSnap.exists()) {
+                    return profileSnap.data().displayName || 'Anonymous User';
+                }
+            } catch (error) {
+                console.error("Error fetching display name:", error);
+            }
+            return 'Anonymous User';
+        };
 
-        /** Cleans up documents older than TTL_DAYS using a batch write. */
-        async function checkAndDeleteOldData() {
-            if (!isAuthReady || !currentUser) return;
 
-            console.log("--- GreenFeed TTL Check Initiated ---");
-            const cutoffTime = Date.now() - (TTL_DAYS * 24 * 60 * 60 * 1000);
-            const dataPath = getCollectionPath(POSTS_COLLECTION);
-            if (!dataPath) return;
+        // --- Authentication Handlers ---
 
-            const q = query(
-                collection(db, dataPath),
-                where('createdAt', '<', cutoffTime)
-            );
+        const handleGoogleSignIn = async () => {
+            if (!auth) return;
+            elements.authErrorMessage.classList.add('hidden');
+            try {
+                const provider = new GoogleAuthProvider();
+                const result = await signInWithPopup(auth, provider);
+                // User signed in successfully, onAuthStateChanged will handle UI update
+            } catch (error) {
+                console.error("Google Sign-In Error:", error);
+                elements.authErrorMessage.textContent = `Sign-in failed: ${error.message}`;
+                elements.authErrorMessage.classList.remove('hidden');
+            }
+        };
+
+        const handleAnonymousSignIn = async () => {
+            if (!auth) return;
+            elements.authErrorMessage.classList.add('hidden');
+            try {
+                await signInAnonymously(auth);
+                // User signed in successfully
+            } catch (error) {
+                console.error("Anonymous Sign-In Error:", error);
+                elements.authErrorMessage.textContent = `Anonymous sign-in failed: ${error.message}`;
+                elements.authErrorMessage.classList.remove('hidden');
+            }
+        };
+
+        const handleEmailAuth = async (e) => {
+            e.preventDefault();
+            if (!auth) return;
+            elements.authErrorMessage.classList.add('hidden');
+
+            const email = elements.emailInput.value;
+            const password = elements.passwordInput.value;
 
             try {
+                // 1. Try to sign in
+                await signInWithEmailAndPassword(auth, email, password);
+                
+            } catch (signInError) {
+                // If sign-in fails, assume the user needs to register
+                if (signInError.code === 'auth/user-not-found' || signInError.code === 'auth/wrong-password') {
+                    try {
+                        // 2. Try to register
+                        await createUserWithEmailAndPassword(auth, email, password);
+                        showStatus("Registration successful. Welcome!", 'success');
+                    } catch (signUpError) {
+                        console.error("Email Registration Error:", signUpError);
+                        elements.authErrorMessage.textContent = `Authentication failed: ${signUpError.message}`;
+                        elements.authErrorMessage.classList.remove('hidden');
+                    }
+                } else {
+                    console.error("Email Sign-In Error:", signInError);
+                    elements.authErrorMessage.textContent = `Sign-in failed: ${signInError.message}`;
+                    elements.authErrorMessage.classList.remove('hidden');
+                }
+            }
+        };
+
+        const handleUpdateProfile = async (e) => {
+            e.preventDefault();
+            if (!auth || !auth.currentUser) return;
+
+            const newDisplayName = elements.displayNameInput.value.trim();
+            if (!newDisplayName) {
+                alert("Display name cannot be empty.");
+                return;
+            }
+
+            try {
+                // Update Firebase Auth profile
+                await updateProfile(auth.currentUser, { displayName: newDisplayName });
+                
+                // Update Firestore profile (critical for display name persistence)
+                await saveUserProfile(auth.currentUser);
+
+                // Update UI and show success
+                elements.displayNameInput.value = newDisplayName;
+                elements.authButton.textContent = `Welcome, ${newDisplayName}`;
+                showStatus("Profile name updated successfully!", 'success');
+                // Re-fetch posts to refresh creator names, if implemented later (not needed now since creator names aren't shown)
+
+            } catch (error) {
+                console.error("Error updating profile:", error);
+                showStatus(`Failed to update profile: ${error.message}`, 'error');
+            }
+        };
+
+        const handleSignOut = async () => {
+            if (!auth) return;
+            try {
+                await signOut(auth);
+                elements.modalOverlay.classList.add('hidden');
+                showStatus("You have been signed out.", 'info');
+            } catch (error) {
+                console.error("Sign Out Error:", error);
+                showStatus(`Sign out failed: ${error.message}`, 'error');
+            }
+        };
+
+        // --- Data Management & Cleanup (TTL) ---
+
+        const checkAndDeleteOldData = async () => {
+            if (!db || !currentUserId) return;
+
+            // Calculate the cutoff time (TTL_DAYS ago in milliseconds)
+            const cutoffTime = Date.now() - (TTL_DAYS * 24 * 60 * 60 * 1000);
+            
+            const dataPath = getPrivateCollectionPath(POSTS_COLLECTION);
+            if (!dataPath) return;
+
+            try {
+                // Query Firestore for documents where the 'createdAt' is LESS THAN the cutoff time
+                const q = query(
+                    collection(db, dataPath),
+                    where('createdAt', '<', cutoffTime)
+                );
+
                 const snapshot = await getDocs(q);
                 
                 if (snapshot.empty) {
-                    console.log(`✅ TTL: No items found older than ${TTL_DAYS} days.`);
+                    console.log(`[GreenFeed TTL] No posts older than ${TTL_DAYS} days found.`);
                     return;
                 }
 
@@ -263,319 +420,239 @@
                 });
 
                 await batch.commit();
-                console.log(`🔥 TTL Cleanup Success: Deleted ${snapshot.size} item(s) older than ${TTL_DAYS} days.`);
+                console.log(`[GreenFeed TTL] Successfully deleted ${snapshot.size} post(s) older than ${TTL_DAYS} days.`);
+
             } catch (error) {
-                console.error("❌ Error during client-side TTL cleanup:", error);
+                console.error("[GreenFeed TTL] Error during client-side TTL cleanup:", error);
             }
-        }
+        };
 
-        // --- Authentication Handlers ---
-
-        function updateUIForUser(user) {
-            currentUser = user;
-            const isLoggedIn = !!user;
-
-            postBtn.disabled = !isLoggedIn;
-            mainContent.classList.toggle('hidden', !isLoggedIn);
-            loadingIndicator.classList.toggle('hidden', true);
-
-            if (isLoggedIn) {
-                const name = user.displayName || (user.isAnonymous ? 'Guest' : user.email);
-                profileBtnText.textContent = name.split('@')[0];
-                
-                // Update Modal
-                signInSection.classList.add('hidden');
-                profileSection.classList.remove('hidden');
-                currentEmail.textContent = user.email || 'Anonymous';
-                currentUid.textContent = user.uid;
-                displayNameInput.value = user.displayName || '';
-            } else {
-                profileBtnText.textContent = 'Sign In / Profile';
-                signInSection.classList.remove('hidden');
-                profileSection.classList.add('hidden');
-            }
-        }
-
-        // --- Fix implemented here: Provider instantiation inside handler ---
-        googleSignInBtn.addEventListener('click', async () => {
-            if (!auth) return;
-            const provider = new GoogleAuthProvider(); // Instantiated here!
-            try {
-                await signInWithPopup(auth, provider);
-                authModal.classList.add('invisible', 'opacity-0');
-            } catch (error) {
-                console.error("Google Sign-In Error:", error);
-                displayAuthMessage(`Google sign-in failed: ${error.message.split('(')[0].trim()}`);
-            }
-        });
-        // ------------------------------------------------------------------
-
-        anonSignInBtn.addEventListener('click', async () => {
-            if (!auth) return;
-            try {
-                await signInAnonymously(auth);
-                authModal.classList.add('invisible', 'opacity-0');
-            } catch (error) {
-                console.error("Anonymous Sign-In Error:", error);
-                displayAuthMessage("Anonymous sign-in failed.");
-            }
-        });
-
-        emailAuthForm.addEventListener('submit', async (e) => {
+        const handleNewPost = async (e) => {
             e.preventDefault();
-            if (!auth) return;
+            const text = elements.newPostText.value.trim();
+            if (!text || !db || !currentUserId) return;
 
-            const email = emailInput.value;
-            const password = passwordInput.value;
-            authMessage.textContent = 'Processing...';
+            const dataPath = getPrivateCollectionPath(POSTS_COLLECTION);
+            if (!dataPath) return;
+
+            // Post button disabled while processing
+            elements.postButton.disabled = true;
 
             try {
-                // Try signing in first
-                await signInWithEmailAndPassword(auth, email, password);
-                authModal.classList.add('invisible', 'opacity-0');
-            } catch (signInError) {
-                // If sign-in fails, try creating a new account
-                if (signInError.code === 'auth/user-not-found') {
-                    try {
-                        await createUserWithEmailAndPassword(auth, email, password);
-                        authModal.classList.add('invisible', 'opacity-0');
-                    } catch (signUpError) {
-                        console.error("Sign-Up Error:", signUpError);
-                        displayAuthMessage(`Sign Up failed: ${signUpError.message}`);
-                    }
-                } else {
-                    console.error("Sign-In Error:", signInError);
-                    displayAuthMessage(`Sign In failed: ${signInError.message}`);
-                }
-            }
-        });
-
-        signOutBtn.addEventListener('click', async () => {
-            if (!auth) return;
-            try {
-                await signOut(auth);
-                authModal.classList.add('invisible', 'opacity-0');
+                await addDoc(collection(db, dataPath), {
+                    text: text,
+                    createdAt: Date.now(),
+                    creatorId: currentUserId,
+                    // Note: Display name is not stored directly on the post to allow for name changes
+                });
+                elements.newPostText.value = '';
+                showStatus("Post created successfully!", 'success');
             } catch (error) {
-                console.error("Sign Out Error:", error);
+                console.error("Error adding document:", error);
+                showStatus(`Could not post item: ${error.message}`, 'error');
+            } finally {
+                elements.postButton.disabled = false;
             }
-        });
+        };
 
-        updateNameForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const newName = displayNameInput.value.trim();
-            if (!currentUser || !newName) return;
+        // --- UI Rendering ---
 
-            try {
-                // 1. Update Firebase Auth profile
-                await updateProfile(currentUser, { displayName: newName });
-                
-                // 2. Update Firestore profile document
-                await saveUserProfile(currentUser);
+        const renderPosts = (posts) => {
+            elements.feedList.innerHTML = '';
+            elements.feedCount.textContent = `(${posts.length})`;
 
-                // UI update handles itself via onAuthStateChanged or the state listener
-                displayAuthMessage('Display name updated successfully!', false);
-                updateUIForUser(currentUser); // Force UI update
-            } catch (error) {
-                console.error("Error updating profile:", error);
-                displayAuthMessage("Failed to update profile name.");
-            }
-        });
-
-        // --- UI Logic ---
-        profileBtn.addEventListener('click', () => {
-            authModal.classList.remove('invisible', 'opacity-0');
-            authModal.classList.add('visible', 'opacity-100');
-        });
-
-        closeModalBtn.addEventListener('click', () => {
-            authModal.classList.add('invisible', 'opacity-0');
-            authModal.classList.remove('visible', 'opacity-100');
-        });
-
-        // --- Core Application Logic ---
-
-        function renderFeedItems(items) {
-            feedCount.textContent = items.length;
-            feedList.innerHTML = '';
-
-            if (items.length === 0) {
-                feedList.innerHTML = `
+            if (posts.length === 0) {
+                elements.feedList.innerHTML = `
                     <p class="text-gray-500 p-4 text-center border-dashed border-2 rounded-xl">
                         The feed is empty. Post the first item!
                     </p>`;
                 return;
             }
 
-            items.sort((a, b) => b.createdAt - a.createdAt).forEach(item => {
-                const li = document.createElement('div');
+            posts.forEach(item => {
                 const isOld = (Date.now() - item.createdAt) > (TTL_DAYS * 24 * 60 * 60 * 1000);
+                const dateString = formatTimestamp(item.createdAt);
                 
-                const statusIcon = isOld 
-                    ? '<svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3 mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>'
-                    : '<svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3 mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>';
-
-                const statusBadge = isOld
-                    ? `<span class="flex items-center text-xs font-semibold px-2 py-1 rounded-full bg-red-100 text-red-600">${statusIcon} OLD (Check TTL)</span>`
-                    : `<span class="flex items-center text-xs font-semibold px-2 py-1 rounded-full bg-green-100 text-green-600">${statusIcon} Active Item</span>`;
-
-                const authorName = item.authorName || 'User';
-
-                li.className = `p-4 rounded-xl shadow-md transition-all duration-300 ${isOld ? 'bg-red-50 border-red-200' : 'bg-white border-gray-100'}`;
-                li.innerHTML = `
-                    <p class="text-gray-800 font-medium mb-2">${item.text}</p>
-                    <div class="flex justify-between items-center text-xs pt-2 border-t border-dashed border-gray-200">
+                const card = document.createElement('div');
+                card.className = `p-4 rounded-xl shadow-md transition-all duration-300 ${isOld ? 'bg-red-50 border-red-200' : 'bg-white border-gray-100'}`;
+                
+                card.innerHTML = `
+                    <p class="text-gray-800 font-medium mb-2 break-words">${item.text}</p>
+                    <div class="flex justify-between items-center text-xs pt-2 border-t mt-2">
                         <span class="text-gray-500 flex items-center">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3 mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                            ${formatTimestamp(item.createdAt)}
+                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                            ${dateString}
                         </span>
-                        <span class="text-gray-600 font-semibold">${authorName}</span>
-                        ${statusBadge}
+                        ${isOld ? `
+                            <span class="flex items-center text-red-600 font-semibold bg-red-100 px-2 py-1 rounded-full">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                                Scheduled for Deletion
+                            </span>
+                        ` : `
+                            <span class="flex items-center text-green-600 font-semibold bg-green-100 px-2 py-1 rounded-full">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><polyline points="13 2 13 9 20 9"></polyline></svg>
+                                Active
+                            </span>
+                        `}
                     </div>
                 `;
-                feedList.appendChild(li);
+                elements.feedList.appendChild(card);
             });
-        }
+        };
 
-        async function fetchAuthorName(authorUid) {
-            const profilePath = `artifacts/${appId}/users/${authorUid}/${PROFILES_COLLECTION}`;
-            const docRef = doc(db, profilePath, 'data');
-            
-            try {
-                const docSnap = await getDocs(collection(db, profilePath));
-                if (!docSnap.empty) {
-                    const data = docSnap.docs[0].data();
-                    return data.displayName || 'Unknown User';
-                }
-                return 'Unknown User';
-            } catch (error) {
-                console.error("Error fetching author name:", error);
-                return 'Unknown User';
-            }
-        }
-
-
-        /** Sets up the real-time listener for the feed data. */
-        function setupRealtimeListener() {
-            if (!isAuthReady || !currentUser) return;
-
-            const dataPath = getCollectionPath(POSTS_COLLECTION);
-            if (!dataPath) return;
-
-            const q = query(collection(db, dataPath));
-
-            onSnapshot(q, async (snapshot) => {
-                const items = [];
-                const profilePromises = [];
-                const profileCache = {};
-
-                snapshot.forEach((doc) => {
-                    const data = doc.data();
-                    const item = {
-                        id: doc.id,
-                        text: data.text,
-                        createdAt: data.createdAt,
-                        authorId: data.authorId || currentUser.uid // Fallback for old posts
-                    };
-                    items.push(item);
-
-                    // Fetch profile if not cached
-                    if (!profileCache[item.authorId]) {
-                        profileCache[item.authorId] = fetchAuthorName(item.authorId);
-                        profilePromises.push(profileCache[item.authorId]);
-                    }
-                });
-
-                // Wait for all profile lookups to resolve (even though currently all posts are local)
-                await Promise.all(profilePromises);
-
-                // Attach resolved names and render
-                const renderedItems = items.map(item => ({
-                    ...item,
-                    authorName: item.authorId === currentUser.uid ? currentUser.displayName || 'You' : profileCache[item.authorId]
-                }));
+        const updateAuthUI = (user) => {
+            if (user) {
+                // User is signed in
+                currentUserId = user.uid;
                 
-                renderFeedItems(renderedItems);
-            }, (error) => {
-                console.error("Error setting up snapshot listener:", error);
-            });
-        }
+                // Set button text and enable posting form
+                const displayName = user.displayName || (user.isAnonymous ? 'Anonymous' : user.email || 'User');
+                elements.authButton.textContent = `Welcome, ${displayName}`;
+                
+                elements.postFormContainer.classList.remove('opacity-50', 'pointer-events-none');
+                elements.postUserInfo.textContent = `Posting as: ${displayName} (${user.uid.substring(0, 8)}...)`;
 
-        postForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const text = newItemText.value.trim();
-            if (!text || !currentUser) return;
+                // Update Profile Modal
+                elements.authContentDefault.classList.add('hidden');
+                elements.authContentProfile.classList.remove('hidden');
+                elements.profileUserId.textContent = user.uid;
+                elements.profileUserEmail.textContent = user.email || 'Anonymous Session';
+                elements.displayNameInput.value = user.displayName || '';
 
-            const dataPath = getCollectionPath(POSTS_COLLECTION);
-            if (!dataPath) return;
+            } else {
+                // User is signed out
+                currentUserId = null;
+                elements.authButton.textContent = 'Sign In / Profile';
+                elements.postFormContainer.classList.add('opacity-50', 'pointer-events-none');
+                elements.postUserInfo.textContent = 'Sign in to post.';
 
-            postBtn.disabled = true;
+                // Update Auth Modal
+                elements.authContentDefault.classList.remove('hidden');
+                elements.authContentProfile.classList.add('hidden');
+            }
+        };
 
-            addDoc(collection(db, dataPath), {
-                text: text,
-                createdAt: Date.now(),
-                authorId: currentUser.uid // Store author UID
-            }).then(() => {
-                newItemText.value = '';
-            }).catch(error => {
-                console.error("Error adding document:", error);
-            }).finally(() => {
-                postBtn.disabled = false;
-            });
-        });
+        // --- Firebase Initialization ---
 
-        // --- Initialization ---
-
-        function initFirebaseAndAuth() {
+        const initializeFirebase = async () => {
             try {
-                app = initializeApp(firebaseConfig);
-                db = getFirestore(app);
-                auth = getAuth(app);
+                if (Object.keys(firebaseConfig).length === 0) {
+                    throw new Error("Firebase configuration is missing or empty.");
+                }
 
-                // Initial Sign-In with Canvas token
+                app = initializeApp(firebaseConfig);
+                auth = getAuth(app);
+                db = getFirestore(app);
+
+                // Initial sign-in with custom token if available
                 if (initialAuthToken) {
-                    signInWithCustomToken(auth, initialAuthToken)
-                        .catch(error => {
-                            console.error("Custom token sign-in failed. Falling back to anonymous.", error);
-                            signInAnonymously(auth);
-                        });
+                    await signInWithCustomToken(auth, initialAuthToken).catch(e => {
+                        console.warn("Custom token sign-in failed. Falling back to anonymous.", e);
+                        signInAnonymously(auth);
+                    });
                 } else {
                     signInAnonymously(auth);
                 }
 
-                // Auth State Listener
+                // Attach Auth State Listener
                 onAuthStateChanged(auth, async (user) => {
                     if (user) {
-                        isAuthReady = true;
-                        currentUser = user;
-
-                        // 1. Update UI and save profile immediately
-                        updateUIForUser(user);
+                        currentUserId = user.uid;
+                        // 1. Save or update the profile (handles displayName consistency)
                         await saveUserProfile(user);
-
-                        // 2. **MANDATORY**: RUN THE TTL CHECK (relies on currentUser being set)
-                        await checkAndDeleteOldData();
-
-                        // 3. Start Real-time Data Display
-                        setupRealtimeListener();
-
+                        // 2. Refresh UI based on potentially updated profile
+                        updateAuthUI(user);
+                        // 3. Set up real-time data listener
+                        setupPostListener(); 
+                        // 4. Run the cleanup job once per session
+                        checkAndDeleteOldData();
                     } else {
-                        isAuthReady = false;
-                        currentUser = null;
-                        updateUIForUser(null);
-                        loadingIndicator.classList.remove('hidden');
-                        mainContent.classList.add('hidden');
-                        loadingIndicator.textContent = "Please sign in to view the feed.";
+                        updateAuthUI(null);
+                        // Clear feed if signed out
+                        renderPosts([]); 
                     }
+                    isAuthReady = true;
+                    // Hide any initial loading message
+                    elements.feedList.innerHTML = ''; 
                 });
 
+                console.log("Firebase services initialized successfully.");
             } catch (error) {
-                console.error("Firebase initialization failed:", error);
-                loadingIndicator.textContent = "Error initializing Firebase. Check console for details.";
+                console.error("Error initializing Firebase:", error);
+                showStatus(`Error initializing Firebase: ${error.message}. Check console for details.`, 'error');
+                // Disable all auth buttons if initialization fails
+                Object.values(elements).forEach(el => {
+                    if (el && el.tagName === 'BUTTON') el.disabled = true;
+                });
             }
-        }
+        };
 
-        window.onload = initFirebaseAndAuth;
+        const setupPostListener = () => {
+            if (!db || !currentUserId) return;
+            
+            const dataPath = getPrivateCollectionPath(POSTS_COLLECTION);
+            if (!dataPath) return;
+
+            const q = query(collection(db, dataPath));
+
+            // Unsubscribe existing listener if it exists (for robustness, though onAuthStateChanged usually handles this)
+            if (window.postListenerUnsubscribe) {
+                window.postListenerUnsubscribe();
+            }
+
+            // Set up new real-time listener
+            window.postListenerUnsubscribe = onSnapshot(q, (snapshot) => {
+                const posts = [];
+                snapshot.forEach((doc) => {
+                    const data = doc.data();
+                    posts.push({
+                        id: doc.id,
+                        text: data.text,
+                        createdAt: data.createdAt,
+                        creatorId: data.creatorId,
+                    });
+                });
+
+                // Sort by newest first
+                posts.sort((a, b) => b.createdAt - a.createdAt);
+                renderPosts(posts);
+
+            }, (error) => {
+                console.error("Error setting up posts listener:", error);
+                showStatus("Error fetching feed data. See console.", 'error');
+            });
+        };
+
+        // --- Event Listeners ---
+
+        elements.authButton.addEventListener('click', () => {
+            elements.modalOverlay.classList.remove('hidden');
+            // Reset error message on open
+            elements.authErrorMessage.classList.add('hidden'); 
+        });
+        
+        elements.closeModal.addEventListener('click', () => {
+            elements.modalOverlay.classList.add('hidden');
+        });
+
+        // Close modal when clicking outside
+        elements.modalOverlay.addEventListener('click', (e) => {
+            if (e.target === elements.modalOverlay) {
+                elements.modalOverlay.classList.add('hidden');
+            }
+        });
+
+        elements.googleSignIn.addEventListener('click', handleGoogleSignIn);
+        elements.anonymousSignIn.addEventListener('click', handleAnonymousSignIn);
+        elements.emailAuthForm.addEventListener('submit', handleEmailAuth);
+        elements.updateProfileForm.addEventListener('submit', handleUpdateProfile);
+        elements.signOutButton.addEventListener('click', handleSignOut);
+        elements.postForm.addEventListener('submit', handleNewPost);
+
+        // --- Start Application ---
+        initializeFirebase();
 
     </script>
 </body>
 </html>
+
