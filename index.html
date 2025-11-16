@@ -116,6 +116,15 @@
             background-color: var(--palette-color-2);
             border-radius: 10px;
         }
+        /* Hide number spinners */
+        input[type=number]::-webkit-outer-spin-button,
+        input[type=number]::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        input[type=number] {
+            -moz-appearance: textfield;
+        }
     </style>
 </head>
 <body class="font-sans">
@@ -171,7 +180,12 @@
     
     <!-- ONBOARDING OVERLAY (Hidden initially, shown if signed in but not verified) -->
     <div id="onboardingDiv" class="hidden fixed inset-0 z-40 flex items-center justify-center bg-gem-bg-global p-4">
-        <div class="bg-white w-full max-w-2xl p-8 rounded-xl shadow-2xl border-t-4 border-gem-accent text-center">
+        <!-- 
+            MOBILE FIX: Added 'sm:max-w-2xl'
+            Removed 'max-w-2xl' and replaced it with 'sm:max-w-2xl'.
+            This makes the card 'w-full' on mobile and 'max-w-2xl' on screens 'sm' (640px) and up.
+        -->
+        <div class="bg-white w-full sm:max-w-2xl p-8 rounded-xl shadow-2xl border-t-4 border-gem-accent text-center">
             <i data-lucide="shield-check" class="w-12 h-12 text-gem-accent mx-auto mb-4"></i>
             <h2 class="text-3xl font-extrabold text-gem-text-main mb-2">Secure Your Identity on GreenFeed</h2>
             <p class="text-lg text-gray-600 mb-6">
@@ -193,9 +207,9 @@
 
                 <!-- 2. Secret Code Input -->
                 <div>
-                    <label for="onboardingVerificationCodeInput" class="block text-sm font-bold text-gem-text-main mb-1">2. Secret Verification Code (Minimum 6 characters):</label>
-                    <input type="password" id="onboardingVerificationCodeInput" class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 text-gem-text-main" placeholder="Enter your secret code">
-                    <p class="text-xs text-gray-500 mt-1">This is a secret key only you know, used to generate your verifiable ID. (Required for full posting access).</p>
+                    <label for="onboardingVerificationCodeInput" class="block text-sm font-bold text-gem-text-main mb-1">2. 6-Digit PIN (Number):</label>
+                    <input type="number" id="onboardingVerificationCodeInput" maxlength="6" inputmode="numeric" class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 text-gem-text-main text-center text-xl tracking-widest" placeholder="••••••">
+                    <p class="text-xs text-gray-500 mt-1">This PIN will be used for future identity checks. (Required for full posting access).</p>
                 </div>
                 
                 <div id="onboardingMessage" class="hidden p-3 text-sm rounded-lg text-gem-text-secondary bg-red-100 mt-4"></div>
@@ -211,7 +225,12 @@
 
     <!-- Post/QR/Comments Modal (Verification view removed from modal) -->
     <div id="appModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 transition-opacity duration-300 p-4">
-        <div class="bg-white p-6 md:p-8 rounded-xl shadow-2xl w-full max-w-lg transition-transform duration-300 transform scale-95 opacity-0" id="modalContent">
+        <!-- 
+            MOBILE FIX: Added 'sm:max-w-lg'
+            Removed 'max-w-lg' and replaced it with 'sm:max-w-lg'.
+            This makes the card 'w-full' on mobile and 'max-w-lg' on screens 'sm' (640px) and up.
+        -->
+        <div class="bg-white p-6 md:p-8 rounded-xl shadow-2xl w-full sm:max-w-lg transition-transform duration-300 transform scale-95 opacity-0" id="modalContent">
             
             <!-- Post Creation View -->
             <div id="postView" class="hidden">
@@ -232,6 +251,7 @@
                 </p>
 
                 <div class="flex flex-col sm:flex-row justify-end mt-4 space-x-0 sm:space-x-3 space-y-3 sm:space-y-0">
+          _http_chunk_receiver_ready_milestone
                     <button id="generateDraftButton" onclick="generatePostDraft()" class="px-4 py-2 bg-gem-light text-gem-text-secondary rounded-lg font-semibold hover:bg-gem-primary transition-colors duration-200 flex items-center justify-center disabled:opacity-50">
                         <i data-lucide="sparkles" class="w-4 h-4 mr-2"></i> Generate Draft
                     </button>
@@ -255,7 +275,7 @@
                 <div class="mt-4 p-3 bg-gem-bg-global rounded-lg inline-block min-w-[200px]">
                     <p class="text-sm text-gray-500 font-medium">Display Name:</p>
                     <!-- Display Name is now critical identity info -->
-                    <p id="qrCodeUserName" class="text-2xl font-bold text-gem-text-main">Loading...</p> 
+                    <p id="qrCodeUserName" class="text-2xl font-bold text-gem-text-main">Loading...</p>
                     <p class="text-xs text-gray-500 mt-2">User ID (for lookup):</p>
                     <p id="qrCodeUserId" class="font-mono text-gem-accent text-[10px] break-all">Loading...</p>
                 </div>
@@ -274,6 +294,7 @@
                 <div class="p-3 bg-gem-bg-global rounded-lg mb-4 max-h-24 overflow-y-auto border border-gem-light">
                     <p class="text-sm font-semibold text-gem-text-main mb-1">Replying to:</p>
                     <p id="commentOriginalPostContent" class="text-xs text-gray-700 line-clamp-2"></p>
+C:\Users\eugene\Downloads\index.html
                 </div>
 
                 <!-- Comments List -->
@@ -282,7 +303,7 @@
                     <!-- Comments will be injected here -->
                 </div>
                 
-                <!-- Add Comment Input -->
+  G             <!-- Add Comment Input -->
                 <div class="border-t pt-4">
                     <input type="text" id="commentInput" class="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gem-primary text-gem-text-main" placeholder="Write a comment...">
                     <div class="flex justify-end mt-3 space-x-3">
@@ -309,12 +330,12 @@
             </div>
 
             <!-- Profile & Actions -->
-            <div class="flex items-center space-x-3 md:space-x-5">
+          D <div class="flex items-center space-x-3 md:space-x-5">
                 <button id="createPostHeaderBtn" onclick="openModal('post')" class="hidden sm:inline-flex items-center px-4 py-2 bg-gem-primary text-gem-text-secondary rounded-full font-bold shadow-md hover:bg-gem-accent transition-all duration-300 transform hover:scale-[1.03] text-sm" disabled>
                     <i data-lucide="edit" class="w-4 h-4 mr-2"></i> Create Post
                 </button>
                 <button class="p-2 rounded-full bg-gem-bg-card hover:bg-gem-light transition-colors duration-200">
-                    <i data-lucide="bell" class="w-6 h-6 text-gem-text-main"></i>
+S                 <i data-lucide="bell" class="w-6 h-6 text-gem-text-main"></i>
                 </button>
                 <div class="w-10 h-10 bg-gem-primary rounded-full border-2 border-gem-accent cursor-pointer flex items-center justify-center text-sm font-bold text-gem-text-secondary" id="profileInitials">
                     ...
@@ -324,6 +345,7 @@
     </header>
 
     <!-- Main Content Grid (Hidden by default, shown when verified) -->
+Indented block
     <main id="appMain" class="hidden container mx-auto p-3 md:p-6 lg:p-8">
         <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
 
@@ -334,921 +356,53 @@
                     <div class="p-4 rounded-xl bg-white shadow-lg border border-gem-bg-card">
                         <div class="flex items-center space-x-3 mb-4">
                             <div class="w-12 h-12 bg-gem-primary rounded-full flex-shrink-0 flex items-center justify-center text-lg font-bold text-gem-text-secondary" id="sidebarProfileInitials">
-                                ...
+                          D   ...
                             </div>
                             <div>
                                 <!-- Display Name / Default Name -->
                                 <p class="font-bold text-gem-text-main" id="sidebarUsername">Welcome User!</p>
                                 <p class="text-xs text-gray-500">Your ID (for sharing):</p>
                                 <p class="text-[10px] text-wrap break-all font-mono text-gem-accent" id="currentUserId">
-                                    Loading...
+D                               Loading...
                                 </p>
+Indented block
                             </div>
                         </div>
                         
                         <!-- Verification Status -->
-                        <div class="flex items-center text-sm font-semibold mt-2 border-t border-gem-bg-global pt-3" id="verificationStatusContainer">
+What                   <div class="flex items-center text-sm font-semibold mt-2 border-t border-gem-bg-global pt-3" id="verificationStatusContainer">
                             <i data-lucide="loader-circle" class="w-4 h-4 mr-2 text-gray-500 animate-spin" id="verificationIcon"></i>
                             <span class="text-gray-500" id="verificationText">Checking status...</span>
+Indented block
                         </div>
                         
                         <!-- QR CODE BUTTON (to show ID) -->
-                        <button onclick="showQrModal()" class="w-full mt-3 flex items-center justify-center px-3 py-2 bg-gem-bg-global text-gem-accent rounded-lg font-semibold hover:bg-gem-light transition-colors duration-200 text-sm disabled:opacity-50" id="showQrButton" disabled>
-                            <i data-lucide="scan-line" class="w-4 h-4 mr-2"></i> Show Verifiable ID QR
+s                     <button onclick="showQrModal()" class="w-full mt-3 flex items-center justify-center px-3 py-2 bg-gem-bg-global text-gem-accent rounded-lg font-semibold hover:bg-gem-light transition-colors duration-200 text-sm disabled:opacity-50" id="showQrButton" disabled>
+                  _http_chunk_receiver_ready_milestone
+            D         <i data-lucide="scan-line" class="w-4 h-4 mr-2"></i> Show Verifiable ID QR
                         </button>
                         
                         <!-- Sign Out Button -->
-                        <button onclick="signOutUser()" class="w-full mt-2 flex items-center justify-center px-3 py-2 bg-red-100 text-red-600 rounded-lg font-semibold hover:bg-red-200 transition-colors duration-200 text-sm" id="signOutButton" disabled>
+TODO                 <button onclick="signOutUser()" class="w-full mt-2 flex items-center justify-center px-3 py-2 bg-red-100 text-red-600 rounded-lg font-semibold hover:bg-red-200 transition-colors duration-200 text-sm" id="signOutButton" disabled>
                             <i data-lucide="log-out" class="w-4 h-4 mr-2"></i> Sign Out
                         </button>
                     </div>
 
                     <!-- Navigation Links -->
+ndented block
                     <nav class="p-4 rounded-xl bg-white shadow-lg border border-gem-bg-card">
                         <ul class="space-y-3">
                             <li class="flex items-center text-gem-accent font-semibold hover:text-gem-primary cursor-pointer transition-colors duration-200">
                                 <i data-lucide="users" class="w-5 h-5 mr-3"></i> Friends
+Read                       </li>
+Indented block
+Indented block
+                            <li class="flex items-center text-gem-text-main hover:text-gem-primary cursor-pointer transition-colors duration-200">
+S                           <i data-lucide="calendar" class="w-5 h-5 mr-3"></i> Events
                             </li>
                             <li class="flex items-center text-gem-text-main hover:text-gem-primary cursor-pointer transition-colors duration-200">
-                                <i data-lucide="calendar" class="w-5 h-5 mr-3"></i> Events
+Indented block
+Indented block
+G Note                     <i data-lucide="group" class="w-5 h-5 mr-3"></i> Groups
                             </li>
-                            <li class="flex items-center text-gem-text-main hover:text-gem-primary cursor-pointer transition-colors duration-200">
-                                <i data-lucide="group" class="w-5 h-5 mr-3"></i> Groups
-                            </li>
-                            <li class="flex items-center text-gem-text-main hover:text-gem-primary cursor-pointer transition-colors duration-200">
-                                <i data-lucide="history" class="w-5 h-5 mr-3"></i> Memories
-                            </li>
-                        </ul>
-                    </nav>
-                </div>
-            </aside>
-
-            <!-- Center Feed (Main Content) -->
-            <section class="lg:col-span-3 space-y-6">
-
-                <!-- Mobile Post Creation Button -->
-                <button id="createPostMobileBtn" onclick="openModal('post')" class="w-full flex sm:hidden items-center justify-center p-3 bg-gem-primary text-gem-text-secondary rounded-xl font-bold shadow-md hover:bg-gem-accent transition-colors duration-300" disabled>
-                    <i data-lucide="edit" class="w-5 h-5 mr-2"></i> Start a new post
-                </button>
-
-                <!-- Post Input Card (Desktop/Tablet) -->
-                <div class="hidden sm:block p-4 rounded-xl bg-white shadow-lg border border-gem-bg-card">
-                    <div class="flex items-center space-x-3 pb-3 border-b border-gem-bg-global">
-                        <div class="w-10 h-10 bg-gem-primary rounded-full flex-shrink-0 flex items-center justify-center text-sm font-bold text-gem-text-secondary" id="inputProfileInitials">...</div>
-                        <input type="text" placeholder="What's going on?" onclick="openModal('post')" readonly class="w-full p-2 bg-gem-bg-global rounded-full cursor-pointer hover:bg-gem-bg-card transition-colors duration-200 text-sm text-gem-text-main placeholder-gray-500 border border-gray-100 focus:outline-none" id="postInput" disabled>
-                    </div>
-                    <!-- Simplified Interactions Bar - Removed Photo/Video and Tag Friends -->
-                    <div class="flex justify-end pt-3 text-sm">
-                        <button onclick="openModal('post')" class="flex items-center text-gem-primary font-bold hover:text-gem-accent transition-colors duration-200" id="postTextBtn" disabled>
-                            Post
-                        </button>
-                    </div>
-                </div>
-                
-                <!-- Loading Indicator -->
-                <div id="loadingIndicator" class="text-center p-8 text-gem-accent font-semibold">
-                    <i data-lucide="loader-circle" class="w-6 h-6 animate-spin inline-block mr-2"></i> Loading Feed...
-                </div>
-
-                <!-- Feed Posts Container -->
-                <div id="feedContainer" class="space-y-6">
-                    <!-- Posts will be dynamically inserted here -->
-                </div>
-            </section>
-            
-        </div>
-    </main>
-
-    <footer class="mt-10 p-4 text-center text-sm text-gray-500 border-t border-gem-bg-card">
-        <p>© 2025 GreenFeed Social. All rights reserved. Persistent data via Firebase & AI powered drafts.</p>
-    </footer>
-
-
-    <script>
-        // Global variables for Firebase access
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        
-        // Custom Firebase Configuration provided by the user
-        const customFirebaseConfig = {
-            apiKey: "AIzaSyBTveXs1VEs-_tJUydTT71oDLx8o9ueMVg",
-            authDomain: "greenfeed-fire.firebaseapp.com",
-            projectId: "greenfeed-fire",
-            storageBucket: "greenfeed-fire.firebasestorage.app",
-            messagingSenderId: "1012124354290",
-            appId: "1:1012124354290:web:fdfdd602385d7d5893f26b",
-            measurementId: "G-JDPHNH2E97"
-        };
-
-        // If the environment provides a config (as __firebase_config), use it; 
-        // otherwise, use the user's custom configuration as a fallback.
-        const firebaseConfig = typeof __firebase_config !== 'undefined' && __firebase_config 
-            ? JSON.parse(__firebase_config) 
-            : customFirebaseConfig;
-            
-        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
-        
-        const DISABLED_USER_KEY = 'greenfeed_disabled_user';
-        let app;
-        let auth;
-        let db;
-        let currentFirebaseUser = null; // The User object from Firebase Auth
-        let userId = null;
-        let userName = null; // Default derived name (e.g., Guest-xyz)
-        let displayName = null; // User's custom verified display name
-        let isAuthReady = false;
-        let isSigningOutIntent = false; // Flag to prevent re-auth on intentional sign out
-        let isUserVerified = false; // Track verification status
-        let currentPostId = null; // NEW: Track the post currently open in the comment modal
-
-        // --- AI Personalities Definition ---
-        const aiPersonalities = {
-            'concise-analyst': { name: 'Concise Analyst', system: 'Act as a concise and factual analyst. Summarize complex topics into three easy-to-read bullet points.' },
-            'friendly-tutor': { name: 'Friendly Tutor', system: 'Act as an encouraging and friendly writing tutor. Elaborate on the user\'s idea, using clear, slightly motivational language, and always offer a conversational closing question to encourage dialogue.' },
-            'creative-storyteller': { name: 'Creative Storyteller', system: 'Act as a creative short story writer. Take the user\'s input and weave it into a short, engaging narrative suitable for a social media post, focusing on vivid descriptions and emotional resonance.' }
-        };
-        // --- End AI Personalities Definition ---
-
-
-        // UI element references
-        const authOverlay = document.getElementById('authOverlay');
-        const authMessage = document.getElementById('authMessage');
-        const emailInput = document.getElementById('emailInput');
-        const passwordInput = document.getElementById('passwordInput');
-        const signInButton = document.getElementById('signInButton');
-        const createAccountButton = document.getElementById('createAccountButton');
-        const googleSignInButton = document.getElementById('googleSignInButton');
-        const guestButton = document.getElementById('guestButton');
-
-        const appModal = document.getElementById('appModal'); 
-        const modalContent = document.getElementById('modalContent');
-        const postView = document.getElementById('postView');
-        const qrView = document.getElementById('qrView');
-        const verificationView = document.getElementById('verificationView'); // Now unused, kept for reference
-        const commentView = document.getElementById('commentView'); 
-        const postTextarea = document.getElementById('postTextarea');
-        const publishButton = document.getElementById('publishButton');
-        const generateDraftButton = document.getElementById('generateDraftButton');
-        const aiPersonalitySelect = document.getElementById('aiPersonalitySelect');
-        const modalMessage = document.getElementById('modalMessage');
-        const feedContainer = document.getElementById('feedContainer');
-        const loadingIndicator = document.getElementById('loadingIndicator');
-        const qrcodeCanvas = document.getElementById('qrcodeCanvas');
-        const qrCodeUserId = document.getElementById('qrCodeUserId');
-        const qrCodeUserName = document.getElementById('qrCodeUserName'); 
-        const showQrButton = document.getElementById('showQrButton');
-        const signOutButton = document.getElementById('signOutButton');
-        const verificationIcon = document.getElementById('verificationIcon');
-        const verificationText = document.getElementById('verificationText');
-        const appHeader = document.getElementById('appHeader');
-        const appMain = document.getElementById('appMain');
-        
-        // NEW: Onboarding UI elements
-        const onboardingDiv = document.getElementById('onboardingDiv');
-        const onboardingDisplayNameInput = document.getElementById('onboardingDisplayNameInput');
-        const onboardingVerificationCodeInput = document.getElementById('onboardingVerificationCodeInput');
-        const onboardingSetCodeButton = document.getElementById('onboardingSetCodeButton');
-        const onboardingUserId = document.getElementById('onboardingUserId');
-        const onboardingMessage = document.getElementById('onboardingMessage');
-        
-        // NEW Comment UI elements
-        const commentOriginalPostContent = document.getElementById('commentOriginalPostContent');
-        const commentsContainer = document.getElementById('commentsContainer');
-        const commentInput = document.getElementById('commentInput');
-        const addCommentButton = document.getElementById('addCommentButton');
-
-        // --- Utility Functions ---
-
-        /**
-        * Generates two initials from a name string.
-        * @param {string} name 
-        * @returns {string} Two uppercase initials.
-        */
-        function getInitials(name) {
-            if (!name) return '??';
-            const parts = name.split(' ').filter(p => p.length > 0);
-            if (parts.length >= 2) {
-                return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-            }
-            return name.substring(0, 2).toUpperCase();
-        }
-
-        /**
-        * Retries a function with exponential backoff on failure.
-        * @param {Function} fn The function to execute.
-        * @param {number} maxRetries Maximum number of retries.
-        * @param {number} delay Initial delay in milliseconds.
-        */
-        async function retryWithBackoff(fn, maxRetries = 3, delay = 1000) {
-            for (let i = 0; i < maxRetries; i++) {
-                try {
-                    return await fn();
-                } catch (error) {
-                    if (i === maxRetries - 1) throw error;
-                    await new Promise(resolve => setTimeout(resolve, delay * (2 ** i)));
-                }
-            }
-        }
-
-        /**
-        * Sets up the AI Personality options in the post modal.
-        */
-        function setupAIPersonalities() {
-            aiPersonalitySelect.innerHTML = '';
-            for (const key in aiPersonalities) {
-                const option = document.createElement('option');
-                option.value = key;
-                option.textContent = aiPersonalities[key].name;
-                aiPersonalitySelect.appendChild(option);
-            }
-        }
-
-        // --- Modal Control ---
-
-        /**
-        * Opens the application modal to a specific view.
-        * @param {'post'|'qr'|'comments'} viewName The view to display.
-        * @param {string | null} postId Optional post ID for comment view.
-        */
-        function openModal(viewName, postId = null) {
-            if (!isUserVerified && viewName !== 'qr') {
-                showCustomMessage('You must confirm your identity to create posts.', 'bg-yellow-100 text-yellow-700', authMessage);
-                return;
-            }
-            
-            const views = { post: postView, qr: qrView, comments: commentView };
-            for (const key in views) {
-                views[key].classList.add('hidden');
-            }
-            modalMessage.classList.add('hidden');
-            
-            const selectedView = views[viewName];
-            if (selectedView) {
-                selectedView.classList.remove('hidden');
-                appModal.classList.remove('hidden');
-                setTimeout(() => {
-                    appModal.classList.add('opacity-100');
-                    modalContent.classList.remove('scale-95', 'opacity-0');
-                    modalContent.classList.add('scale-100', 'opacity-100');
-                }, 10);
-            }
-
-            if (viewName === 'post') {
-                postTextarea.value = '';
-                publishButton.disabled = true;
-            } else if (viewName === 'comments' && postId) {
-                currentPostId = postId;
-                setupCommentsListener(postId);
-                addCommentButton.disabled = !isUserVerified;
-            }
-        }
-
-        function closeModal() {
-            modalContent.classList.remove('scale-100', 'opacity-100');
-            modalContent.classList.add('scale-95', 'opacity-0');
-            appModal.classList.remove('opacity-100');
-            currentPostId = null;
-            setTimeout(() => {
-                appModal.classList.add('hidden');
-            }, 300);
-        }
-
-        function showCustomMessage(message, classes, element) {
-            element.textContent = message;
-            element.className = `p-3 mb-4 text-sm rounded-lg ${classes}`;
-            element.classList.remove('hidden');
-            setTimeout(() => element.classList.add('hidden'), 5000);
-        }
-        
-        // --- AI Draft Generation ---
-        
-        async function generatePostDraft() {
-            const userQuery = postTextarea.value.trim();
-            if (userQuery.length < 5) {
-                showCustomMessage('Please enter at least a few keywords to generate a draft.', 'bg-red-100 text-red-700', modalMessage);
-                return;
-            }
-
-            generateDraftButton.disabled = true;
-            publishButton.disabled = true;
-            const originalButtonText = generateDraftButton.innerHTML;
-            generateDraftButton.innerHTML = `<i data-lucide="loader-circle" class="w-4 h-4 mr-2 animate-spin"></i> Generating...`;
-            lucide.createIcons();
-            postTextarea.placeholder = 'Drafting your masterpiece...';
-
-            const selectedKey = aiPersonalitySelect.value;
-            const systemInstruction = aiPersonalities[selectedKey]?.system || aiPersonalities['friendly-tutor'].system;
-            
-            const apiKey = "";
-            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
-
-            const payload = {
-                contents: [{ parts: [{ text: userQuery }] }],
-                tools: [{ "google_search": {} }],
-                systemInstruction: { parts: [{ text: systemInstruction }] },
-            };
-
-            try {
-                const response = await retryWithBackoff(() => fetch(apiUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                }));
-                const result = await response.json();
-                const text = result.candidates?.[0]?.content?.parts?.[0]?.text || "Failed to generate content.";
-                
-                postTextarea.value = text;
-                publishButton.disabled = text.length < 10;
-                showCustomMessage(`Draft generated by ${aiPersonalities[selectedKey].name}. Review and publish!`, 'bg-gem-bg-card text-gem-text-main', modalMessage);
-
-            } catch (error) {
-                console.error("Gemini API Error:", error);
-                showCustomMessage('Failed to generate draft. Please check the console for API errors.', 'bg-red-100 text-red-700', modalMessage);
-                postTextarea.placeholder = 'Type a short idea here, or write your full post.';
-            } finally {
-                generateDraftButton.disabled = false;
-                generateDraftButton.innerHTML = originalButtonText;
-                lucide.createIcons();
-            }
-        }
-        window.generatePostDraft = generatePostDraft; // Expose globally for onclick
-
-        // --- Post CRUD & Listeners ---
-
-        /**
-        * Publishes a new post to the public posts collection.
-        */
-        async function publishPost() {
-            const content = postTextarea.value.trim();
-            if (!isUserVerified || !userId || !displayName) {
-                showCustomMessage('You must be a verified user to publish posts.', 'bg-red-100 text-red-700', modalMessage);
-                return;
-            }
-            if (content.length < 10) {
-                showCustomMessage('Post content must be at least 10 characters long.', 'bg-red-100 text-red-700', modalMessage);
-                return;
-            }
-
-            publishButton.disabled = true;
-            const originalButtonText = publishButton.textContent;
-            publishButton.textContent = 'Posting...';
-
-            try {
-                await addDoc(collection(db, `artifacts/${appId}/public/data/posts`), {
-                    content: content,
-                    authorId: userId,
-                    authorName: displayName,
-                    likes: [], // Array of user IDs who liked the post
-                    commentCount: 0,
-                    timestamp: serverTimestamp()
-                });
-                closeModal();
-                postTextarea.value = '';
-            } catch (error) {
-                console.error("Error adding document: ", error);
-                showCustomMessage('Error publishing post. Check security rules/console.', 'bg-red-100 text-red-700', modalMessage);
-            } finally {
-                publishButton.textContent = originalButtonText;
-                publishButton.disabled = true;
-            }
-        }
-
-        window.publishPost = publishPost; // Expose globally for onclick
-
-        /**
-        * Renders a single post element.
-        * @param {object} post The post data including its ID.
-        * @returns {string} HTML string for the post card.
-        */
-        function renderPost(post) {
-            const timestamp = post.timestamp ? new Date(post.timestamp.toDate()).toLocaleString() : 'Just now';
-            const isLiked = post.likes.includes(userId);
-            const likeButtonClass = isLiked ? 'text-red-500 hover:text-red-600' : 'text-gray-500 hover:text-red-500';
-            const likeIcon = isLiked ? 'heart' : 'heart'; // Still using heart, but color indicates state
-            const initials = getInitials(post.authorName || 'Guest');
-            const canDelete = userId === post.authorId;
-            
-            return `
-                <div id="post-${post.id}" class="post-card p-4 md:p-6 bg-white rounded-xl shadow-lg border border-gem-bg-card transition-all duration-300 transform hover:shadow-xl">
-                    <div class="flex items-center justify-between mb-4">
-                        <div class="flex items-center space-x-3">
-                            <div class="w-10 h-10 bg-gem-primary rounded-full flex-shrink-0 flex items-center justify-center text-sm font-bold text-gem-text-secondary">${initials}</div>
-                            <div>
-                                <p class="font-bold text-gem-text-main">${post.authorName || 'Anonymous'}</p>
-                                <p class="text-xs text-gray-500">${timestamp}</p>
-                            </div>
-                        </div>
-                        ${canDelete ? `
-                            <button onclick="deletePost('${post.id}')" class="p-1 text-red-400 hover:text-red-600 transition-colors duration-200" title="Delete Post">
-                                <i data-lucide="trash-2" class="w-5 h-5"></i>
-                            </button>
-                        ` : ''}
-                    </div>
-
-                    <div class="post-content text-lg mb-4 whitespace-pre-wrap">${post.content}</div>
-
-                    <div class="flex items-center space-x-6 border-t pt-4">
-                        <!-- Like Button -->
-                        <button onclick="toggleLike('${post.id}', ${isLiked})" class="flex items-center font-semibold text-sm transition-colors duration-200 ${likeButtonClass}" ${isUserVerified ? '' : 'disabled'}>
-                            <i data-lucide="${likeIcon}" class="w-4 h-4 mr-1 fill-current"></i>
-                            <span>${post.likes.length} Likes</span>
-                        </button>
-                        
-                        <!-- Comment Button -->
-                        <button onclick="openModal('comments', '${post.id}')" class="flex items-center font-semibold text-sm text-gem-accent hover:text-gem-primary transition-colors duration-200">
-                            <i data-lucide="message-circle" class="w-4 h-4 mr-1"></i>
-                            <span>${post.commentCount || 0} Comments</span>
-                        </button>
-                    </div>
-                </div>
-            `;
-        }
-
-        /**
-        * Toggles the like status of a post.
-        * @param {string} postId The ID of the post.
-        * @param {boolean} isCurrentlyLiked The current like state.
-        */
-        async function toggleLike(postId, isCurrentlyLiked) {
-            if (!isUserVerified) return;
-
-            const postRef = doc(db, `artifacts/${appId}/public/data/posts/${postId}`);
-            const updateData = {};
-
-            if (isCurrentlyLiked) {
-                updateData.likes = arrayRemove(userId);
-            } else {
-                updateData.likes = arrayUnion(userId);
-            }
-
-            try {
-                await updateDoc(postRef, updateData);
-            } catch (error) {
-                console.error("Error toggling like: ", error);
-            }
-        }
-        window.toggleLike = toggleLike; // Expose globally
-
-        /**
-        * Deletes a post.
-        * @param {string} postId The ID of the post to delete.
-        */
-        async function deletePost(postId) {
-            if (!confirm('Are you sure you want to delete this post and all its comments?')) return;
-
-            try {
-                // Delete the post document
-                await deleteDoc(doc(db, `artifacts/${appId}/public/data/posts/${postId}`));
-                console.log("Post deleted successfully.");
-                
-                // NOTE: For simplicity, we assume Firestore security rules will handle comment cascade
-                // or that a backend job would clean up comments. In a client-only app,
-                // we would delete them manually, but that often hits limits.
-                // For now, we trust the `onSnapshot` listener to remove the UI element.
-            } catch (error) {
-                console.error("Error deleting post: ", error);
-            }
-        }
-        window.deletePost = deletePost;
-
-        /**
-        * Sets up the real-time listener for the public feed.
-        */
-        function setupFeedListener() {
-            if (!db || !userId) return;
-
-            loadingIndicator.classList.remove('hidden');
-            feedContainer.innerHTML = '';
-            
-            const postsColRef = collection(db, `artifacts/${appId}/public/data/posts`);
-            // Query: Order by timestamp descending
-            const q = query(postsColRef);
-
-            onSnapshot(q, (snapshot) => {
-                loadingIndicator.classList.add('hidden');
-                
-                // Process changes
-                snapshot.docChanges().forEach(change => {
-                    const postData = { id: change.doc.id, ...change.doc.data() };
-                    const existingElement = document.getElementById(`post-${postData.id}`);
-
-                    if (change.type === 'added') {
-                        const newPostHtml = renderPost(postData);
-                        const tempDiv = document.createElement('div');
-                        tempDiv.innerHTML = newPostHtml;
-                        feedContainer.prepend(tempDiv.firstChild);
-                    } else if (change.type === 'modified') {
-                        if (existingElement) {
-                            // Simple re-render for updates like like count or content
-                            existingElement.outerHTML = renderPost(postData);
-                        }
-                    } else if (change.type === 'removed') {
-                        if (existingElement) {
-                            existingElement.remove();
-                        }
-                    }
-                });
-
-                // Re-initialize lucide icons after DOM manipulation
-                lucide.createIcons();
-            }, (error) => {
-                console.error("Feed Listener Error:", error);
-                loadingIndicator.innerHTML = '<span class="text-red-500">Error loading feed. Check your connection or console.</span>';
-            });
-        }
-
-        // --- Comments Logic ---
-
-        /**
-        * Sets up the real-time listener for comments on a specific post.
-        * @param {string} postId The ID of the post to listen to.
-        */
-        async function setupCommentsListener(postId) {
-            commentsContainer.innerHTML = '<p class="text-center text-gray-500 text-sm">Loading comments...</p>';
-            commentInput.value = '';
-            
-            try {
-                // 1. Get original post data for the header
-                const postDocRef = doc(db, `artifacts/${appId}/public/data/posts/${postId}`);
-                const postSnap = await getDoc(postDocRef);
-                if (!postSnap.exists()) {
-                    commentOriginalPostContent.textContent = 'Post not found.';
-                    return;
-                }
-                const postData = postSnap.data();
-                commentOriginalPostContent.textContent = postData.content;
-
-                // 2. Setup real-time listener for comments
-                const commentsColRef = collection(db, `artifacts/${appId}/public/data/posts/${postId}/comments`);
-                // Use orderBy for comments
-                const q = query(commentsColRef, orderBy('timestamp', 'asc'));
-
-                onSnapshot(q, (snapshot) => {
-                    commentsContainer.innerHTML = '';
-                    const comments = [];
-                    snapshot.forEach(doc => {
-                        comments.push({ id: doc.id, ...doc.data() });
-                    });
-
-                    if (comments.length === 0) {
-                        commentsContainer.innerHTML = '<p class="text-center text-gray-500 text-sm">Be the first to comment!</p>';
-                    } else {
-                        comments.forEach(comment => {
-                            const commentElement = document.createElement('div');
-                            commentElement.className = 'p-3 bg-gem-bg-global rounded-lg border border-gem-bg-card';
-                            commentElement.innerHTML = `
-                                <div class="font-bold text-sm text-gem-text-main">${comment.authorName || 'Anonymous'}</div>
-                                <p class="text-xs text-gray-500 mb-1">${comment.timestamp ? new Date(comment.timestamp.toDate()).toLocaleTimeString() : 'Just now'}</p>
-                                <p class="text-sm text-gray-700 whitespace-pre-wrap">${comment.content}</p>
-                            `;
-                            commentsContainer.appendChild(commentElement);
-                        });
-                    }
-                });
-            } catch (error) {
-                console.error("Error setting up comments listener: ", error);
-                commentsContainer.innerHTML = '<p class="text-center text-red-500 text-sm">Failed to load comments.</p>';
-            }
-        }
-
-        /**
-        * Adds a comment to the currently open post.
-        */
-        async function addComment() {
-            const content = commentInput.value.trim();
-            if (!isUserVerified || !userId || !displayName || !currentPostId) return;
-            if (content.length < 1) {
-                showCustomMessage('Comment cannot be empty.', 'bg-red-100 text-red-700', modalMessage);
-                return;
-            }
-
-            addCommentButton.disabled = true;
-            const originalButtonText = addCommentButton.textContent;
-            addCommentButton.textContent = 'Posting...';
-
-            try {
-                // 1. Add comment to the subcollection
-                const commentsColRef = collection(db, `artifacts/${appId}/public/data/posts/${currentPostId}/comments`);
-                await addDoc(commentsColRef, {
-                    content: content,
-                    authorId: userId,
-                    authorName: displayName,
-                    timestamp: serverTimestamp()
-                });
-
-                // 2. Increment comment counter on the main post (optional but good practice)
-                // NOTE: Firebase doesn't have an easy way to increment counts from client side
-                // without custom logic. We'll rely on the comment listener for now.
-
-                commentInput.value = ''; // Clear input on success
-            } catch (error) {
-                console.error("Error adding comment: ", error);
-                showCustomMessage('Error posting comment. Check console.', 'bg-red-100 text-red-700', modalMessage);
-            } finally {
-                addCommentButton.textContent = originalButtonText;
-                addCommentButton.disabled = false;
-            }
-        }
-        window.addComment = addComment; // Expose globally for onclick
-
-        // --- Verification & User Profile Management ---
-
-        /**
-        * Checks the public user profile document for verification status.
-        * @param {string} uid The Firebase Auth UID.
-        */
-        async function checkUserVerification(uid) {
-            try {
-                const userDocRef = doc(db, `artifacts/${appId}/public/data/users/${uid}`);
-                const userSnap = await getDoc(userDocRef);
-
-                if (userSnap.exists() && userSnap.data().isVerified) {
-                    // User is verified
-                    isUserVerified = true;
-                    displayName = userSnap.data().displayName;
-                    setVerificationStatus(true);
-                    onboardingDiv.classList.add('hidden');
-                    setupFeedListener(); // Start listening to the feed
-                } else {
-                    // User not verified, force onboarding
-                    isUserVerified = false;
-                    setVerificationStatus(false);
-                    handleOnboarding(uid);
-                }
-            } catch (error) {
-                console.error("Error checking verification: ", error);
-                setVerificationStatus(false, 'Error checking profile.');
-            }
-        }
-
-        /**
-        * Displays or hides the onboarding overlay and sets ID.
-        * @param {string} uid The Firebase Auth UID.
-        */
-        function handleOnboarding(uid) {
-            onboardingUserId.textContent = uid;
-            onboardingDiv.classList.remove('hidden');
-        }
-
-        /**
-        * Writes the user's display name and verification status to Firestore.
-        */
-        onboardingSetCodeButton.onclick = async () => {
-            const name = onboardingDisplayNameInput.value.trim();
-            const code = onboardingVerificationCodeInput.value.trim();
-            
-            if (name.length < 3) {
-                showCustomMessage('Display name must be at least 3 characters.', 'bg-red-100 text-red-700', onboardingMessage);
-                return;
-            }
-            if (code.length < 6) {
-                showCustomMessage('Secret code must be at least 6 characters.', 'bg-red-100 text-red-700', onboardingMessage);
-                return;
-            }
-
-            onboardingSetCodeButton.disabled = true;
-            const originalText = onboardingSetCodeButton.innerHTML;
-            onboardingSetCodeButton.innerHTML = `<i data-lucide="loader-circle" class="w-5 h-5 mr-2 inline-block animate-spin"></i> Confirming...`;
-            lucide.createIcons();
-
-            try {
-                const userDocRef = doc(db, `artifacts/${appId}/public/data/users/${userId}`);
-                await setDoc(userDocRef, {
-                    displayName: name,
-                    isVerified: true,
-                    createdAt: serverTimestamp()
-                }, { merge: true }); // Use merge: true to avoid overwriting
-
-                // Success: Update local state and UI
-                isUserVerified = true;
-                displayName = name;
-                onboardingDiv.classList.add('hidden');
-                setVerificationStatus(true);
-                setupFeedListener();
-            } catch (error) {
-                console.error("Error setting user profile: ", error);
-                showCustomMessage('Profile setup failed. Try again or check console.', 'bg-red-100 text-red-700', onboardingMessage);
-            } finally {
-                onboardingSetCodeButton.innerHTML = originalText;
-                onboardingSetCodeButton.disabled = false;
-                lucide.createIcons();
-            }
-        };
-
-        /**
-        * Updates the verification UI status and enables/disables features.
-        * @param {boolean} verified 
-        * @param {string} [message]
-        */
-        function setVerificationStatus(verified, message = null) {
-            isUserVerified = verified;
-
-            // Update Sidebar Status
-            verificationIcon.setAttribute('data-lucide', verified ? 'check-circle' : 'alert-triangle');
-            verificationIcon.className = `w-4 h-4 mr-2 transition-colors ${verified ? 'text-gem-accent' : 'text-red-500'}`;
-            verificationText.textContent = message || (verified ? 'Identity Confirmed' : 'Verification Required');
-            verificationText.className = verified ? 'text-gem-accent' : 'text-red-500';
-
-            // Toggle Post Buttons
-            const postButtons = [
-                document.getElementById('createPostHeaderBtn'),
-                document.getElementById('createPostMobileBtn'),
-                document.getElementById('postInput'),
-                document.getElementById('postTextBtn'),
-                showQrButton
-            ];
-            postButtons.forEach(btn => btn.disabled = !verified);
-            
-            // Re-create icons to ensure they update their attributes
-            lucide.createIcons();
-        }
-
-
-        // --- QR Code Generator ---
-
-        function showQrModal() {
-            openModal('qr');
-            
-            // Clear previous QR Code
-            qrcodeCanvas.innerHTML = '';
-            
-            qrCodeUserId.textContent = userId;
-            qrCodeUserName.textContent = displayName || userName;
-
-            // Data for the QR Code (User ID and Display Name)
-            const qrData = `GreenFeed ID: ${userId}, Name: ${displayName || userName}`;
-
-            // Generate QR Code (Global QRCodeJS library is available)
-            new QRCode(qrcodeCanvas, {
-                text: qrData,
-                width: 200,
-                height: 200,
-                colorDark: "#00330c", // gem-text-main
-                colorLight: "#ffffff", // White background
-                correctLevel: QRCode.CorrectLevel.H
-            });
-        }
-        window.showQrModal = showQrModal; // Expose globally
-
-        // --- Core Auth Handling ---
-
-        /**
-        * Updates UI based on the current user status.
-        * @param {object | null} user Firebase User object or null.
-        */
-        async function handleAuth(user) {
-            currentFirebaseUser = user;
-            isAuthReady = true;
-
-            if (user) {
-                userId = user.uid;
-                authOverlay.classList.add('hidden');
-                appHeader.classList.remove('hidden');
-                appMain.classList.remove('hidden');
-                signOutButton.disabled = false;
-
-                // Determine user name for display
-                if (user.isAnonymous) {
-                    userName = `Guest-${user.uid.substring(0, 4)}`;
-                } else if (user.displayName) {
-                    userName = user.displayName;
-                } else {
-                    userName = user.email || `User-${user.uid.substring(0, 4)}`;
-                }
-
-                // Set initial display fields
-                const initials = getInitials(userName);
-                document.querySelectorAll('[id$="Initials"]').forEach(el => el.textContent = initials);
-                document.getElementById('currentUserId').textContent = user.uid;
-                document.getElementById('sidebarUsername').textContent = `Welcome, ${userName}!`;
-                
-                // Check for user verification (Display Name set in public profile)
-                await checkUserVerification(user.uid);
-            } else {
-                // No user signed in
-                userId = null;
-                displayName = null;
-                isUserVerified = false;
-                appHeader.classList.add('hidden');
-                appMain.classList.add('hidden');
-                onboardingDiv.classList.add('hidden');
-                
-                if (!isSigningOutIntent) {
-                    authOverlay.classList.remove('hidden');
-                    loadingIndicator.classList.add('hidden');
-                } else {
-                    isSigningOutIntent = false;
-                }
-            }
-        }
-
-        /**
-        * Signs out the current user and shows the auth overlay.
-        */
-        async function signOutUser() {
-            isSigningOutIntent = true;
-            try {
-                await signOut(auth);
-                showCustomMessage('Successfully signed out.', 'bg-gem-bg-card text-gem-text-main', authMessage);
-            } catch (error) {
-                console.error("Sign out error: ", error);
-            }
-        }
-        window.signOutUser = signOutUser;
-
-        // --- Firebase Initialization ---
-
-        function initFirebase() {
-            try {
-                setLogLevel('debug');
-                app = initializeApp(firebaseConfig);
-                auth = getAuth(app);
-                db = getFirestore(app);
-
-                // Listen for auth state changes
-                onAuthStateChanged(auth, async (user) => {
-                    await handleAuth(user);
-                });
-
-                // Custom token sign-in (Canvas environment)
-                if (initialAuthToken) {
-                    signInWithCustomToken(auth, initialAuthToken).catch(error => {
-                        console.error("Custom token sign-in failed:", error);
-                        signInAnonymously(auth); // Fallback to anonymous
-                    });
-                } else if (!auth.currentUser) {
-                    // If no user, show auth overlay (handled by onAuthStateChanged)
-                    loadingIndicator.classList.add('hidden');
-                    authOverlay.classList.remove('hidden');
-                }
-            } catch (e) {
-                console.error("Firebase Initialization Error: ", e);
-                showCustomMessage('Fatal Error: Firebase failed to initialize.', 'bg-red-200 text-red-800', authMessage);
-            }
-        }
-
-        // --- Event Listeners & Setup ---
-
-        document.addEventListener('DOMContentLoaded', () => {
-            lucide.createIcons();
-            setupAIPersonalities();
-            initFirebase();
-        });
-
-        // Auth Overlay Listeners
-        signInButton.onclick = async () => {
-            const email = emailInput.value;
-            const password = passwordInput.value;
-            try {
-                await signInWithEmailAndPassword(auth, email, password);
-            } catch (error) {
-                showCustomMessage(`Sign In Failed: ${error.message.substring(0, 50)}...`, 'bg-red-100 text-red-700', authMessage);
-                console.error(error);
-            }
-        };
-
-        createAccountButton.onclick = async () => {
-            const email = emailInput.value;
-            const password = passwordInput.value;
-            try {
-                await createUserWithEmailAndPassword(auth, email, password);
-            } catch (error) {
-                showCustomMessage(`Account Creation Failed: ${error.message.substring(0, 50)}...`, 'bg-red-100 text-red-700', authMessage);
-                console.error(error);
-            }
-        };
-        
-        googleSignInButton.onclick = async () => {
-            const provider = new GoogleAuthProvider();
-            try {
-                await signInWithPopup(auth, provider);
-            } catch (error) {
-                showCustomMessage(`Google Sign-In Failed: ${error.message.substring(0, 50)}...`, 'bg-red-100 text-red-700', authMessage);
-                console.error(error);
-            }
-        };
-
-        guestButton.onclick = async () => {
-            try {
-                await signInAnonymously(auth);
-            } catch (error) {
-                showCustomMessage(`Guest Sign-In Failed: ${error.message.substring(0, 50)}...`, 'bg-red-100 text-red-700', authMessage);
-                console.error(error);
-            }
-        };
-
-        // Post Textarea Listener to enable Publish button
-        postTextarea.oninput = () => {
-            if (postTextarea.value.trim().length >= 10 && isUserVerified) {
-                publishButton.disabled = false;
-            } else {
-                publishButton.disabled = true;
-            }
-        };
-
-        // Comment Input Listener (Optional, but good practice for UX)
-        commentInput.oninput = () => {
-            addCommentButton.disabled = commentInput.value.trim().length === 0 || !isUserVerified;
-        };
-    </script>
-</body>
-</html>
+      Next 500 lines
