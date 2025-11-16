@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GreenFeed - Social Media</title>
+    <title>GreenFeed - Client TTL</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
     <style>
@@ -74,9 +74,20 @@
 
         // --- Configuration & Global State ---
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
         const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
         
+        // ** USING USER-PROVIDED FIREBASE CONFIGURATION **
+        const firebaseConfig = {
+            apiKey: "AIzaSyDaw63IFCbBz4T8COOgBOmddpPODLYdWuc",
+            authDomain: "pixeldraw-b8692.firebaseapp.com",
+            projectId: "pixeldraw-b8692",
+            storageBucket: "pixeldraw-b8692.firebasestorage.app",
+            messagingSenderId: "1003659579933",
+            appId: "1:1003659579933:web:58af7b0898298e9d7d6cf4",
+            measurementId: "G-0DGFSBS7Y2"
+        };
+        // --------------------------------------------------
+
         const TTL_DAYS = 30;
         const COLLECTION_NAME = 'green_feed_items';
 
@@ -271,6 +282,7 @@
 
         function initFirebaseAndAuth() {
             try {
+                // Initialize using the user's explicit firebaseConfig
                 app = initializeApp(firebaseConfig);
                 db = getFirestore(app);
                 auth = getAuth(app);
