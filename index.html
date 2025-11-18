@@ -8,6 +8,9 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
         body { font-family: 'Inter', sans-serif; }
+        /* Smooth fade transitions */
+        .fade-in { animation: fadeIn 0.3s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
@@ -32,7 +35,7 @@
         </header>
 
         <!-- Status Message Area -->
-        <div id="status-message" class="hidden mb-4 p-3 rounded-lg text-sm transition-all duration-300"></div>
+        <div id="status-message" class="hidden mb-4 p-3 rounded-lg text-sm transition-all duration-300 border"></div>
 
         <!-- Posting Form -->
         <div id="post-form-container" class="mb-8 bg-white p-6 rounded-xl shadow-lg border border-gray-100 opacity-50 pointer-events-none transition-opacity duration-300">
@@ -40,7 +43,7 @@
             <form id="post-form">
                 <textarea
                     id="new-post-text"
-                    placeholder="What's your positive thought for the day? (Max 280 chars)"
+                    placeholder="What's on your mind? (Max 280 chars)"
                     rows="3"
                     maxlength="280"
                     class="w-full p-3 border border-gray-300 rounded-lg focus:ring-green-500 focus:border-green-500 transition-shadow resize-none"
@@ -55,7 +58,7 @@
                         <line x1="22" y1="2" x2="11" y2="13"></line>
                         <polygon points="22 2 15 22 11 14 2 10 22 2"></polygon>
                     </svg>
-                    Post to Feed
+                    Post
                 </button>
             </form>
         </div>
@@ -65,14 +68,14 @@
         
         <div id="feed-list" class="space-y-4">
             <p class="text-gray-500 p-4 text-center border-dashed border-2 rounded-xl">
-                Loading posts...
+                Initializing feed...
             </p>
         </div>
     </div>
 
     <!-- Modal Overlay -->
-    <div id="modal-overlay" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
-        <div id="auth-modal" class="bg-white rounded-xl shadow-2xl p-6 w-11/12 max-w-md transform scale-95 transition-transform duration-300">
+    <div id="modal-overlay" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 fade-in">
+        <div id="auth-modal" class="bg-white rounded-xl shadow-2xl p-6 w-11/12 max-w-md transform transition-all duration-300">
             <div class="flex justify-between items-center mb-6 border-b pb-3">
                 <h2 id="modal-title" class="text-2xl font-bold text-gray-700">Account Access</h2>
                 <button id="close-modal" class="text-gray-500 hover:text-gray-800">
@@ -148,26 +151,25 @@
         } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { 
             getFirestore, doc, addDoc, setDoc, onSnapshot, collection, query, 
-            where, writeBatch, getDocs, setLogLevel, getDoc 
+            where, writeBatch, getDocs, getDoc 
         } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // Global variables provided by the Canvas environment
+        // --- 1. Retrieve Environment Variables ---
+        // The Canvas environment injects these globals.
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+        const firebaseConfigString = typeof __firebase_config !== 'undefined' ? __firebase_config : null;
         const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
         
         // Firebase Instances
         let app, auth, db;
         let currentUserId = null;
-        let isAuthReady = false;
 
         // Configuration
         const TTL_DAYS = 30; // Posts older than 30 days are deleted
         const POSTS_COLLECTION = "green_feed_posts";
         const PROFILES_COLLECTION = "user_profiles";
-        // setLogLevel('debug'); // Disabled for cleaner console output
-
-        // DOM Elements
+        
+        // DOM Elements Helper
         const D = (id) => document.getElementById(id);
         const elements = {
             authButton: D('auth-button'),
@@ -201,14 +203,12 @@
 
         const showStatus = (message, type = 'info') => {
             elements.statusMessage.textContent = message;
-            elements.statusMessage.className = `mb-4 p-3 rounded-lg text-sm transition-all duration-300 flex items-center`;
-            
             if (type === 'success') {
-                elements.statusMessage.classList.add('bg-green-100', 'text-green-700', 'border', 'border-green-300');
+                elements.statusMessage.className = 'mb-4 p-3 rounded-lg text-sm flex items-center bg-green-100 text-green-700 border border-green-300';
             } else if (type === 'error') {
-                elements.statusMessage.classList.add('bg-red-100', 'text-red-700', 'border', 'border-red-300');
+                elements.statusMessage.className = 'mb-4 p-3 rounded-lg text-sm flex items-center bg-red-100 text-red-700 border border-red-300';
             } else { // info
-                elements.statusMessage.classList.add('bg-indigo-100', 'text-indigo-700', 'border', 'border-indigo-300');
+                elements.statusMessage.className = 'mb-4 p-3 rounded-lg text-sm flex items-center bg-indigo-100 text-indigo-700 border border-indigo-300';
             }
             elements.statusMessage.classList.remove('hidden');
         };
@@ -224,68 +224,29 @@
 
         // --- Data Persistence (Firestore) ---
 
-        /**
-         * Saves or updates a user's profile document.
-         * This is crucial because Firebase Auth profile data (like displayName) is not always reliable
-         * immediately after sign-in, and this collection allows us to store extra data.
-         */
         const saveUserProfile = async (user) => {
             if (!db || !user) return;
             const profilePath = getPrivateCollectionPath(PROFILES_COLLECTION);
             if (!profilePath) return;
 
-            // Use the user's UID for the document ID in the profiles collection
             const profileDocRef = doc(db, profilePath, user.uid);
             
             const profileData = {
                 uid: user.uid,
                 email: user.email || 'N/A',
-                displayName: user.displayName || 'Anonymous User',
+                displayName: user.displayName || (user.isAnonymous ? 'Anonymous User' : 'New User'),
                 lastLogin: Date.now(),
             };
             
             try {
-                // Check if profile exists
-                const existingProfile = await getDoc(profileDocRef);
-                
-                if (existingProfile.exists()) {
-                    // Update existing profile (merge: true is implied by setDoc without merge option)
-                    await setDoc(profileDocRef, profileData, { merge: true });
-                } else {
-                    // Create new profile
-                    await setDoc(profileDocRef, profileData);
+                await setDoc(profileDocRef, profileData, { merge: true });
+                if (!user.displayName && !user.isAnonymous) {
+                    await updateProfile(user, { displayName: profileData.displayName });
                 }
-                
-                // Manually update the user's display name locally if it was null/empty
-                if (!user.displayName) {
-                    user.displayName = profileData.displayName;
-                }
-                console.log("Profile data saved/updated for:", profileData.displayName);
             } catch (error) {
                 console.error("Error saving user profile:", error);
             }
         };
-
-        /**
-         * Fetches a user's display name from the Firestore profile collection.
-         */
-        const getDisplayName = async (userId) => {
-            if (!db || !userId) return 'Unknown User';
-            const profilePath = `artifacts/${appId}/users/${userId}/${PROFILES_COLLECTION}`;
-            
-            try {
-                const profileDocRef = doc(db, profilePath, userId);
-                const profileSnap = await getDoc(profileDocRef);
-                
-                if (profileSnap.exists()) {
-                    return profileSnap.data().displayName || 'Anonymous User';
-                }
-            } catch (error) {
-                console.error("Error fetching display name:", error);
-            }
-            return 'Anonymous User';
-        };
-
 
         // --- Authentication Handlers ---
 
@@ -294,8 +255,9 @@
             elements.authErrorMessage.classList.add('hidden');
             try {
                 const provider = new GoogleAuthProvider();
-                const result = await signInWithPopup(auth, provider);
-                // User signed in successfully, onAuthStateChanged will handle UI update
+                provider.setCustomParameters({ prompt: 'select_account' }); 
+                await signInWithPopup(auth, provider);
+                elements.modalOverlay.classList.add('hidden');
             } catch (error) {
                 console.error("Google Sign-In Error:", error);
                 elements.authErrorMessage.textContent = `Sign-in failed: ${error.message}`;
@@ -308,7 +270,7 @@
             elements.authErrorMessage.classList.add('hidden');
             try {
                 await signInAnonymously(auth);
-                // User signed in successfully
+                elements.modalOverlay.classList.add('hidden');
             } catch (error) {
                 console.error("Anonymous Sign-In Error:", error);
                 elements.authErrorMessage.textContent = `Anonymous sign-in failed: ${error.message}`;
@@ -320,24 +282,22 @@
             e.preventDefault();
             if (!auth) return;
             elements.authErrorMessage.classList.add('hidden');
-
             const email = elements.emailInput.value;
             const password = elements.passwordInput.value;
 
             try {
-                // 1. Try to sign in
                 await signInWithEmailAndPassword(auth, email, password);
-                
+                elements.modalOverlay.classList.add('hidden');
             } catch (signInError) {
-                // If sign-in fails, assume the user needs to register
-                if (signInError.code === 'auth/user-not-found' || signInError.code === 'auth/wrong-password') {
+                if (signInError.code === 'auth/user-not-found' || signInError.code === 'auth/wrong-password' || signInError.code === 'auth/invalid-credential') {
                     try {
-                        // 2. Try to register
-                        await createUserWithEmailAndPassword(auth, email, password);
+                        const result = await createUserWithEmailAndPassword(auth, email, password);
+                        await updateProfile(result.user, { displayName: email.split('@')[0] });
                         showStatus("Registration successful. Welcome!", 'success');
+                        elements.modalOverlay.classList.add('hidden');
                     } catch (signUpError) {
                         console.error("Email Registration Error:", signUpError);
-                        elements.authErrorMessage.textContent = `Authentication failed: ${signUpError.message}`;
+                        elements.authErrorMessage.textContent = `Registration failed: ${signUpError.message}`;
                         elements.authErrorMessage.classList.remove('hidden');
                     }
                 } else {
@@ -354,23 +314,14 @@
 
             const newDisplayName = elements.displayNameInput.value.trim();
             if (!newDisplayName) {
-                alert("Display name cannot be empty.");
+                showStatus("Display name cannot be empty.", 'error');
                 return;
             }
 
             try {
-                // Update Firebase Auth profile
                 await updateProfile(auth.currentUser, { displayName: newDisplayName });
-                
-                // Update Firestore profile (critical for display name persistence)
                 await saveUserProfile(auth.currentUser);
-
-                // Update UI and show success
-                elements.displayNameInput.value = newDisplayName;
-                elements.authButton.textContent = `Welcome, ${newDisplayName}`;
                 showStatus("Profile name updated successfully!", 'success');
-                // Re-fetch posts to refresh creator names, if implemented later (not needed now since creator names aren't shown)
-
             } catch (error) {
                 console.error("Error updating profile:", error);
                 showStatus(`Failed to update profile: ${error.message}`, 'error');
@@ -389,41 +340,25 @@
             }
         };
 
-        // --- Data Management & Cleanup (TTL) ---
+        // --- Data Management (TTL & Posts) ---
 
         const checkAndDeleteOldData = async () => {
             if (!db || !currentUserId) return;
-
-            // Calculate the cutoff time (TTL_DAYS ago in milliseconds)
             const cutoffTime = Date.now() - (TTL_DAYS * 24 * 60 * 60 * 1000);
-            
             const dataPath = getPrivateCollectionPath(POSTS_COLLECTION);
             if (!dataPath) return;
 
             try {
-                // Query Firestore for documents where the 'createdAt' is LESS THAN the cutoff time
-                const q = query(
-                    collection(db, dataPath),
-                    where('createdAt', '<', cutoffTime)
-                );
-
+                const q = query(collection(db, dataPath), where('createdAt', '<', cutoffTime));
                 const snapshot = await getDocs(q);
-                
-                if (snapshot.empty) {
-                    console.log(`[GreenFeed TTL] No posts older than ${TTL_DAYS} days found.`);
-                    return;
-                }
+                if (snapshot.empty) return;
 
                 const batch = writeBatch(db);
-                snapshot.forEach((docSnap) => {
-                    batch.delete(docSnap.ref);
-                });
-
+                snapshot.forEach((docSnap) => batch.delete(docSnap.ref));
                 await batch.commit();
-                console.log(`[GreenFeed TTL] Successfully deleted ${snapshot.size} post(s) older than ${TTL_DAYS} days.`);
-
+                console.log(`[GreenFeed TTL] Deleted ${snapshot.size} old post(s).`);
             } catch (error) {
-                console.error("[GreenFeed TTL] Error during client-side TTL cleanup:", error);
+                console.error("[GreenFeed TTL] Cleanup Error:", error);
             }
         };
 
@@ -435,7 +370,6 @@
             const dataPath = getPrivateCollectionPath(POSTS_COLLECTION);
             if (!dataPath) return;
 
-            // Post button disabled while processing
             elements.postButton.disabled = true;
 
             try {
@@ -443,7 +377,6 @@
                     text: text,
                     createdAt: Date.now(),
                     creatorId: currentUserId,
-                    // Note: Display name is not stored directly on the post to allow for name changes
                 });
                 elements.newPostText.value = '';
                 showStatus("Post created successfully!", 'success');
@@ -475,25 +408,14 @@
                 
                 const card = document.createElement('div');
                 card.className = `p-4 rounded-xl shadow-md transition-all duration-300 ${isOld ? 'bg-red-50 border-red-200' : 'bg-white border-gray-100'}`;
-                
                 card.innerHTML = `
                     <p class="text-gray-800 font-medium mb-2 break-words">${item.text}</p>
                     <div class="flex justify-between items-center text-xs pt-2 border-t mt-2">
                         <span class="text-gray-500 flex items-center">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                             <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
                             ${dateString}
                         </span>
-                        ${isOld ? `
-                            <span class="flex items-center text-red-600 font-semibold bg-red-100 px-2 py-1 rounded-full">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-                                Scheduled for Deletion
-                            </span>
-                        ` : `
-                            <span class="flex items-center text-green-600 font-semibold bg-green-100 px-2 py-1 rounded-full">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><polyline points="13 2 13 9 20 9"></polyline></svg>
-                                Active
-                            </span>
-                        `}
+                         ${isOld ? `<span class="flex items-center text-red-600 font-semibold bg-red-100 px-2 py-1 rounded-full">TTL Deletion Pending</span>` : `<span class="flex items-center text-green-600 font-semibold bg-green-100 px-2 py-1 rounded-full">Active</span>`}
                     </div>
                 `;
                 elements.feedList.appendChild(card);
@@ -502,31 +424,22 @@
 
         const updateAuthUI = (user) => {
             if (user) {
-                // User is signed in
                 currentUserId = user.uid;
-                
-                // Set button text and enable posting form
                 const displayName = user.displayName || (user.isAnonymous ? 'Anonymous' : user.email || 'User');
                 elements.authButton.textContent = `Welcome, ${displayName}`;
-                
                 elements.postFormContainer.classList.remove('opacity-50', 'pointer-events-none');
-                elements.postUserInfo.textContent = `Posting as: ${displayName} (${user.uid.substring(0, 8)}...)`;
+                elements.postUserInfo.textContent = `Posting as: ${displayName}`;
 
-                // Update Profile Modal
                 elements.authContentDefault.classList.add('hidden');
                 elements.authContentProfile.classList.remove('hidden');
                 elements.profileUserId.textContent = user.uid;
                 elements.profileUserEmail.textContent = user.email || 'Anonymous Session';
                 elements.displayNameInput.value = user.displayName || '';
-
             } else {
-                // User is signed out
                 currentUserId = null;
                 elements.authButton.textContent = 'Sign In / Profile';
                 elements.postFormContainer.classList.add('opacity-50', 'pointer-events-none');
                 elements.postUserInfo.textContent = 'Sign in to post.';
-
-                // Update Auth Modal
                 elements.authContentDefault.classList.remove('hidden');
                 elements.authContentProfile.classList.add('hidden');
             }
@@ -535,55 +448,59 @@
         // --- Firebase Initialization ---
 
         const initializeFirebase = async () => {
-            try {
-                if (Object.keys(firebaseConfig).length === 0) {
-                    throw new Error("Firebase configuration is missing or empty.");
+            let config;
+            
+            // 1. Parse config from environment variable
+            if (firebaseConfigString) {
+                try {
+                    config = JSON.parse(firebaseConfigString);
+                } catch (e) {
+                    console.error("Failed to parse __firebase_config:", e);
+                    showStatus("CRITICAL ERROR: Failed to parse configuration.", 'error');
+                    return;
                 }
+            } else {
+                console.error("__firebase_config is missing.");
+                showStatus("CRITICAL ERROR: Config missing.", 'error');
+                return;
+            }
 
-                app = initializeApp(firebaseConfig);
+            try {
+                // 2. Initialize
+                app = initializeApp(config);
                 auth = getAuth(app);
                 db = getFirestore(app);
 
-                // Initial sign-in with custom token if available
+                // 3. Authenticate
                 if (initialAuthToken) {
                     await signInWithCustomToken(auth, initialAuthToken).catch(e => {
-                        console.warn("Custom token sign-in failed. Falling back to anonymous.", e);
+                        console.warn("Token sign-in failed:", e);
                         signInAnonymously(auth);
                     });
                 } else {
                     signInAnonymously(auth);
                 }
 
-                // Attach Auth State Listener
+                // 4. Listener
                 onAuthStateChanged(auth, async (user) => {
                     if (user) {
                         currentUserId = user.uid;
-                        // 1. Save or update the profile (handles displayName consistency)
                         await saveUserProfile(user);
-                        // 2. Refresh UI based on potentially updated profile
                         updateAuthUI(user);
-                        // 3. Set up real-time data listener
                         setupPostListener(); 
-                        // 4. Run the cleanup job once per session
                         checkAndDeleteOldData();
                     } else {
                         updateAuthUI(null);
-                        // Clear feed if signed out
                         renderPosts([]); 
                     }
                     isAuthReady = true;
-                    // Hide any initial loading message
                     elements.feedList.innerHTML = ''; 
                 });
 
-                console.log("Firebase services initialized successfully.");
+                showStatus("Ready. Please sign in.", 'success');
             } catch (error) {
-                console.error("Error initializing Firebase:", error);
-                showStatus(`Error initializing Firebase: ${error.message}. Check console for details.`, 'error');
-                // Disable all auth buttons if initialization fails
-                Object.values(elements).forEach(el => {
-                    if (el && el.tagName === 'BUTTON') el.disabled = true;
-                });
+                console.error("Init Error:", error);
+                showStatus(`Initialization failed: ${error.message}`, 'error');
             }
         };
 
@@ -594,54 +511,30 @@
             if (!dataPath) return;
 
             const q = query(collection(db, dataPath));
+            if (window.postListenerUnsubscribe) window.postListenerUnsubscribe();
 
-            // Unsubscribe existing listener if it exists (for robustness, though onAuthStateChanged usually handles this)
-            if (window.postListenerUnsubscribe) {
-                window.postListenerUnsubscribe();
-            }
-
-            // Set up new real-time listener
             window.postListenerUnsubscribe = onSnapshot(q, (snapshot) => {
                 const posts = [];
                 snapshot.forEach((doc) => {
                     const data = doc.data();
-                    posts.push({
-                        id: doc.id,
-                        text: data.text,
-                        createdAt: data.createdAt,
-                        creatorId: data.creatorId,
-                    });
+                    posts.push({ id: doc.id, ...data });
                 });
-
-                // Sort by newest first
                 posts.sort((a, b) => b.createdAt - a.createdAt);
                 renderPosts(posts);
-
             }, (error) => {
-                console.error("Error setting up posts listener:", error);
-                showStatus("Error fetching feed data. See console.", 'error');
+                console.error("Listener Error:", error);
             });
         };
 
         // --- Event Listeners ---
-
         elements.authButton.addEventListener('click', () => {
             elements.modalOverlay.classList.remove('hidden');
-            // Reset error message on open
             elements.authErrorMessage.classList.add('hidden'); 
         });
-        
-        elements.closeModal.addEventListener('click', () => {
-            elements.modalOverlay.classList.add('hidden');
-        });
-
-        // Close modal when clicking outside
+        elements.closeModal.addEventListener('click', () => elements.modalOverlay.classList.add('hidden'));
         elements.modalOverlay.addEventListener('click', (e) => {
-            if (e.target === elements.modalOverlay) {
-                elements.modalOverlay.classList.add('hidden');
-            }
+            if (e.target === elements.modalOverlay) elements.modalOverlay.classList.add('hidden');
         });
-
         elements.googleSignIn.addEventListener('click', handleGoogleSignIn);
         elements.anonymousSignIn.addEventListener('click', handleAnonymousSignIn);
         elements.emailAuthForm.addEventListener('submit', handleEmailAuth);
@@ -649,10 +542,9 @@
         elements.signOutButton.addEventListener('click', handleSignOut);
         elements.postForm.addEventListener('submit', handleNewPost);
 
-        // --- Start Application ---
         initializeFirebase();
-
     </script>
 </body>
 </html>
+
 
