@@ -154,21 +154,32 @@
             where, writeBatch, getDocs, getDoc 
         } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // --- 1. Retrieve Environment Variables ---
-        // The Canvas environment injects these globals.
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        const firebaseConfigString = typeof __firebase_config !== 'undefined' ? __firebase_config : null;
-        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+        // --- Configuration ---
+
+        // ** USER PROVIDED CONFIGURATION **
+        const firebaseConfig = {
+          apiKey: "AIzaSyDaw63IFCbBz4T8COOgBOmddpPODLYdWuc",
+          authDomain: "pixeldraw-b8692.firebaseapp.com",
+          projectId: "pixeldraw-b8692",
+          storageBucket: "pixeldraw-b8692.firebasestorage.app",
+          messagingSenderId: "1003659579933",
+          appId: "1:1003659579933:web:58af7b0898298e9d7d6cf4",
+          measurementId: "G-0DGFSBS7Y2"
+        };
+        
+        // Fallback app ID if environment variable isn't present
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'greenfeed-default';
+        
+        // Constants
+        const TTL_DAYS = 30;
+        const POSTS_COLLECTION = "green_feed_posts";
+        const PROFILES_COLLECTION = "user_profiles";
         
         // Firebase Instances
         let app, auth, db;
         let currentUserId = null;
+        let isAuthReady = false;
 
-        // Configuration
-        const TTL_DAYS = 30; // Posts older than 30 days are deleted
-        const POSTS_COLLECTION = "green_feed_posts";
-        const PROFILES_COLLECTION = "user_profiles";
-        
         // DOM Elements Helper
         const D = (id) => document.getElementById(id);
         const elements = {
@@ -203,19 +214,22 @@
 
         const showStatus = (message, type = 'info') => {
             elements.statusMessage.textContent = message;
+            elements.statusMessage.className = `mb-4 p-3 rounded-lg text-sm transition-all duration-300 flex items-center`;
+            
             if (type === 'success') {
-                elements.statusMessage.className = 'mb-4 p-3 rounded-lg text-sm flex items-center bg-green-100 text-green-700 border border-green-300';
+                elements.statusMessage.classList.add('bg-green-100', 'text-green-700', 'border', 'border-green-300');
             } else if (type === 'error') {
-                elements.statusMessage.className = 'mb-4 p-3 rounded-lg text-sm flex items-center bg-red-100 text-red-700 border border-red-300';
+                elements.statusMessage.classList.add('bg-red-100', 'text-red-700', 'border', 'border-red-300');
             } else { // info
-                elements.statusMessage.className = 'mb-4 p-3 rounded-lg text-sm flex items-center bg-indigo-100 text-indigo-700 border border-indigo-300';
+                elements.statusMessage.classList.add('bg-indigo-100', 'text-indigo-700', 'border', 'border-indigo-300');
             }
             elements.statusMessage.classList.remove('hidden');
         };
 
+        // Uses a path specific to the configured projectId to keep data clean
         const getPrivateCollectionPath = (collectionName) => {
             if (!currentUserId) return null;
-            return `artifacts/${appId}/users/${currentUserId}/${collectionName}`;
+            return `artifacts/${firebaseConfig.projectId}/users/${currentUserId}/${collectionName}`;
         };
 
         const formatTimestamp = (ms) => {
@@ -260,7 +274,8 @@
                 elements.modalOverlay.classList.add('hidden');
             } catch (error) {
                 console.error("Google Sign-In Error:", error);
-                elements.authErrorMessage.textContent = `Sign-in failed: ${error.message}`;
+                const message = error.code ? error.code.replace('auth/', '').replace(/-/g, ' ') : error.message;
+                elements.authErrorMessage.textContent = `Sign-in failed: ${message}`;
                 elements.authErrorMessage.classList.remove('hidden');
             }
         };
@@ -282,14 +297,16 @@
             e.preventDefault();
             if (!auth) return;
             elements.authErrorMessage.classList.add('hidden');
+
             const email = elements.emailInput.value;
             const password = elements.passwordInput.value;
 
             try {
                 await signInWithEmailAndPassword(auth, email, password);
                 elements.modalOverlay.classList.add('hidden');
+                
             } catch (signInError) {
-                if (signInError.code === 'auth/user-not-found' || signInError.code === 'auth/wrong-password' || signInError.code === 'auth/invalid-credential') {
+                if (signInError.code === 'auth/user-not-found' || signInError.code === 'auth/wrong-password') {
                     try {
                         const result = await createUserWithEmailAndPassword(auth, email, password);
                         await updateProfile(result.user, { displayName: email.split('@')[0] });
@@ -297,12 +314,14 @@
                         elements.modalOverlay.classList.add('hidden');
                     } catch (signUpError) {
                         console.error("Email Registration Error:", signUpError);
-                        elements.authErrorMessage.textContent = `Registration failed: ${signUpError.message}`;
+                        const message = signUpError.code.replace('auth/', '').replace(/-/g, ' ');
+                        elements.authErrorMessage.textContent = `Registration failed: ${message}`;
                         elements.authErrorMessage.classList.remove('hidden');
                     }
                 } else {
                     console.error("Email Sign-In Error:", signInError);
-                    elements.authErrorMessage.textContent = `Sign-in failed: ${signInError.message}`;
+                    const message = signInError.code.replace('auth/', '').replace(/-/g, ' ');
+                    elements.authErrorMessage.textContent = `Sign-in failed: ${message}`;
                     elements.authErrorMessage.classList.remove('hidden');
                 }
             }
@@ -340,7 +359,7 @@
             }
         };
 
-        // --- Data Management (TTL & Posts) ---
+        // --- Data Management & Cleanup (TTL) ---
 
         const checkAndDeleteOldData = async () => {
             if (!db || !currentUserId) return;
@@ -358,7 +377,7 @@
                 await batch.commit();
                 console.log(`[GreenFeed TTL] Deleted ${snapshot.size} old post(s).`);
             } catch (error) {
-                console.error("[GreenFeed TTL] Cleanup Error:", error);
+                console.error("[GreenFeed TTL] Error during client-side TTL cleanup:", error);
             }
         };
 
@@ -412,10 +431,20 @@
                     <p class="text-gray-800 font-medium mb-2 break-words">${item.text}</p>
                     <div class="flex justify-between items-center text-xs pt-2 border-t mt-2">
                         <span class="text-gray-500 flex items-center">
-                             <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
                             ${dateString}
                         </span>
-                         ${isOld ? `<span class="flex items-center text-red-600 font-semibold bg-red-100 px-2 py-1 rounded-full">TTL Deletion Pending</span>` : `<span class="flex items-center text-green-600 font-semibold bg-green-100 px-2 py-1 rounded-full">Active</span>`}
+                        ${isOld ? `
+                            <span class="flex items-center text-red-600 font-semibold bg-red-100 px-2 py-1 rounded-full">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                                Scheduled for Deletion
+                            </span>
+                        ` : `
+                            <span class="flex items-center text-green-600 font-semibold bg-green-100 px-2 py-1 rounded-full">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><polyline points="13 2 13 9 20 9"></polyline></svg>
+                                Active
+                            </span>
+                        `}
                     </div>
                 `;
                 elements.feedList.appendChild(card);
@@ -427,19 +456,22 @@
                 currentUserId = user.uid;
                 const displayName = user.displayName || (user.isAnonymous ? 'Anonymous' : user.email || 'User');
                 elements.authButton.textContent = `Welcome, ${displayName}`;
+                
                 elements.postFormContainer.classList.remove('opacity-50', 'pointer-events-none');
-                elements.postUserInfo.textContent = `Posting as: ${displayName}`;
+                elements.postUserInfo.textContent = `Posting as: ${displayName} (User ID: ${user.uid.substring(0, 8)}...)`;
 
                 elements.authContentDefault.classList.add('hidden');
                 elements.authContentProfile.classList.remove('hidden');
                 elements.profileUserId.textContent = user.uid;
                 elements.profileUserEmail.textContent = user.email || 'Anonymous Session';
                 elements.displayNameInput.value = user.displayName || '';
+
             } else {
                 currentUserId = null;
                 elements.authButton.textContent = 'Sign In / Profile';
                 elements.postFormContainer.classList.add('opacity-50', 'pointer-events-none');
                 elements.postUserInfo.textContent = 'Sign in to post.';
+
                 elements.authContentDefault.classList.remove('hidden');
                 elements.authContentProfile.classList.add('hidden');
             }
@@ -448,40 +480,13 @@
         // --- Firebase Initialization ---
 
         const initializeFirebase = async () => {
-            let config;
-            
-            // 1. Parse config from environment variable
-            if (firebaseConfigString) {
-                try {
-                    config = JSON.parse(firebaseConfigString);
-                } catch (e) {
-                    console.error("Failed to parse __firebase_config:", e);
-                    showStatus("CRITICAL ERROR: Failed to parse configuration.", 'error');
-                    return;
-                }
-            } else {
-                console.error("__firebase_config is missing.");
-                showStatus("CRITICAL ERROR: Config missing.", 'error');
-                return;
-            }
-
             try {
-                // 2. Initialize
-                app = initializeApp(config);
+                // Initialize using hardcoded config
+                app = initializeApp(firebaseConfig);
                 auth = getAuth(app);
                 db = getFirestore(app);
 
-                // 3. Authenticate
-                if (initialAuthToken) {
-                    await signInWithCustomToken(auth, initialAuthToken).catch(e => {
-                        console.warn("Token sign-in failed:", e);
-                        signInAnonymously(auth);
-                    });
-                } else {
-                    signInAnonymously(auth);
-                }
-
-                // 4. Listener
+                // Attach Auth State Listener
                 onAuthStateChanged(auth, async (user) => {
                     if (user) {
                         currentUserId = user.uid;
@@ -497,10 +502,15 @@
                     elements.feedList.innerHTML = ''; 
                 });
 
-                showStatus("Ready. Please sign in.", 'success');
+                console.log("Firebase services initialized successfully.");
+                showStatus("Application ready. Please sign in.", 'success');
+
             } catch (error) {
-                console.error("Init Error:", error);
-                showStatus(`Initialization failed: ${error.message}`, 'error');
+                console.error("Critical Firebase Initialization Error:", error);
+                showStatus(`CRITICAL ERROR: Initialization failed. ${error.message}.`, 'error');
+                Object.values(elements).forEach(el => {
+                    if (el && el.tagName === 'BUTTON') el.disabled = true;
+                });
             }
         };
 
@@ -511,22 +521,34 @@
             if (!dataPath) return;
 
             const q = query(collection(db, dataPath));
-            if (window.postListenerUnsubscribe) window.postListenerUnsubscribe();
+
+            if (window.postListenerUnsubscribe) {
+                window.postListenerUnsubscribe();
+            }
 
             window.postListenerUnsubscribe = onSnapshot(q, (snapshot) => {
                 const posts = [];
                 snapshot.forEach((doc) => {
                     const data = doc.data();
-                    posts.push({ id: doc.id, ...data });
+                    posts.push({
+                        id: doc.id,
+                        text: data.text,
+                        createdAt: data.createdAt,
+                        creatorId: data.creatorId,
+                    });
                 });
+
                 posts.sort((a, b) => b.createdAt - a.createdAt);
                 renderPosts(posts);
+
             }, (error) => {
-                console.error("Listener Error:", error);
+                console.error("Error setting up posts listener:", error);
+                showStatus("Error fetching feed data. See console.", 'error');
             });
         };
 
         // --- Event Listeners ---
+
         elements.authButton.addEventListener('click', () => {
             elements.modalOverlay.classList.remove('hidden');
             elements.authErrorMessage.classList.add('hidden'); 
@@ -542,7 +564,9 @@
         elements.signOutButton.addEventListener('click', handleSignOut);
         elements.postForm.addEventListener('submit', handleNewPost);
 
+        // --- Start Application ---
         initializeFirebase();
+
     </script>
 </body>
 </html>
