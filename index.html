@@ -3,22 +3,49 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GreenFeed - Public Social Feed</title>
+    <title>GreenFeed - Social Media</title>
+    
+    <!-- 1. Load Fonts via Link (More Robust) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <!-- 2. Load Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- 3. Fallback CSS (In case Tailwind is slow) -->
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
-        body { font-family: 'Inter', sans-serif; }
-        /* Smooth fade transitions */
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: #f9fafb; /* Tailwind gray-50 fallback */
+            color: #1f2937; /* Tailwind gray-800 fallback */
+        }
+        .hidden { display: none !important; }
+        
+        /* Fade Animation */
         .fade-in { animation: fadeIn 0.3s ease-in-out; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        /* Spinner */
+        .spinner {
+            border: 3px solid rgba(0, 0, 0, 0.1);
+            border-left-color: #4f46e5; /* Indigo-600 */
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
     </style>
 </head>
-<body class="bg-gray-50 min-h-screen">
+<body class="bg-gray-50 min-h-screen text-gray-900">
 
     <!-- Main Application Container -->
     <div id="app" class="p-4 sm:p-8 max-w-4xl mx-auto">
-        <header class="flex justify-between items-center py-4 mb-8 border-b border-green-200">
-            <h1 class="text-3xl font-extrabold text-green-700 flex items-center">
+        
+        <!-- Header -->
+        <header class="flex justify-between items-center py-4 mb-8 border-b border-green-200 bg-white sm:bg-transparent rounded-lg px-4 sm:px-0 shadow-sm sm:shadow-none">
+            <h1 class="text-2xl sm:text-3xl font-extrabold text-green-700 flex items-center">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6 mr-2 text-green-500">
                     <path d="M7.9 20A10 10 0 1 0 3 15.1"/>
                     <path d="M12 21v-4"/>
@@ -29,112 +56,130 @@
                 </svg>
                 GreenFeed 🌱
             </h1>
-            <button id="auth-button" class="flex items-center px-4 py-2 bg-indigo-500 text-white text-sm font-semibold rounded-lg shadow-md hover:bg-indigo-600 transition duration-150">
-                Sign In / Profile
+            <button id="auth-button" class="flex items-center px-4 py-2 bg-indigo-600 text-white text-sm font-semibold rounded-lg shadow-md hover:bg-indigo-700 transition duration-150">
+                Sign In
             </button>
         </header>
 
         <!-- Status Message Area -->
-        <div id="status-message" class="hidden mb-4 p-3 rounded-lg text-sm transition-all duration-300 border"></div>
+        <div id="status-message" class="hidden mb-4 p-4 rounded-lg text-sm font-medium shadow-sm border fade-in"></div>
 
-        <!-- Posting Form -->
-        <div id="post-form-container" class="mb-8 bg-white p-6 rounded-xl shadow-lg border border-gray-100 opacity-50 pointer-events-none transition-opacity duration-300">
-            <p id="post-user-info" class="text-sm text-gray-500 mb-3"></p>
+        <!-- Posting Form (Initially Disabled) -->
+        <div id="post-form-container" class="mb-8 bg-white p-6 rounded-xl shadow-md border border-gray-200 opacity-50 pointer-events-none transition-all duration-300">
+            <div class="flex justify-between items-center mb-3">
+                <p id="post-user-info" class="text-sm text-gray-500 font-medium">Sign in to post</p>
+            </div>
             <form id="post-form">
                 <textarea
                     id="new-post-text"
                     placeholder="What's on your mind? (Max 280 chars)"
                     rows="3"
                     maxlength="280"
-                    class="w-full p-3 border border-gray-300 rounded-lg focus:ring-green-500 focus:border-green-500 transition-shadow resize-none"
+                    class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-shadow resize-none bg-gray-50 focus:bg-white"
                     required
                 ></textarea>
-                <button
-                    type="submit"
-                    id="post-button"
-                    class="mt-3 w-full sm:w-auto flex items-center justify-center px-6 py-2 bg-green-600 text-white font-semibold rounded-lg shadow-md hover:bg-green-700 transition duration-150 disabled:bg-green-300 disabled:cursor-not-allowed"
-                >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2">
-                        <line x1="22" y1="2" x2="11" y2="13"></line>
-                        <polygon points="22 2 15 22 11 14 2 10 22 2"></polygon>
-                    </svg>
-                    Post Publicly
-                </button>
+                <div class="mt-3 flex justify-end">
+                    <button
+                        type="submit"
+                        id="post-button"
+                        class="flex items-center justify-center px-6 py-2 bg-green-600 text-white font-semibold rounded-lg shadow-md hover:bg-green-700 active:bg-green-800 transition duration-150 disabled:bg-green-300 disabled:cursor-not-allowed"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2">
+                            <line x1="22" y1="2" x2="11" y2="13"></line>
+                            <polygon points="22 2 15 22 11 14 2 10 22 2"></polygon>
+                        </svg>
+                        Post
+                    </button>
+                </div>
             </form>
         </div>
 
         <!-- Feed List -->
-        <h2 class="text-2xl font-bold text-gray-700 mb-4 border-b pb-2">Public Feed <span id="feed-count" class="text-lg font-normal text-gray-400"></span></h2>
+        <div class="flex items-center justify-between mb-4 border-b border-gray-200 pb-2">
+            <h2 class="text-xl font-bold text-gray-800">Recent Posts</h2>
+            <span id="feed-count" class="text-sm font-medium text-gray-500 bg-gray-100 px-2 py-1 rounded-full">0</span>
+        </div>
         
-        <div id="feed-list" class="space-y-4">
-            <p class="text-gray-500 p-4 text-center border-dashed border-2 rounded-xl">
-                Loading public feed...
-            </p>
+        <div id="feed-list" class="space-y-4 min-h-[200px]">
+            <div class="flex flex-col items-center justify-center p-10 text-gray-400 border-2 border-dashed border-gray-200 rounded-xl">
+                <div class="spinner mb-3 border-gray-300 border-l-gray-500"></div>
+                <p>Connecting to feed...</p>
+            </div>
         </div>
     </div>
 
     <!-- Modal Overlay -->
-    <div id="modal-overlay" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 fade-in">
-        <div id="auth-modal" class="bg-white rounded-xl shadow-2xl p-6 w-11/12 max-w-md transform transition-all duration-300">
-            <div class="flex justify-between items-center mb-6 border-b pb-3">
-                <h2 id="modal-title" class="text-2xl font-bold text-gray-700">Account Access</h2>
-                <button id="close-modal" class="text-gray-500 hover:text-gray-800">
+    <div id="modal-overlay" class="fixed inset-0 bg-gray-900 bg-opacity-60 hidden items-center justify-center z-50 fade-in backdrop-blur-sm">
+        <div id="auth-modal" class="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-md m-4 transform transition-all duration-300 scale-100">
+            
+            <!-- Modal Header -->
+            <div class="flex justify-between items-center mb-6">
+                <h2 id="modal-title" class="text-2xl font-bold text-gray-800">Account Access</h2>
+                <button id="close-modal" class="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
                 </button>
             </div>
             
-            <!-- Auth Content (Default View) -->
+            <!-- Auth Content (Login Options) -->
             <div id="auth-content-default">
-                <div id="auth-error-message" class="hidden bg-red-100 text-red-700 p-3 rounded-lg mb-4 text-sm"></div>
+                <div id="auth-error-message" class="hidden bg-red-50 border border-red-200 text-red-700 p-3 rounded-lg mb-4 text-sm"></div>
 
                 <div class="space-y-3 mb-6">
-                    <button id="google-sign-in" class="w-full flex items-center justify-center px-4 py-3 bg-red-500 text-white font-semibold rounded-lg hover:bg-red-600 transition duration-150 shadow-md">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" class="w-5 h-5 mr-3 bg-white rounded-full">
+                    <button id="google-sign-in" class="w-full flex items-center justify-center px-4 py-3 bg-white border border-gray-300 text-gray-700 font-semibold rounded-lg hover:bg-gray-50 transition duration-150 shadow-sm group">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" class="w-5 h-5 mr-3">
                             <path fill="#FFC107" d="M43.61 20.08v3.52H48c-1.63 7.82-8.58 13.56-17.65 13.56-11.41 0-20.67-9.26-20.67-20.67S18.94 2.72 30.35 2.72c5.44 0 9.77 2.15 13.1 5.34l-3.3 3.3c-2.3-2.19-5.32-3.66-9.8-3.66-7.85 0-14.2 6.35-14.2 14.2s6.35 14.2 14.2 14.2c9.2 0 13.6-6.12 14.1-12.75H24.35v-4.14H43.61z"/>
+                            <path fill="#FF3D00" d="M6.306 14.691c2.16-5.85 7.85-9.691 14.694-9.691 3.14 0 6.02 1.08 8.24 2.86l6.51-6.51C34.63 2.36 29.5 0 24 0 10.74 0 0 10.74 0 24s10.74 24 24 24c12.55 0 22.7-9.59 23.99-21.92l-1.38-1.997z"/>
+                            <path fill="#4CAF50" d="M24 48c13.26 0 24-10.74 24-24 0-1.74-.18-3.43-.51-5.06l-6.51 6.51C40.92 21.08 42 22.46 42 24c0 4.08-1.68 7.74-4.38 10.38l6.38 6.38C46.86 37.07 48 30.73 48 24c0-3.32-.67-6.47-1.85-9.35l-6.51 6.51c.32 1.15.51 2.36.51 3.63 0 7.72-6.28 14-14 14-4.93 0-9.27-2.58-11.83-6.48l-6.66 6.66C8.86 45.47 15.93 48 24 48z"/>
+                            <path fill="#1976D2" d="M43.611 20.083H42V20H24v8h11.303c-1.68 5.473-6.84 9.473-13.303 9.473-7.72 0-14-6.28-14-14s6.28-14 14-14c3.14 0 6.02 1.08 8.24 2.86l6.51-6.51C34.63 2.36 29.5 0 24 0 10.74 0 0 10.74 0 24s10.74 24 24 24c12.55 0 22.7-9.59 23.99-21.92l-1.38-1.997z"/>
                         </svg>
                         Sign in with Google
                     </button>
-                    <button id="anonymous-sign-in" class="w-full flex items-center justify-center px-4 py-3 bg-gray-500 text-white font-semibold rounded-lg hover:bg-gray-600 transition duration-150 shadow-md">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-3"><path d="M10 5l-2 2-3-3"/><path d="M22 17l-3-3-2 2"/><path d="M9.51 11.23a4 4 0 1 1 5.48 0"/></svg>
+                    <button id="anonymous-sign-in" class="w-full flex items-center justify-center px-4 py-3 bg-gray-600 text-white font-semibold rounded-lg hover:bg-gray-700 transition duration-150 shadow-md">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-3 text-gray-300"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
                         Continue Anonymously
                     </button>
                 </div>
 
                 <div class="relative flex items-center justify-center my-6">
                     <div class="absolute inset-0 flex items-center">
-                        <div class="w-full border-t border-gray-300"></div>
+                        <div class="w-full border-t border-gray-200"></div>
                     </div>
-                    <div class="relative bg-white px-4 text-sm text-gray-500">OR</div>
+                    <div class="relative bg-white px-4 text-sm text-gray-400 font-medium">OR EMAIL</div>
                 </div>
 
                 <form id="email-auth-form" class="space-y-4">
-                    <input type="email" id="email-input" placeholder="Email Address" required class="w-full p-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500">
-                    <input type="password" id="password-input" placeholder="Password (min 6 chars)" required class="w-full p-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500">
-                    <button type="submit" id="email-sign-in-up" class="w-full px-4 py-3 bg-indigo-500 text-white font-semibold rounded-lg hover:bg-indigo-600 transition duration-150 shadow-md">
-                        Sign In / Register with Email
+                    <input type="email" id="email-input" placeholder="Email Address" required class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-colors">
+                    <input type="password" id="password-input" placeholder="Password (min 6 chars)" required class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-colors">
+                    <button type="submit" id="email-sign-in-up" class="w-full px-4 py-3 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition duration-150 shadow-md">
+                        Sign In / Register
                     </button>
                 </form>
             </div>
 
             <!-- Profile Content (Signed In View) -->
             <div id="auth-content-profile" class="hidden">
-                <p class="text-md text-gray-600 mb-4">You are signed in as:</p>
-                <div class="bg-gray-100 p-4 rounded-lg mb-6 break-words">
-                    <p class="font-mono text-xs text-gray-500">User ID:</p>
-                    <p id="profile-user-id" class="text-sm font-semibold mb-2"></p>
-                    <p class="font-mono text-xs text-gray-500">Email:</p>
-                    <p id="profile-user-email" class="text-sm font-semibold"></p>
+                <div class="flex items-center space-x-4 mb-6 p-4 bg-indigo-50 rounded-lg border border-indigo-100">
+                    <div class="h-12 w-12 rounded-full bg-indigo-200 flex items-center justify-center text-indigo-600 font-bold text-xl" id="profile-avatar">
+                        ?
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-sm font-medium text-gray-900 truncate" id="profile-display-name-display">User</p>
+                        <p class="text-xs text-gray-500 truncate" id="profile-user-email">email@example.com</p>
+                        <p class="text-xs font-mono text-gray-400 mt-1 truncate" id="profile-user-id">ID: ...</p>
+                    </div>
                 </div>
 
                 <form id="update-profile-form" class="space-y-4">
-                    <label for="display-name-input" class="block text-sm font-medium text-gray-700">Display Name</label>
-                    <input type="text" id="display-name-input" placeholder="Enter your display name" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-green-500 focus:border-green-500">
-                    <button type="submit" class="w-full px-4 py-3 bg-green-500 text-white font-semibold rounded-lg hover:bg-green-600 transition duration-150 shadow-md">
-                        Update Profile
+                    <div>
+                        <label for="display-name-input" class="block text-sm font-medium text-gray-700 mb-1">Update Display Name</label>
+                        <input type="text" id="display-name-input" placeholder="How should we call you?" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none">
+                    </div>
+                    <button type="submit" class="w-full px-4 py-3 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition duration-150 shadow-md">
+                        Save Changes
                     </button>
                 </form>
 
-                <button id="sign-out-button" class="mt-6 w-full px-4 py-2 bg-red-500 text-white font-semibold rounded-lg hover:bg-red-600 transition duration-150 shadow-md">
+                <button id="sign-out-button" class="mt-6 w-full px-4 py-3 bg-white border border-red-200 text-red-600 font-semibold rounded-lg hover:bg-red-50 transition duration-150">
                     Sign Out
                 </button>
             </div>
@@ -151,14 +196,12 @@
         } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { 
             getFirestore, doc, addDoc, setDoc, onSnapshot, collection, query, 
-            where, writeBatch, getDocs, getDoc 
+            where, writeBatch, getDocs, getDoc, deleteDoc 
         } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // --- Configuration ---
-        // 1. App ID from Environment
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
 
-        // 2. Hardcoded Config (As requested)
+        // ** USER PROVIDED CONFIGURATION (HARDCODED) **
         const firebaseConfig = {
           apiKey: "AIzaSyDaw63IFCbBz4T8COOgBOmddpPODLYdWuc",
           authDomain: "pixeldraw-b8692.firebaseapp.com",
@@ -169,15 +212,18 @@
           measurementId: "G-0DGFSBS7Y2"
         };
         
-        // 3. Constants
-        const TTL_DAYS = 30; 
-        const POSTS_COLLECTION = "green_feed_public_posts"; // Renamed for clarity
-        const PROFILES_COLLECTION = "user_profiles";
+        const appId = 'greenfeed-app'; 
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
         
-        // 4. State Variables
+        // Firebase Instances
         let app, auth, db;
         let currentUserId = null;
 
+        // Configuration
+        const TTL_DAYS = 30; // Posts older than 30 days are deleted
+        const POSTS_COLLECTION = "green_feed_public_posts"; // Public collection
+        const PROFILES_COLLECTION = "user_profiles";
+        
         // DOM Elements Helper
         const D = (id) => document.getElementById(id);
         const elements = {
@@ -196,6 +242,8 @@
             profileUserId: D('profile-user-id'),
             profileUserEmail: D('profile-user-email'),
             displayNameInput: D('display-name-input'),
+            profileDisplayNameDisplay: D('profile-display-name-display'),
+            profileAvatar: D('profile-avatar'),
             updateProfileForm: D('update-profile-form'),
             signOutButton: D('sign-out-button'),
             postFormContainer: D('post-form-container'),
@@ -212,44 +260,49 @@
 
         const showStatus = (message, type = 'info') => {
             elements.statusMessage.textContent = message;
-            elements.statusMessage.className = `mb-4 p-3 rounded-lg text-sm transition-all duration-300 flex items-center`;
+            // Reset classes
+            elements.statusMessage.className = `mb-4 p-3 rounded-lg text-sm transition-all duration-300 flex items-center fade-in`;
             
             if (type === 'success') {
-                elements.statusMessage.classList.add('bg-green-100', 'text-green-700', 'border', 'border-green-300');
+                elements.statusMessage.classList.add('bg-green-50', 'text-green-700', 'border', 'border-green-200');
             } else if (type === 'error') {
-                elements.statusMessage.classList.add('bg-red-100', 'text-red-700', 'border', 'border-red-300');
+                elements.statusMessage.classList.add('bg-red-50', 'text-red-700', 'border', 'border-red-200');
             } else { // info
-                elements.statusMessage.classList.add('bg-indigo-100', 'text-indigo-700', 'border', 'border-indigo-300');
+                elements.statusMessage.classList.add('bg-blue-50', 'text-blue-700', 'border', 'border-blue-200');
             }
             elements.statusMessage.classList.remove('hidden');
+            
+            // Auto hide after 5 seconds
+            setTimeout(() => {
+                 elements.statusMessage.classList.add('hidden');
+            }, 5000);
         };
 
-        const formatTimestamp = (ms) => {
-            return new Date(ms).toLocaleString();
-        };
-
-        // --- Firestore Paths ---
-
-        // Returns the path to the PUBLIC posts collection
         const getPublicPostsPath = () => {
             return `artifacts/${appId}/public/data/${POSTS_COLLECTION}`;
         };
 
-        // Returns the path to the USER'S private profile
-        const getUserProfilePath = () => {
+        const getPrivateCollectionPath = (collectionName) => {
             if (!currentUserId) return null;
-            return `artifacts/${appId}/users/${currentUserId}/${PROFILES_COLLECTION}`;
+            return `artifacts/${appId}/users/${currentUserId}/${collectionName}`;
+        };
+
+        const formatTimestamp = (ms) => {
+            return new Date(ms).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+        };
+
+        const getInitials = (name) => {
+            return name ? name.substring(0, 2).toUpperCase() : '??';
         };
 
         // --- Data Persistence (Firestore) ---
 
         const saveUserProfile = async (user) => {
             if (!db || !user) return;
-            const profilePath = getUserProfilePath();
+            const profilePath = getPrivateCollectionPath(PROFILES_COLLECTION);
             if (!profilePath) return;
 
-            // Use user UID as doc ID
-            const profileDocRef = doc(db, profilePath, 'main_profile'); 
+            const profileDocRef = doc(db, profilePath, user.uid);
             
             const profileData = {
                 uid: user.uid,
@@ -260,9 +313,11 @@
             
             try {
                 await setDoc(profileDocRef, profileData, { merge: true });
+                
                 if (!user.displayName && !user.isAnonymous) {
                     await updateProfile(user, { displayName: profileData.displayName });
                 }
+                
             } catch (error) {
                 console.error("Error saving user profile:", error);
             }
@@ -280,7 +335,8 @@
                 elements.modalOverlay.classList.add('hidden');
             } catch (error) {
                 console.error("Google Sign-In Error:", error);
-                elements.authErrorMessage.textContent = `Sign-in failed: ${error.message}`;
+                const message = error.code ? error.code.replace('auth/', '').replace(/-/g, ' ') : error.message;
+                elements.authErrorMessage.textContent = `Sign-in failed: ${message}`;
                 elements.authErrorMessage.classList.remove('hidden');
             }
         };
@@ -302,7 +358,6 @@
             e.preventDefault();
             if (!auth) return;
             elements.authErrorMessage.classList.add('hidden');
-
             const email = elements.emailInput.value;
             const password = elements.passwordInput.value;
 
@@ -342,6 +397,7 @@
             try {
                 await updateProfile(auth.currentUser, { displayName: newDisplayName });
                 await saveUserProfile(auth.currentUser);
+                updateAuthUI(auth.currentUser); // Refresh UI
                 showStatus("Profile name updated successfully!", 'success');
             } catch (error) {
                 console.error("Error updating profile:", error);
@@ -364,15 +420,13 @@
         // --- Data Management & Cleanup (TTL) ---
 
         const checkAndDeleteOldData = async () => {
-            if (!db) return; // Runs globally for the collection if permissions allow, or checks on load
-            
-            const dataPath = getPublicPostsPath();
+            if (!db) return;
             const cutoffTime = Date.now() - (TTL_DAYS * 24 * 60 * 60 * 1000);
+            const dataPath = getPublicPostsPath(); 
 
             try {
                 const q = query(collection(db, dataPath), where('createdAt', '<', cutoffTime));
                 const snapshot = await getDocs(q);
-                
                 if (snapshot.empty) return;
 
                 const batch = writeBatch(db);
@@ -380,7 +434,7 @@
                 await batch.commit();
                 console.log(`[GreenFeed TTL] Deleted ${snapshot.size} old post(s).`);
             } catch (error) {
-                console.error("[GreenFeed TTL] Cleanup Error (Check Permissions):", error);
+                console.error("[GreenFeed TTL] Cleanup Error:", error);
             }
         };
 
@@ -389,8 +443,8 @@
             const text = elements.newPostText.value.trim();
             if (!text || !db || !currentUserId) return;
 
-            const dataPath = getPublicPostsPath(); // WRITING TO PUBLIC FEED
-            
+            const dataPath = getPublicPostsPath(); 
+
             elements.postButton.disabled = true;
 
             try {
@@ -409,6 +463,25 @@
                 elements.postButton.disabled = false;
             }
         };
+        
+        // --- Delete Functionality ---
+        
+        // Attached to window for inline onclick use
+        window.deletePost = async (postId) => {
+            if (!db) return;
+            if (!confirm("Are you sure you want to delete this post?")) return;
+            
+            const dataPath = getPublicPostsPath();
+            const postRef = doc(db, dataPath, postId);
+            
+            try {
+                await deleteDoc(postRef);
+                showStatus("Post deleted successfully.", 'success');
+            } catch (error) {
+                console.error("Error deleting post:", error);
+                showStatus(`Failed to delete post: ${error.message}`, 'error');
+            }
+        };
 
         // --- UI Rendering ---
 
@@ -418,24 +491,45 @@
 
             if (posts.length === 0) {
                 elements.feedList.innerHTML = `
-                    <p class="text-gray-500 p-4 text-center border-dashed border-2 rounded-xl">
-                        The feed is empty. Post the first item!
-                    </p>`;
+                    <div class="flex flex-col items-center justify-center p-8 text-gray-400 border-2 border-dashed border-gray-200 rounded-xl bg-gray-50">
+                        <p>The feed is empty.</p>
+                        <p class="text-sm">Be the first to post!</p>
+                    </div>`;
                 return;
             }
 
             posts.forEach(item => {
                 const isOld = (Date.now() - item.createdAt) > (TTL_DAYS * 24 * 60 * 60 * 1000);
                 const dateString = formatTimestamp(item.createdAt);
+                const isOwner = item.creatorId === currentUserId;
+                const authorName = item.creatorName || 'Unknown';
+                const avatarInitials = getInitials(authorName);
                 
                 const card = document.createElement('div');
-                card.className = `p-4 rounded-xl shadow-md transition-all duration-300 bg-white border-gray-100`;
+                card.className = `p-5 rounded-xl shadow-sm transition-all duration-300 bg-white border border-gray-100 hover:shadow-md`;
+                
+                // Render Delete Button if Owner
+                const deleteButtonHtml = isOwner ? `
+                    <button onclick="deletePost('${item.id}')" class="text-gray-400 hover:text-red-500 p-1.5 rounded-full hover:bg-red-50 transition-colors" title="Delete Post">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                    </button>
+                ` : '';
+                
                 card.innerHTML = `
-                    <div class="flex justify-between items-center mb-2">
-                         <span class="font-bold text-green-700 text-sm">${item.creatorName || 'User'}</span>
-                         <span class="text-xs text-gray-400">${dateString}</span>
+                    <div class="flex justify-between items-start mb-3">
+                         <div class="flex items-center space-x-3">
+                            <div class="h-10 w-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-bold text-sm">
+                                ${avatarInitials}
+                            </div>
+                            <div>
+                                <div class="font-bold text-gray-900 text-sm">${authorName}</div>
+                                <div class="text-xs text-gray-400">${dateString}</div>
+                            </div>
+                         </div>
+                         ${deleteButtonHtml}
                     </div>
-                    <p class="text-gray-800 font-medium mb-2 break-words">${item.text}</p>
+                    <p class="text-gray-800 text-base leading-relaxed break-words">${item.text}</p>
+                     ${isOld ? `<div class="mt-3 border-t border-red-100 pt-2"><span class="inline-flex items-center text-xs font-semibold text-red-600 bg-red-50 px-2 py-1 rounded-full">Pending Deletion (TTL)</span></div>` : ''}
                 `;
                 elements.feedList.appendChild(card);
             });
@@ -445,20 +539,28 @@
             if (user) {
                 currentUserId = user.uid;
                 const displayName = user.displayName || (user.isAnonymous ? 'Anonymous' : user.email || 'User');
-                elements.authButton.textContent = `Welcome, ${displayName}`;
+                
+                elements.authButton.textContent = displayName;
+                elements.authButton.classList.remove('bg-indigo-500', 'hover:bg-indigo-600');
+                elements.authButton.classList.add('bg-white', 'text-indigo-600', 'border', 'border-indigo-200', 'hover:bg-indigo-50');
                 
                 elements.postFormContainer.classList.remove('opacity-50', 'pointer-events-none');
-                elements.postUserInfo.textContent = `Posting as: ${displayName}`;
+                elements.postUserInfo.textContent = `Posting as ${displayName}`;
 
                 elements.authContentDefault.classList.add('hidden');
                 elements.authContentProfile.classList.remove('hidden');
                 elements.profileUserId.textContent = user.uid;
                 elements.profileUserEmail.textContent = user.email || 'Anonymous Session';
                 elements.displayNameInput.value = user.displayName || '';
+                elements.profileDisplayNameDisplay.textContent = displayName;
+                elements.profileAvatar.textContent = getInitials(displayName);
 
             } else {
                 currentUserId = null;
                 elements.authButton.textContent = 'Sign In / Profile';
+                elements.authButton.classList.add('bg-indigo-500', 'hover:bg-indigo-600');
+                elements.authButton.classList.remove('bg-white', 'text-indigo-600', 'border', 'border-indigo-200', 'hover:bg-indigo-50');
+
                 elements.postFormContainer.classList.add('opacity-50', 'pointer-events-none');
                 elements.postUserInfo.textContent = 'Sign in to post.';
 
@@ -471,14 +573,12 @@
 
         const initializeFirebase = async () => {
             try {
-                // 1. Initialize
                 app = initializeApp(firebaseConfig);
                 auth = getAuth(app);
                 db = getFirestore(app);
 
-                // 2. Authenticate (Try Anonymous First if no token)
-                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                     await signInWithCustomToken(auth, __initial_auth_token).catch(e => {
+                if (initialAuthToken) {
+                    await signInWithCustomToken(auth, initialAuthToken).catch(e => {
                         console.warn("Token sign-in failed:", e);
                         signInAnonymously(auth);
                     });
@@ -486,7 +586,6 @@
                      signInAnonymously(auth);
                 }
 
-                // 3. Listener
                 onAuthStateChanged(auth, async (user) => {
                     if (user) {
                         currentUserId = user.uid;
@@ -511,7 +610,6 @@
         const setupPostListener = () => {
             if (!db) return;
             
-            // Listening to PUBLIC posts path now
             const dataPath = getPublicPostsPath();
             const q = query(collection(db, dataPath));
 
@@ -527,7 +625,6 @@
                 renderPosts(posts);
             }, (error) => {
                 console.error("Listener Error:", error);
-                // showStatus(`Feed error: ${error.message}`, 'error');
             });
         };
 
