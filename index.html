@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GreenFeed - Social Media</title>
+    <title>GreenFeed - Public Social Feed</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
@@ -58,17 +58,17 @@
                         <line x1="22" y1="2" x2="11" y2="13"></line>
                         <polygon points="22 2 15 22 11 14 2 10 22 2"></polygon>
                     </svg>
-                    Post
+                    Post Publicly
                 </button>
             </form>
         </div>
 
         <!-- Feed List -->
-        <h2 class="text-2xl font-bold text-gray-700 mb-4 border-b pb-2">Recent Posts <span id="feed-count" class="text-lg font-normal text-gray-400"></span></h2>
+        <h2 class="text-2xl font-bold text-gray-700 mb-4 border-b pb-2">Public Feed <span id="feed-count" class="text-lg font-normal text-gray-400"></span></h2>
         
         <div id="feed-list" class="space-y-4">
             <p class="text-gray-500 p-4 text-center border-dashed border-2 rounded-xl">
-                Initializing feed...
+                Loading public feed...
             </p>
         </div>
     </div>
@@ -155,8 +155,10 @@
         } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // --- Configuration ---
+        // 1. App ID from Environment
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
 
-        // ** USER PROVIDED CONFIGURATION **
+        // 2. Hardcoded Config (As requested)
         const firebaseConfig = {
           apiKey: "AIzaSyDaw63IFCbBz4T8COOgBOmddpPODLYdWuc",
           authDomain: "pixeldraw-b8692.firebaseapp.com",
@@ -167,18 +169,14 @@
           measurementId: "G-0DGFSBS7Y2"
         };
         
-        // Fallback app ID if environment variable isn't present
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'greenfeed-default';
-        
-        // Constants
-        const TTL_DAYS = 30;
-        const POSTS_COLLECTION = "green_feed_posts";
+        // 3. Constants
+        const TTL_DAYS = 30; 
+        const POSTS_COLLECTION = "green_feed_public_posts"; // Renamed for clarity
         const PROFILES_COLLECTION = "user_profiles";
         
-        // Firebase Instances
+        // 4. State Variables
         let app, auth, db;
         let currentUserId = null;
-        let isAuthReady = false;
 
         // DOM Elements Helper
         const D = (id) => document.getElementById(id);
@@ -226,24 +224,32 @@
             elements.statusMessage.classList.remove('hidden');
         };
 
-        // Uses a path specific to the configured projectId to keep data clean
-        const getPrivateCollectionPath = (collectionName) => {
-            if (!currentUserId) return null;
-            return `artifacts/${firebaseConfig.projectId}/users/${currentUserId}/${collectionName}`;
-        };
-
         const formatTimestamp = (ms) => {
             return new Date(ms).toLocaleString();
+        };
+
+        // --- Firestore Paths ---
+
+        // Returns the path to the PUBLIC posts collection
+        const getPublicPostsPath = () => {
+            return `artifacts/${appId}/public/data/${POSTS_COLLECTION}`;
+        };
+
+        // Returns the path to the USER'S private profile
+        const getUserProfilePath = () => {
+            if (!currentUserId) return null;
+            return `artifacts/${appId}/users/${currentUserId}/${PROFILES_COLLECTION}`;
         };
 
         // --- Data Persistence (Firestore) ---
 
         const saveUserProfile = async (user) => {
             if (!db || !user) return;
-            const profilePath = getPrivateCollectionPath(PROFILES_COLLECTION);
+            const profilePath = getUserProfilePath();
             if (!profilePath) return;
 
-            const profileDocRef = doc(db, profilePath, user.uid);
+            // Use user UID as doc ID
+            const profileDocRef = doc(db, profilePath, 'main_profile'); 
             
             const profileData = {
                 uid: user.uid,
@@ -274,8 +280,7 @@
                 elements.modalOverlay.classList.add('hidden');
             } catch (error) {
                 console.error("Google Sign-In Error:", error);
-                const message = error.code ? error.code.replace('auth/', '').replace(/-/g, ' ') : error.message;
-                elements.authErrorMessage.textContent = `Sign-in failed: ${message}`;
+                elements.authErrorMessage.textContent = `Sign-in failed: ${error.message}`;
                 elements.authErrorMessage.classList.remove('hidden');
             }
         };
@@ -304,9 +309,8 @@
             try {
                 await signInWithEmailAndPassword(auth, email, password);
                 elements.modalOverlay.classList.add('hidden');
-                
             } catch (signInError) {
-                if (signInError.code === 'auth/user-not-found' || signInError.code === 'auth/wrong-password') {
+                if (signInError.code === 'auth/user-not-found' || signInError.code === 'auth/wrong-password' || signInError.code === 'auth/invalid-credential') {
                     try {
                         const result = await createUserWithEmailAndPassword(auth, email, password);
                         await updateProfile(result.user, { displayName: email.split('@')[0] });
@@ -314,14 +318,12 @@
                         elements.modalOverlay.classList.add('hidden');
                     } catch (signUpError) {
                         console.error("Email Registration Error:", signUpError);
-                        const message = signUpError.code.replace('auth/', '').replace(/-/g, ' ');
-                        elements.authErrorMessage.textContent = `Registration failed: ${message}`;
+                        elements.authErrorMessage.textContent = `Registration failed: ${signUpError.message}`;
                         elements.authErrorMessage.classList.remove('hidden');
                     }
                 } else {
                     console.error("Email Sign-In Error:", signInError);
-                    const message = signInError.code.replace('auth/', '').replace(/-/g, ' ');
-                    elements.authErrorMessage.textContent = `Sign-in failed: ${message}`;
+                    elements.authErrorMessage.textContent = `Sign-in failed: ${signInError.message}`;
                     elements.authErrorMessage.classList.remove('hidden');
                 }
             }
@@ -362,14 +364,15 @@
         // --- Data Management & Cleanup (TTL) ---
 
         const checkAndDeleteOldData = async () => {
-            if (!db || !currentUserId) return;
+            if (!db) return; // Runs globally for the collection if permissions allow, or checks on load
+            
+            const dataPath = getPublicPostsPath();
             const cutoffTime = Date.now() - (TTL_DAYS * 24 * 60 * 60 * 1000);
-            const dataPath = getPrivateCollectionPath(POSTS_COLLECTION);
-            if (!dataPath) return;
 
             try {
                 const q = query(collection(db, dataPath), where('createdAt', '<', cutoffTime));
                 const snapshot = await getDocs(q);
+                
                 if (snapshot.empty) return;
 
                 const batch = writeBatch(db);
@@ -377,7 +380,7 @@
                 await batch.commit();
                 console.log(`[GreenFeed TTL] Deleted ${snapshot.size} old post(s).`);
             } catch (error) {
-                console.error("[GreenFeed TTL] Error during client-side TTL cleanup:", error);
+                console.error("[GreenFeed TTL] Cleanup Error (Check Permissions):", error);
             }
         };
 
@@ -386,9 +389,8 @@
             const text = elements.newPostText.value.trim();
             if (!text || !db || !currentUserId) return;
 
-            const dataPath = getPrivateCollectionPath(POSTS_COLLECTION);
-            if (!dataPath) return;
-
+            const dataPath = getPublicPostsPath(); // WRITING TO PUBLIC FEED
+            
             elements.postButton.disabled = true;
 
             try {
@@ -396,9 +398,10 @@
                     text: text,
                     createdAt: Date.now(),
                     creatorId: currentUserId,
+                    creatorName: auth.currentUser.displayName || 'Anonymous'
                 });
                 elements.newPostText.value = '';
-                showStatus("Post created successfully!", 'success');
+                showStatus("Post published to public feed!", 'success');
             } catch (error) {
                 console.error("Error adding document:", error);
                 showStatus(`Could not post item: ${error.message}`, 'error');
@@ -426,26 +429,13 @@
                 const dateString = formatTimestamp(item.createdAt);
                 
                 const card = document.createElement('div');
-                card.className = `p-4 rounded-xl shadow-md transition-all duration-300 ${isOld ? 'bg-red-50 border-red-200' : 'bg-white border-gray-100'}`;
+                card.className = `p-4 rounded-xl shadow-md transition-all duration-300 bg-white border-gray-100`;
                 card.innerHTML = `
-                    <p class="text-gray-800 font-medium mb-2 break-words">${item.text}</p>
-                    <div class="flex justify-between items-center text-xs pt-2 border-t mt-2">
-                        <span class="text-gray-500 flex items-center">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-                            ${dateString}
-                        </span>
-                        ${isOld ? `
-                            <span class="flex items-center text-red-600 font-semibold bg-red-100 px-2 py-1 rounded-full">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-                                Scheduled for Deletion
-                            </span>
-                        ` : `
-                            <span class="flex items-center text-green-600 font-semibold bg-green-100 px-2 py-1 rounded-full">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><polyline points="13 2 13 9 20 9"></polyline></svg>
-                                Active
-                            </span>
-                        `}
+                    <div class="flex justify-between items-center mb-2">
+                         <span class="font-bold text-green-700 text-sm">${item.creatorName || 'User'}</span>
+                         <span class="text-xs text-gray-400">${dateString}</span>
                     </div>
+                    <p class="text-gray-800 font-medium mb-2 break-words">${item.text}</p>
                 `;
                 elements.feedList.appendChild(card);
             });
@@ -458,7 +448,7 @@
                 elements.authButton.textContent = `Welcome, ${displayName}`;
                 
                 elements.postFormContainer.classList.remove('opacity-50', 'pointer-events-none');
-                elements.postUserInfo.textContent = `Posting as: ${displayName} (User ID: ${user.uid.substring(0, 8)}...)`;
+                elements.postUserInfo.textContent = `Posting as: ${displayName}`;
 
                 elements.authContentDefault.classList.add('hidden');
                 elements.authContentProfile.classList.remove('hidden');
@@ -481,12 +471,22 @@
 
         const initializeFirebase = async () => {
             try {
-                // Initialize using hardcoded config
+                // 1. Initialize
                 app = initializeApp(firebaseConfig);
                 auth = getAuth(app);
                 db = getFirestore(app);
 
-                // Attach Auth State Listener
+                // 2. Authenticate (Try Anonymous First if no token)
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                     await signInWithCustomToken(auth, __initial_auth_token).catch(e => {
+                        console.warn("Token sign-in failed:", e);
+                        signInAnonymously(auth);
+                    });
+                } else {
+                     signInAnonymously(auth);
+                }
+
+                // 3. Listener
                 onAuthStateChanged(auth, async (user) => {
                     if (user) {
                         currentUserId = user.uid;
@@ -498,57 +498,40 @@
                         updateAuthUI(null);
                         renderPosts([]); 
                     }
-                    isAuthReady = true;
                     elements.feedList.innerHTML = ''; 
                 });
 
-                console.log("Firebase services initialized successfully.");
-                showStatus("Application ready. Please sign in.", 'success');
-
+                showStatus("Ready. Public Feed Active.", 'success');
             } catch (error) {
-                console.error("Critical Firebase Initialization Error:", error);
-                showStatus(`CRITICAL ERROR: Initialization failed. ${error.message}.`, 'error');
-                Object.values(elements).forEach(el => {
-                    if (el && el.tagName === 'BUTTON') el.disabled = true;
-                });
+                console.error("Init Error:", error);
+                showStatus(`Initialization failed: ${error.message}`, 'error');
             }
         };
 
         const setupPostListener = () => {
-            if (!db || !currentUserId) return;
+            if (!db) return;
             
-            const dataPath = getPrivateCollectionPath(POSTS_COLLECTION);
-            if (!dataPath) return;
-
+            // Listening to PUBLIC posts path now
+            const dataPath = getPublicPostsPath();
             const q = query(collection(db, dataPath));
 
-            if (window.postListenerUnsubscribe) {
-                window.postListenerUnsubscribe();
-            }
+            if (window.postListenerUnsubscribe) window.postListenerUnsubscribe();
 
             window.postListenerUnsubscribe = onSnapshot(q, (snapshot) => {
                 const posts = [];
                 snapshot.forEach((doc) => {
                     const data = doc.data();
-                    posts.push({
-                        id: doc.id,
-                        text: data.text,
-                        createdAt: data.createdAt,
-                        creatorId: data.creatorId,
-                    });
+                    posts.push({ id: doc.id, ...data });
                 });
-
                 posts.sort((a, b) => b.createdAt - a.createdAt);
                 renderPosts(posts);
-
             }, (error) => {
-                console.error("Error setting up posts listener:", error);
-                showStatus("Error fetching feed data. See console.", 'error');
+                console.error("Listener Error:", error);
+                // showStatus(`Feed error: ${error.message}`, 'error');
             });
         };
 
         // --- Event Listeners ---
-
         elements.authButton.addEventListener('click', () => {
             elements.modalOverlay.classList.remove('hidden');
             elements.authErrorMessage.classList.add('hidden'); 
@@ -564,9 +547,7 @@
         elements.signOutButton.addEventListener('click', handleSignOut);
         elements.postForm.addEventListener('submit', handleNewPost);
 
-        // --- Start Application ---
         initializeFirebase();
-
     </script>
 </body>
 </html>
