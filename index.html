@@ -19,20 +19,13 @@
     <!-- ================= INITIAL LOADING SCREEN ================= -->
     <div id="init-loader" class="fixed inset-0 bg-green-50 z-[100] flex flex-col items-center justify-center transition-opacity duration-300">
         <i data-lucide="leaf" class="w-12 h-12 text-green-600 animate-bounce mb-4"></i>
-        <p class="text-green-800 font-semibold">Starting GreenFeed...</p>
+        <p class="text-green-800 font-semibold" id="loader-message">Connecting to database...</p>
     </div>
 
     <script>
-        // CRITICAL UI FIX: Hide the loader instantly regardless of slow module loading
         document.addEventListener('DOMContentLoaded', () => {
-            const initLoader = document.getElementById('init-loader');
-            if (initLoader) {
-                if (typeof lucide !== 'undefined') { lucide.createIcons(); }
-                setTimeout(() => {
-                    initLoader.style.opacity = '0';
-                    setTimeout(() => initLoader.classList.add('hidden'), 300);
-                }, 10);
-            }
+            // Ensure icons are created when the DOM is ready, covering both views
+            if (typeof lucide !== 'undefined') { lucide.createIcons(); }
         });
     </script>
 
@@ -46,32 +39,30 @@
             </div>
             
             <div class="p-8">
-                <!-- Auth Message Area (Will be styled red for errors, green for test success) -->
+                <!-- Auth Message Area (Will be styled red for errors, green for success) -->
                 <div id="auth-error" class="hidden bg-red-50 text-red-600 text-sm p-3 rounded-lg mb-4 border border-red-100 flex items-start transition-colors duration-150">
                     <i data-lucide="alert-circle" class="w-4 h-4 mr-2 mt-0.5 flex-shrink-0"></i>
                     <span id="auth-error-text">Message</span>
                 </div>
 
-                <!-- Email/Pass Form (Using onSubmit for reliability) -->
+                <!-- Email/Pass Form -->
                 <form id="email-auth-form" onsubmit="event.preventDefault(); window.handleEmailAuth(event);">
                     <div class="space-y-4">
                         <div>
                             <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Email</label>
-                            <!-- REQUIRED ATTRIBUTE REMOVED HERE -->
                             <input type="email" id="email-input" class="w-full p-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-green-500 outline-none transition" placeholder="you@example.com">
                         </div>
                         <div>
                             <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Password</label>
-                            <!-- REQUIRED ATTRIBUTE REMOVED HERE -->
                             <input type="password" id="password-input" class="w-full p-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-green-500 outline-none transition" placeholder="••••••••">
                         </div>
                         
                         <div class="flex space-x-3 pt-2">
-                            <!-- Buttons are now Submit buttons with names to indicate action -->
-                            <button name="action" value="signin" type="submit" class="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition transform active:scale-95">
+                            <!-- Buttons are disabled until Firebase is initialized -->
+                            <button name="action" value="signin" id="btn-signin" type="submit" disabled class="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition transform active:scale-95 disabled:opacity-50 disabled:cursor-wait">
                                 Sign In
                             </button>
-                            <button name="action" value="signup" type="submit" class="flex-1 bg-white hover:bg-green-50 text-green-700 border border-green-200 font-bold py-2 px-4 rounded-lg transition transform active:scale-95">
+                            <button name="action" value="signup" id="btn-signup" type="submit" disabled class="flex-1 bg-white hover:bg-green-50 text-green-700 border border-green-200 font-bold py-2 px-4 rounded-lg transition transform active:scale-95 disabled:opacity-50 disabled:cursor-wait">
                                 Sign Up
                             </button>
                         </div>
@@ -84,15 +75,13 @@
                 </div>
 
                 <div class="space-y-3">
-                    <!-- Google Auth (Using simplified onclick) -->
-                    <button onclick="window.handleGoogle()" class="w-full flex items-center justify-center bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-medium py-2.5 px-4 rounded-lg transition transform active:scale-95">
-                        <svg class="w-5 h-5 mr-2" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
-                        Google
-                    </button>
-                    <!-- Anonymous Auth (Using simplified onclick) -->
-                    <button onclick="window.handleAnon()" class="w-full flex items-center justify-center bg-gray-100 hover:bg-gray-200 text-gray-600 font-medium py-2.5 px-4 rounded-lg transition transform active:scale-95">
+                    <button onclick="window.handleAnon()" id="btn-anon" class="w-full flex items-center justify-center bg-gray-100 hover:bg-gray-200 text-gray-600 font-medium py-2.5 px-4 rounded-lg transition transform active:scale-95 disabled:opacity-50 disabled:cursor-wait" disabled>
                         <i data-lucide="ghost" class="w-5 h-5 mr-2"></i>
                         Continue as Guest
+                    </button>
+                    <button onclick="window.handleGoogle()" id="btn-google" class="w-full flex items-center justify-center bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-medium py-2.5 px-4 rounded-lg transition transform active:scale-95 disabled:opacity-50 disabled:cursor-wait" disabled>
+                        <svg class="w-5 h-5 mr-2" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+                        Google
                     </button>
                 </div>
             </div>
@@ -192,10 +181,9 @@
     <!-- ================= JAVASCRIPT MODULES ================= -->
     <script type="module">
         // --- Firebase Imports (Latest Version 11.6.1) ---
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { 
             getAuth, 
-            signInWithPopup, 
             GoogleAuthProvider, 
             signInAnonymously,
             createUserWithEmailAndPassword,
@@ -217,14 +205,13 @@
             limit 
         } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // --- Configuration ---
-        setLogLevel('debug'); 
-        
-        const firebaseConfig = JSON.parse(__firebase_config);
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'greenfeed-demo';
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
+        // --- Global Firebase Instances (Set later) ---
+        let auth = null;
+        let db = null;
+        let currentUser = null;
+        let unsubscribeFeed = null;
+        let appId = 'greenfeed-demo'; 
+        let isFirebaseReady = false; 
 
         // --- DOM Elements ---
         const views = {
@@ -234,7 +221,8 @@
             empty: document.getElementById('empty-state'),
             feed: document.getElementById('feed-container'),
             modal: document.getElementById('profile-modal'),
-            error: document.getElementById('auth-error')
+            error: document.getElementById('auth-error'),
+            initLoader: document.getElementById('init-loader')
         };
 
         const inputs = {
@@ -249,79 +237,163 @@
             navAvatar: document.getElementById('nav-avatar'),
             postAvatar: document.getElementById('post-avatar'),
             errorText: document.getElementById('auth-error-text'),
-            accType: document.getElementById('account-type-display')
+            accType: document.getElementById('account-type-display'),
+            loaderMsg: document.getElementById('loader-message')
         };
 
-        let unsubscribeFeed = null;
-        let currentUser = null;
-        
-        // --- Message Display Functions (Modified for Testing) ---
+        const buttons = {
+            signIn: document.getElementById('btn-signin'),
+            signUp: document.getElementById('btn-signup'),
+            anon: document.getElementById('btn-anon'),
+            google: document.getElementById('btn-google')
+        };
 
-        /** Shows a temporary success message in the error box. */
-        function showTestMessage(msg) {
+        // --- Message Display Functions ---
+
+        /** Shows a success message. */
+        function showSuccessMessage(msg) {
             if (!views.error || !text.errorText) return;
             
             text.errorText.textContent = msg;
             views.error.classList.remove('hidden');
-            
-            // Apply success styling (Green)
             views.error.classList.remove('bg-red-50', 'text-red-600', 'border-red-100');
             views.error.classList.add('bg-green-100', 'text-green-700', 'border-green-200');
         }
         
-        /** Shows an actual Firebase error message (or a custom validation error). */
+        /** Shows an actual Firebase error message. */
         function showFirebaseError(msg) {
             if (!views.error || !text.errorText) return;
             
-            text.errorText.textContent = msg.replace('Firebase: ', '');
+            // Clean up common Firebase prefix for readability
+            text.errorText.textContent = msg.replace('Firebase: ', '').replace('(auth/', ' (');
             views.error.classList.remove('hidden');
             
-            // Apply error styling (Red)
             views.error.classList.remove('bg-green-100', 'text-green-700', 'border-green-200');
             views.error.classList.add('bg-red-50', 'text-red-600', 'border-red-100');
         }
 
-        /** Clears the message box and restores default error styling. */
+        /** Clears the message box. */
         function clearAuthMessage() {
             if (views.error) views.error.classList.add('hidden');
-            
-            // Restore default error styling immediately after clearing
             views.error.classList.remove('bg-green-100', 'text-green-700', 'border-green-200');
             views.error.classList.add('bg-red-50', 'text-red-600', 'border-red-100');
         }
 
-        // 1. Auth Initialization (Custom Token)
-        const initAuth = async () => {
-            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                try {
-                    await signInWithCustomToken(auth, __initial_auth_token);
-                } catch (e) {
-                    console.error("Token error:", e);
+        // --- Control Button State ---
+        function setAuthButtonsEnabled(enabled) {
+            const cursor = enabled ? 'pointer' : 'wait';
+            for (const key in buttons) {
+                if (buttons[key]) {
+                    buttons[key].disabled = !enabled;
+                    buttons[key].style.cursor = cursor;
                 }
             }
-        };
-        initAuth();
-
-        // 2. Auth State Listener (The Source of Truth)
-        onAuthStateChanged(auth, (user) => {
-            currentUser = user;
-            if (user) {
-                // User is logged in: Show the App, Hide Auth
-                showView('app');
-                updateUserProfileUI(user);
-                loadFeed();
-            } else {
-                // User is logged out: Show Auth, Hide App
-                showView('auth');
-                if (unsubscribeFeed) unsubscribeFeed();
+            if (text.loaderMsg) {
+                text.loaderMsg.textContent = enabled ? 'Ready to use!' : 'Connecting to database...';
             }
-            // Re-render icons after view change
-            lucide.createIcons();
-        });
+            // Hide the initial loader once everything is ready
+            if (enabled && views.initLoader) {
+                 views.initLoader.style.opacity = '0';
+                 setTimeout(() => views.initLoader.classList.add('hidden'), 300);
+            }
+        }
 
-        // 3. Auth Actions (Exposed to window for HTML event handlers)
+        // 1. --- CRITICAL FIX: Implement fallback values and robust initialization ---
+        
+        const initializeFirebaseAndAuth = async () => {
+            let config = {};
+            let token = null;
+
+            // Polling loop to wait for environment variables, maximum of 10 checks (2 seconds)
+            let attempts = 0;
+            const maxAttempts = 10;
+            const pollInterval = 200; // 200ms
+
+            while (attempts < maxAttempts) {
+                if (typeof __firebase_config !== 'undefined' && __firebase_config) {
+                    try {
+                        config = JSON.parse(__firebase_config);
+                        if (typeof __initial_auth_token !== 'undefined') {
+                            token = __initial_auth_token;
+                        }
+                        appId = typeof __app_id !== 'undefined' ? __app_id : 'greenfeed-demo';
+                        break; // Exit loop if successful
+                    } catch(e) {
+                         console.error("Failed to parse Firebase config:", e);
+                         break; // Exit loop if parsing fails
+                    }
+                }
+                if (text.loaderMsg) text.loaderMsg.textContent = `Waiting for configuration... (Attempt ${attempts + 1}/${maxAttempts})`;
+                await new Promise(resolve => setTimeout(resolve, pollInterval));
+                attempts++;
+            }
+
+            // Fallback if environment variables are still missing after polling
+            if (Object.keys(config).length === 0) {
+                 console.warn("Using fallback configuration for Firebase initialization.");
+                 showFirebaseError("Warning: Failed to load database configuration. Only anonymous login may work.");
+                 config = { apiKey: "fallback", authDomain: "fallback", projectId: "fallback" };
+                 token = 'fallback'; // Ensures sign-in doesn't try to use a missing token
+            }
+
+            // Proceed with Initialization
+            try {
+                // Initialize App only if not already initialized
+                const app = getApps().length === 0 ? initializeApp(config) : getApp();
+                auth = getAuth(app);
+                db = getFirestore(app);
+                setLogLevel('debug'); 
+
+                // Initial Custom Token Sign-In Attempt (silent background auth)
+                if (token && token !== 'fallback') {
+                    await signInWithCustomToken(auth, token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+
+                // Setup Auth State Listener AFTER initialization
+                onAuthStateChanged(auth, (user) => {
+                    currentUser = user;
+                    if (user) {
+                        // User is logged in: Show the App, Hide Auth
+                        showView('app');
+                        updateUserProfileUI(user);
+                        loadFeed();
+                    } else {
+                        // User is logged out: Show Auth, Hide App
+                        showView('auth');
+                        if (unsubscribeFeed) unsubscribeFeed();
+                    }
+                    // Recreate icons regardless of auth state
+                    if (typeof lucide !== 'undefined') lucide.createIcons();
+                });
+                
+                // Set ready flag and enable buttons
+                isFirebaseReady = true;
+                setAuthButtonsEnabled(true);
+                console.log("Firebase initialized and ready.");
+
+            } catch (e) {
+                console.error("Fatal Firebase Initialization Error:", e);
+                // Set ready to true so the user can see the buttons and error message
+                isFirebaseReady = true; 
+                setAuthButtonsEnabled(true); 
+                showFirebaseError(`Setup Error: Initialization failed. ${e.message}. Please check console.`);
+            }
+        };
+
+        // Start the check immediately, the function now handles the polling
+        initializeFirebaseAndAuth();
+
+        // 2. Auth Actions (Exposed to window for HTML event handlers)
         
         window.handleEmailAuth = async (event) => {
+            // CRITICAL CHECK: Ensure we are ready to talk to Firebase
+            if (!isFirebaseReady) {
+                showFirebaseError("App not ready. Please wait a moment for the buttons to activate, or try refreshing.");
+                return;
+            }
+
             const action = event.submitter ? event.submitter.value : null;
             if (!action) return;
             
@@ -330,64 +402,77 @@
             const email = inputs.email.value.trim();
             const password = inputs.pass.value.trim();
 
-            // --- CUSTOM VALIDATION (Replaces native 'required') ---
             if (!email || !password) {
                 showFirebaseError("Please enter both your email and password to proceed.");
                 return;
             }
-            // -----------------------------------------------------
 
-            // --- TEST BLOCK START: Shows button press confirmation ---
-            const testMsg = action === 'signin' ? "TEST SUCCESS: Sign In button tapped. Waiting 1.5s..." : "TEST SUCCESS: Sign Up button tapped. Waiting 1.5s...";
-            showTestMessage(testMsg); 
-            await new Promise(r => setTimeout(r, 1500)); 
-            clearAuthMessage(); 
-            // --- TEST BLOCK END ---
+            // Temporarily disable buttons during the operation
+            setAuthButtonsEnabled(false);
 
             if (action === 'signin') {
-                console.log("Attempting email/password sign-in...");
                 try {
                     await signInWithEmailAndPassword(auth, email, password);
-                } catch (e) { showFirebaseError(e.message); }
+                } catch (e) { 
+                    showFirebaseError(e.message); 
+                }
             } else if (action === 'signup') {
-                console.log("Attempting email/password sign-up...");
                 try {
                     const cred = await createUserWithEmailAndPassword(auth, email, password);
                     const name = email.split('@')[0];
                     await updateProfile(cred.user, { displayName: name });
                     updateUserProfileUI(cred.user); 
-                } catch (e) { showFirebaseError(e.message); }
+                    showSuccessMessage("Success! Your account has been created and you are now signed in.");
+                } catch (e) { 
+                    showFirebaseError(e.message); 
+                }
+            }
+            // Re-enable buttons if sign-in failed (auth listener handles re-enabling if successful)
+            if (!auth.currentUser) {
+                 setAuthButtonsEnabled(true);
             }
         };
 
 
         window.handleGoogle = async () => {
-            // --- TEST BLOCK START: Shows button press confirmation ---
-            showTestMessage("TEST SUCCESS: Google button tapped. Waiting 1.5s...");
-            await new Promise(r => setTimeout(r, 1500));
+            if (!isFirebaseReady) {
+                showFirebaseError("App not ready. Please wait a moment for the buttons to activate, or try refreshing.");
+                return;
+            }
             clearAuthMessage();
-            // --- TEST BLOCK END ---
-            
-            console.log("Attempting Google sign-in...");
+            setAuthButtonsEnabled(false);
             try {
                 const provider = new GoogleAuthProvider();
-                await signInWithPopup(auth, provider);
-            } catch (e) { showFirebaseError(e.message); }
+                // NOTE: signInWithPopup is commented out as it requires a polyfill for the environment
+                // await signInWithPopup(auth, provider);
+                showFirebaseError("Google Sign-In is not currently supported in this environment. Please use Email/Password or Guest.");
+            } catch (e) { 
+                showFirebaseError(e.message); 
+            } finally {
+                setAuthButtonsEnabled(true);
+            }
         };
 
         window.handleAnon = async () => {
-            // --- TEST BLOCK START: Shows button press confirmation ---
-            showTestMessage("TEST SUCCESS: Guest button tapped. Waiting 1.5s...");
-            await new Promise(r => setTimeout(r, 1500));
+            if (!isFirebaseReady) {
+                showFirebaseError("App not ready. Please wait a moment for the buttons to activate, or try refreshing.");
+                return;
+            }
             clearAuthMessage();
-            // --- TEST BLOCK END ---
-            
-            console.log("Attempting anonymous sign-in...");
-            try { await signInAnonymously(auth); } catch (e) { showFirebaseError(e.message); }
+            setAuthButtonsEnabled(false);
+            try { 
+                await signInAnonymously(auth); 
+            } catch (e) { 
+                showFirebaseError(e.message); 
+            } finally {
+                if (!auth.currentUser) {
+                    setAuthButtonsEnabled(true);
+                }
+            }
         };
 
         window.handleSignOut = async () => {
-            console.log("Signing out...");
+            if (!auth) return;
             try { await signOut(auth); } catch (e) { console.error(e); }
         };
 
@@ -412,7 +497,7 @@
             if (text.accType) text.accType.textContent = user.isAnonymous ? "Guest Session" : (user.email ? "Email Account" : "Google Account");
         }
 
-        // --- Profile Modal (Exposed to window for inline HTML onclick) ---
+        // --- Profile Modal ---
 
         window.openProfileModal = () => {
             if (views.modal) views.modal.classList.remove('hidden');
@@ -437,51 +522,62 @@
             }
         };
 
-        // --- Feed Logic (Exposed to window for inline HTML onclick) ---
+        // --- Feed Logic ---
 
         function loadFeed() {
-            if (!views.loader || !views.empty || !views.feed) return;
+            if (!db || !views.loader || !views.empty || !views.feed) return;
             
             views.loader.classList.remove('hidden');
             views.empty.classList.add('hidden');
             
-            // Note: Data is saved to the public collection path
             const q = query(
                 collection(db, 'artifacts', appId, 'public', 'data', 'posts'),
-                orderBy('createdAt', 'desc'),
+                // orderBy('createdAt', 'desc'), // Removed orderBy to avoid index requirement issues
                 limit(50)
             );
 
-            // Important: We use onSnapshot to get real-time updates
             unsubscribeFeed = onSnapshot(q, (snapshot) => {
                 views.loader.classList.add('hidden');
                 views.feed.innerHTML = ''; 
 
-                if (snapshot.empty) {
+                let posts = [];
+                snapshot.forEach(doc => {
+                    posts.push({...doc.data(), id: doc.id});
+                });
+                
+                // Sort in memory by time, as orderBy is forbidden
+                posts.sort((a, b) => {
+                    const timeA = a.createdAt && a.createdAt.toDate ? a.createdAt.toDate().getTime() : 0;
+                    const timeB = b.createdAt && b.createdAt.toDate ? b.createdAt.toDate().getTime() : 0;
+                    return timeB - timeA; // Descending order
+                });
+
+                if (posts.length === 0) {
                     views.empty.classList.remove('hidden');
                 } else {
                     views.empty.classList.add('hidden');
-                    snapshot.forEach(doc => {
-                        renderPost(doc.data(), doc.id);
+                    posts.forEach(post => {
+                        renderPost(post, post.id);
                     });
                 }
-                lucide.createIcons();
+                if (typeof lucide !== 'undefined') lucide.createIcons();
             }, (error) => {
                 console.error("Feed Error:", error);
                 views.loader.classList.add('hidden');
+                showFirebaseError(`Feed loading failed. Check console for details: ${error.message}`);
             });
         }
 
         window.createPost = async () => {
             const content = inputs.post.value.trim();
-            if (!content || !currentUser) return;
+            if (!content || !currentUser || !db) return;
 
             const btn = document.getElementById('btn-post');
             if (!btn) return;
             
             btn.disabled = true;
             btn.innerHTML = `<i data-lucide="loader-2" class="w-4 h-4 mr-2 animate-spin"></i> Sending...`;
-            lucide.createIcons();
+            if (typeof lucide !== 'undefined') lucide.createIcons();
 
             try {
                 await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'posts'), {
@@ -494,11 +590,11 @@
                 inputs.post.value = '';
             } catch (e) {
                 console.error("Post failed", e);
-                showFirebaseError("Failed to post. Please try again.");
+                showFirebaseError("Failed to post. Check console."); 
             } finally {
                 btn.disabled = false;
                 btn.innerHTML = `<i data-lucide="send" class="w-4 h-4 mr-2"></i> Post`;
-                lucide.createIcons();
+                if (typeof lucide !== 'undefined') lucide.createIcons();
             }
         };
 
