@@ -8,19 +8,25 @@
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
         body { font-family: 'Inter', sans-serif; background-color: #f0fdf4; }
-        .fade-in { animation: fadeIn 0.3s ease-in; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .fade-in { animation: fadeIn 0.4s ease-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body class="text-gray-800 min-h-screen flex flex-col">
 
+    <!-- ================= INITIAL LOADING SCREEN ================= -->
+    <div id="init-loader" class="fixed inset-0 bg-green-50 z-[100] flex flex-col items-center justify-center transition-opacity duration-500">
+        <i data-lucide="leaf" class="w-12 h-12 text-green-600 animate-bounce mb-4"></i>
+        <p class="text-green-800 font-semibold">Starting GreenFeed...</p>
+    </div>
+
     <!-- ================= LOGIN SCREEN ================= -->
     <div id="auth-view" class="flex-grow flex items-center justify-center p-4 hidden">
-        <div class="bg-white w-full max-w-md rounded-2xl shadow-xl overflow-hidden border border-green-100">
+        <div class="bg-white w-full max-w-md rounded-2xl shadow-xl overflow-hidden border border-green-100 fade-in">
             <div class="bg-green-600 p-6 text-center">
                 <i data-lucide="leaf" class="w-12 h-12 text-white mx-auto mb-2"></i>
                 <h1 class="text-2xl font-bold text-white">Welcome to GreenFeed</h1>
-                <p class="text-green-100 text-sm">Join the conversation</p>
+                <p class="text-green-100 text-sm">Real-time Social Feed</p>
             </div>
             
             <div class="p-8">
@@ -42,10 +48,10 @@
                     </div>
                     
                     <div class="flex space-x-3 pt-2">
-                        <button id="btn-signin" class="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition">
+                        <button id="btn-signin" class="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition transform active:scale-95">
                             Sign In
                         </button>
-                        <button id="btn-signup" class="flex-1 bg-white hover:bg-green-50 text-green-700 border border-green-200 font-bold py-2 px-4 rounded-lg transition">
+                        <button id="btn-signup" class="flex-1 bg-white hover:bg-green-50 text-green-700 border border-green-200 font-bold py-2 px-4 rounded-lg transition transform active:scale-95">
                             Sign Up
                         </button>
                     </div>
@@ -57,11 +63,11 @@
                 </div>
 
                 <div class="space-y-3">
-                    <button id="btn-google" class="w-full flex items-center justify-center bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-medium py-2.5 px-4 rounded-lg transition">
+                    <button id="btn-google" class="w-full flex items-center justify-center bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-medium py-2.5 px-4 rounded-lg transition transform active:scale-95">
                         <svg class="w-5 h-5 mr-2" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
                         Google
                     </button>
-                    <button id="btn-anon" class="w-full flex items-center justify-center bg-gray-100 hover:bg-gray-200 text-gray-600 font-medium py-2.5 px-4 rounded-lg transition">
+                    <button id="btn-anon" class="w-full flex items-center justify-center bg-gray-100 hover:bg-gray-200 text-gray-600 font-medium py-2.5 px-4 rounded-lg transition transform active:scale-95">
                         <i data-lucide="ghost" class="w-5 h-5 mr-2"></i>
                         Continue as Guest
                     </button>
@@ -81,7 +87,7 @@
                         <span>GreenFeed</span>
                     </div>
                     <div class="flex items-center space-x-3">
-                        <button onclick="openProfileModal()" class="flex items-center space-x-2 hover:bg-green-700 px-3 py-1.5 rounded-full transition group">
+                        <button onclick="openProfileModal()" class="flex items-center space-x-2 hover:bg-green-700 px-3 py-1.5 rounded-full transition group border border-transparent hover:border-green-400">
                             <div class="w-8 h-8 bg-green-200 text-green-800 rounded-full flex items-center justify-center font-bold text-sm border-2 border-green-500 group-hover:border-white transition" id="nav-avatar">U</div>
                             <span id="nav-username" class="text-sm font-medium hidden sm:block max-w-[100px] truncate">User</span>
                         </button>
@@ -97,7 +103,7 @@
         <main class="flex-grow max-w-2xl w-full mx-auto px-4 py-6">
             
             <!-- Create Post -->
-            <div class="bg-white rounded-xl shadow-sm border border-green-100 p-4 mb-6">
+            <div class="bg-white rounded-xl shadow-sm border border-green-100 p-4 mb-6 fade-in">
                 <div class="flex space-x-3">
                     <div class="w-10 h-10 bg-green-100 text-green-600 rounded-full flex items-center justify-center flex-shrink-0 font-bold" id="post-avatar">
                         U
@@ -118,19 +124,19 @@
             <!-- Feed -->
             <div id="feed-loader" class="text-center py-10 hidden">
                 <i data-lucide="loader-2" class="w-8 h-8 text-green-500 animate-spin mx-auto"></i>
-                <p class="text-gray-400 text-sm mt-2">Loading feed...</p>
+                <p class="text-gray-400 text-sm mt-2">Loading updates...</p>
             </div>
             
-            <div id="feed-container" class="space-y-4 pb-10">
+            <div id="feed-container" class="space-y-4 pb-10 min-h-[200px]">
                 <!-- Posts go here -->
             </div>
 
             <!-- Empty State -->
-            <div id="empty-state" class="hidden text-center py-16">
+            <div id="empty-state" class="hidden text-center py-16 fade-in">
                 <div class="bg-green-50 w-16 h-16 mx-auto rounded-full flex items-center justify-center mb-4">
                     <i data-lucide="wind" class="w-8 h-8 text-green-400"></i>
                 </div>
-                <h3 class="text-lg font-semibold text-gray-700">No posts yet</h3>
+                <h3 class="text-lg font-semibold text-gray-700">It's quiet here...</h3>
                 <p class="text-gray-500 text-sm mt-1">Be the first to share something!</p>
             </div>
         </main>
@@ -145,7 +151,7 @@
             </div>
             <div class="p-6">
                 <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Display Name</label>
-                <input type="text" id="display-name-input" class="w-full p-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-green-500 outline-none mb-4">
+                <input type="text" id="display-name-input" class="w-full p-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-green-500 outline-none mb-4" placeholder="Enter new name">
                 
                 <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Account Type</label>
                 <div class="bg-gray-100 p-3 rounded-lg text-sm text-gray-600 mb-6 flex items-center">
@@ -153,7 +159,7 @@
                     <span id="account-type-display">Loading...</span>
                 </div>
 
-                <button onclick="saveProfile()" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-lg shadow transition">
+                <button onclick="saveProfile()" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-lg shadow transition transform active:scale-95">
                     Save Changes
                 </button>
             </div>
@@ -162,8 +168,8 @@
 
     <!-- ================= JAVASCRIPT ================= -->
     <script type="module">
-        // --- Firebase Imports ---
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        // --- Firebase Imports (Latest Version 11.6.1) ---
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { 
             getAuth, 
             signInWithPopup, 
@@ -175,7 +181,7 @@
             onAuthStateChanged,
             updateProfile,
             signInWithCustomToken
-        } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { 
             getFirestore, 
             collection, 
@@ -185,17 +191,18 @@
             onSnapshot, 
             serverTimestamp, 
             limit 
-        } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // --- Configuration (Environment Variables) ---
+        // --- Configuration ---
         const firebaseConfig = JSON.parse(__firebase_config);
-        const appId = __app_id;
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'greenfeed-demo';
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
 
         // --- DOM Elements ---
         const views = {
+            init: document.getElementById('init-loader'),
             auth: document.getElementById('auth-view'),
             app: document.getElementById('app-view'),
             loader: document.getElementById('feed-loader'),
@@ -223,35 +230,42 @@
         let unsubscribeFeed = null;
         let currentUser = null;
 
-        // --- Auth Logic ---
+        // --- Initialization ---
+        
+        // Make sure Lucide icons render immediately on load for the loading screen
+        lucide.createIcons();
 
-        // 1. Check for custom token (Preview Environment) or wait for user action
+        // 1. Auth Initialization
         const initAuth = async () => {
             if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
                 try {
                     await signInWithCustomToken(auth, __initial_auth_token);
                 } catch (e) {
-                    console.error("Custom token failed", e);
+                    console.error("Token error:", e);
                 }
             }
+            // We rely on onAuthStateChanged to remove the loader
         };
         initAuth();
 
-        // 2. State Listener
+        // 2. Auth State Listener (The Source of Truth)
         onAuthStateChanged(auth, (user) => {
+            // Remove init loader once we know the state
+            views.init.style.opacity = '0';
+            setTimeout(() => views.init.classList.add('hidden'), 500);
+
             currentUser = user;
             if (user) {
-                // Logged In
+                // User is logged in
                 showView('app');
                 updateUserProfileUI(user);
                 loadFeed();
-                lucide.createIcons();
             } else {
-                // Logged Out
+                // User is logged out
                 showView('auth');
                 if (unsubscribeFeed) unsubscribeFeed();
-                lucide.createIcons();
             }
+            lucide.createIcons();
         });
 
         // 3. Auth Actions
@@ -275,9 +289,10 @@
         window.handleEmailSignUp = async () => {
             try {
                 const cred = await createUserWithEmailAndPassword(auth, inputs.email.value, inputs.pass.value);
-                // Set default display name for email users
-                await updateProfile(cred.user, { displayName: inputs.email.value.split('@')[0] });
-                updateUserProfileUI(cred.user);
+                const name = inputs.email.value.split('@')[0];
+                await updateProfile(cred.user, { displayName: name });
+                // Force UI update since onAuthStateChanged might fire before profile update finishes
+                updateUserProfileUI(cred.user); 
             } catch (e) { showError(e.message); }
         };
 
@@ -285,7 +300,7 @@
             try { await signOut(auth); } catch (e) { console.error(e); }
         };
 
-        // --- UI Logic ---
+        // --- UI Helpers ---
 
         function showView(viewName) {
             views.auth.classList.add('hidden');
@@ -301,22 +316,21 @@
 
         function updateUserProfileUI(user) {
             const name = user.displayName || (user.isAnonymous ? "Guest" : "User");
-            const initial = name[0].toUpperCase();
+            const initial = name[0] ? name[0].toUpperCase() : "U";
             
             text.navUser.textContent = name;
             text.navAvatar.textContent = initial;
             text.postAvatar.textContent = initial;
             
-            // For Modal
             inputs.displayName.value = name;
-            text.accType.textContent = user.isAnonymous ? "Anonymous (Guest)" : (user.email ? "Email Account" : "Google Account");
+            text.accType.textContent = user.isAnonymous ? "Guest Session" : (user.email ? "Email Account" : "Google Account");
         }
 
         // --- Profile Modal ---
 
         window.openProfileModal = () => {
             views.modal.classList.remove('hidden');
-            if (currentUser) inputs.displayName.value = currentUser.displayName || "User";
+            if (currentUser) inputs.displayName.value = currentUser.displayName || "";
         };
 
         window.closeProfileModal = () => {
@@ -331,43 +345,40 @@
                 await updateProfile(currentUser, { displayName: newName });
                 updateUserProfileUI(currentUser);
                 closeProfileModal();
-                // Ideally we would update all past posts too, but for simplicity we only update local state
-                // and new posts will use the new name.
             } catch (e) {
-                alert("Failed to update profile: " + e.message);
+                alert("Error: " + e.message);
             }
         };
 
-        // --- Feed Logic (Firestore) ---
+        // --- Feed Logic ---
 
         function loadFeed() {
             views.loader.classList.remove('hidden');
             views.empty.classList.add('hidden');
-            views.feed.innerHTML = '';
-
+            
             const q = query(
-                collection(db, 'artifacts', appId, 'public', 'data', 'posts'), // Shared Collection
+                collection(db, 'artifacts', appId, 'public', 'data', 'posts'),
                 orderBy('createdAt', 'desc'),
                 limit(50)
             );
 
             unsubscribeFeed = onSnapshot(q, (snapshot) => {
                 views.loader.classList.add('hidden');
-                views.feed.innerHTML = '';
+                views.feed.innerHTML = ''; // Clear current feed to rebuild
 
                 if (snapshot.empty) {
                     views.empty.classList.remove('hidden');
                 } else {
                     views.empty.classList.add('hidden');
                     snapshot.forEach(doc => {
-                        const post = doc.data();
-                        renderPost(post, doc.id);
+                        renderPost(doc.data(), doc.id);
                     });
                 }
                 lucide.createIcons();
             }, (error) => {
-                console.error("Feed error:", error);
+                console.error("Feed Error:", error);
                 views.loader.classList.add('hidden');
+                // Don't show empty state on error, maybe show an error toast (omitted for brevity)
             });
         }
 
@@ -377,6 +388,8 @@
 
             const btn = document.getElementById('btn-post');
             btn.disabled = true;
+            btn.innerHTML = `<i data-lucide="loader-2" class="w-4 h-4 mr-2 animate-spin"></i> Sending...`;
+            lucide.createIcons();
 
             try {
                 await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'posts'), {
@@ -389,24 +402,28 @@
                 inputs.post.value = '';
             } catch (e) {
                 console.error("Post failed", e);
-                alert("Could not post. Check console.");
+                alert("Failed to post. Please try again.");
             } finally {
                 btn.disabled = false;
+                btn.innerHTML = `<i data-lucide="send" class="w-4 h-4 mr-2"></i> Post`;
+                lucide.createIcons();
             }
         };
 
         function renderPost(post, id) {
             const div = document.createElement('div');
-            div.className = "bg-white p-5 rounded-xl shadow-sm border border-green-50 fade-in hover:shadow-md transition duration-200";
+            div.className = "bg-white p-5 rounded-xl shadow-sm border border-green-50 fade-in mb-4 hover:shadow-md transition duration-200";
             
-            // Date formatting
+            // Handle timestamp safely
             let timeStr = "Just now";
             if (post.createdAt) {
+                // toDate() works for Firestore timestamps
                 const date = post.createdAt.toDate();
                 timeStr = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
             }
 
-            const initial = post.authorName ? post.authorName[0].toUpperCase() : 'U';
+            const name = post.authorName || "Anonymous";
+            const initial = name[0] ? name[0].toUpperCase() : "U";
             const isMe = currentUser && post.authorId === currentUser.uid;
 
             div.innerHTML = `
@@ -417,19 +434,26 @@
                     <div class="flex-1 min-w-0">
                         <div class="flex items-center justify-between">
                             <div class="flex items-center space-x-2 overflow-hidden">
-                                <h4 class="font-bold text-gray-900 truncate">${post.authorName}</h4>
+                                <h4 class="font-bold text-gray-900 truncate">${name}</h4>
                                 <span class="text-gray-400 text-xs flex-shrink-0">${timeStr}</span>
                             </div>
                             ${isMe ? '<span class="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-medium">You</span>' : ''}
                         </div>
-                        <p class="mt-1 text-gray-800 leading-relaxed whitespace-pre-line break-words">${post.content}</p>
+                        <p class="mt-1 text-gray-800 leading-relaxed whitespace-pre-line break-words text-sm md:text-base">${post.content}</p>
                     </div>
                 </div>
             `;
             views.feed.appendChild(div);
         }
 
-        // --- Event Listeners (Binding Buttons) ---
+        // --- Keyboard Shortcut for Posting ---
+        inputs.post.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+                createPost();
+            }
+        });
+
+        // --- Global Listeners ---
         document.getElementById('btn-google').addEventListener('click', window.handleGoogle);
         document.getElementById('btn-anon').addEventListener('click', window.handleAnon);
         document.getElementById('btn-signin').addEventListener('click', window.handleEmailSignIn);
