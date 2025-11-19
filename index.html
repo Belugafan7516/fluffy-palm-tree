@@ -15,13 +15,27 @@
 <body class="text-gray-800 min-h-screen flex flex-col">
 
     <!-- ================= INITIAL LOADING SCREEN ================= -->
-    <div id="init-loader" class="fixed inset-0 bg-green-50 z-[100] flex flex-col items-center justify-center transition-opacity duration-500">
+    <div id="init-loader" class="fixed inset-0 bg-green-50 z-[100] flex flex-col items-center justify-center transition-opacity duration-300">
         <i data-lucide="leaf" class="w-12 h-12 text-green-600 animate-bounce mb-4"></i>
         <p class="text-green-800 font-semibold">Starting GreenFeed...</p>
     </div>
 
-    <!-- ================= LOGIN SCREEN ================= -->
-    <div id="auth-view" class="flex-grow flex items-center justify-center p-4 hidden">
+    <script>
+        // CRITICAL UI FIX: Hide the loader instantly regardless of slow module loading
+        document.addEventListener('DOMContentLoaded', () => {
+            const initLoader = document.getElementById('init-loader');
+            if (initLoader) {
+                if (typeof lucide !== 'undefined') { lucide.createIcons(); }
+                setTimeout(() => {
+                    initLoader.style.opacity = '0';
+                    setTimeout(() => initLoader.classList.add('hidden'), 300);
+                }, 10);
+            }
+        });
+    </script>
+
+    <!-- ================= LOGIN SCREEN (DEFAULT VISIBLE) ================= -->
+    <div id="auth-view" class="flex-grow flex items-center justify-center p-4">
         <div class="bg-white w-full max-w-md rounded-2xl shadow-xl overflow-hidden border border-green-100 fade-in">
             <div class="bg-green-600 p-6 text-center">
                 <i data-lucide="leaf" class="w-12 h-12 text-white mx-auto mb-2"></i>
@@ -76,7 +90,7 @@
         </div>
     </div>
 
-    <!-- ================= APP SCREEN ================= -->
+    <!-- ================= APP SCREEN (Starts Hidden) ================= -->
     <div id="app-view" class="flex-grow flex flex-col hidden">
         <!-- Navbar -->
         <nav class="bg-green-600 text-white shadow-lg sticky top-0 z-50">
@@ -166,7 +180,7 @@
         </div>
     </div>
 
-    <!-- ================= JAVASCRIPT ================= -->
+    <!-- ================= JAVASCRIPT MODULES ================= -->
     <script type="module">
         // --- Firebase Imports (Latest Version 11.6.1) ---
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
@@ -180,7 +194,8 @@
             signOut,
             onAuthStateChanged,
             updateProfile,
-            signInWithCustomToken
+            signInWithCustomToken,
+            setLogLevel 
         } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { 
             getFirestore, 
@@ -194,6 +209,9 @@
         } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // --- Configuration ---
+        // Enable Firebase debugging in the console
+        setLogLevel('debug'); 
+        
         const firebaseConfig = JSON.parse(__firebase_config);
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'greenfeed-demo';
         const app = initializeApp(firebaseConfig);
@@ -202,7 +220,6 @@
 
         // --- DOM Elements ---
         const views = {
-            init: document.getElementById('init-loader'),
             auth: document.getElementById('auth-view'),
             app: document.getElementById('app-view'),
             loader: document.getElementById('feed-loader'),
@@ -229,13 +246,8 @@
 
         let unsubscribeFeed = null;
         let currentUser = null;
-
-        // --- Initialization ---
         
-        // Make sure Lucide icons render immediately on load for the loading screen
-        lucide.createIcons();
-
-        // 1. Auth Initialization
+        // 1. Auth Initialization (Custom Token)
         const initAuth = async () => {
             if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
                 try {
@@ -244,24 +256,19 @@
                     console.error("Token error:", e);
                 }
             }
-            // We rely on onAuthStateChanged to remove the loader
         };
         initAuth();
 
         // 2. Auth State Listener (The Source of Truth)
         onAuthStateChanged(auth, (user) => {
-            // Remove init loader once we know the state
-            views.init.style.opacity = '0';
-            setTimeout(() => views.init.classList.add('hidden'), 500);
-
             currentUser = user;
             if (user) {
-                // User is logged in
+                // User is logged in: Show the App, Hide Auth
                 showView('app');
                 updateUserProfileUI(user);
                 loadFeed();
             } else {
-                // User is logged out
+                // User is logged out: Show Auth, Hide App
                 showView('auth');
                 if (unsubscribeFeed) unsubscribeFeed();
             }
@@ -270,6 +277,7 @@
 
         // 3. Auth Actions
         window.handleGoogle = async () => {
+            console.log("Attempting Google sign-in...");
             try {
                 const provider = new GoogleAuthProvider();
                 await signInWithPopup(auth, provider);
@@ -277,26 +285,29 @@
         };
 
         window.handleAnon = async () => {
+            console.log("Attempting anonymous sign-in..."); // CONFIRMATION LOG
             try { await signInAnonymously(auth); } catch (e) { showError(e.message); }
         };
 
         window.handleEmailSignIn = async () => {
+            console.log("Attempting email/password sign-in...");
             try {
                 await signInWithEmailAndPassword(auth, inputs.email.value, inputs.pass.value);
             } catch (e) { showError(e.message); }
         };
 
         window.handleEmailSignUp = async () => {
+            console.log("Attempting email/password sign-up...");
             try {
                 const cred = await createUserWithEmailAndPassword(auth, inputs.email.value, inputs.pass.value);
                 const name = inputs.email.value.split('@')[0];
                 await updateProfile(cred.user, { displayName: name });
-                // Force UI update since onAuthStateChanged might fire before profile update finishes
                 updateUserProfileUI(cred.user); 
             } catch (e) { showError(e.message); }
         };
 
         window.handleSignOut = async () => {
+            console.log("Signing out...");
             try { await signOut(auth); } catch (e) { console.error(e); }
         };
 
@@ -310,6 +321,7 @@
         }
 
         function showError(msg) {
+            // Displays Firebase error message on the auth screen
             text.errorText.textContent = msg.replace('Firebase: ', '');
             text.error.classList.remove('hidden');
         }
@@ -346,7 +358,8 @@
                 updateUserProfileUI(currentUser);
                 closeProfileModal();
             } catch (e) {
-                alert("Error: " + e.message);
+                console.error("Error saving profile:", e);
+                showError("Failed to save profile. See console for details.");
             }
         };
 
@@ -362,9 +375,10 @@
                 limit(50)
             );
 
+            // Important: We use onSnapshot to get real-time updates
             unsubscribeFeed = onSnapshot(q, (snapshot) => {
                 views.loader.classList.add('hidden');
-                views.feed.innerHTML = ''; // Clear current feed to rebuild
+                views.feed.innerHTML = ''; 
 
                 if (snapshot.empty) {
                     views.empty.classList.remove('hidden');
@@ -378,7 +392,6 @@
             }, (error) => {
                 console.error("Feed Error:", error);
                 views.loader.classList.add('hidden');
-                // Don't show empty state on error, maybe show an error toast (omitted for brevity)
             });
         }
 
@@ -402,7 +415,7 @@
                 inputs.post.value = '';
             } catch (e) {
                 console.error("Post failed", e);
-                alert("Failed to post. Please try again.");
+                showError("Failed to post. Please try again.");
             } finally {
                 btn.disabled = false;
                 btn.innerHTML = `<i data-lucide="send" class="w-4 h-4 mr-2"></i> Post`;
@@ -414,10 +427,8 @@
             const div = document.createElement('div');
             div.className = "bg-white p-5 rounded-xl shadow-sm border border-green-50 fade-in mb-4 hover:shadow-md transition duration-200";
             
-            // Handle timestamp safely
             let timeStr = "Just now";
-            if (post.createdAt) {
-                // toDate() works for Firestore timestamps
+            if (post.createdAt && post.createdAt.toDate) { 
                 const date = post.createdAt.toDate();
                 timeStr = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
             }
@@ -460,8 +471,9 @@
         document.getElementById('btn-signup').addEventListener('click', window.handleEmailSignUp);
         document.getElementById('btn-signout').addEventListener('click', window.handleSignOut);
 
+        console.log("All main event listeners attached successfully."); // CONFIRMATION LOG
+
     </script>
 </body>
 </html>
-
 
