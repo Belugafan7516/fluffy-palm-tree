@@ -3,653 +3,441 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GreenFeed - Social Media</title>
-    
-    <!-- Load Inter Font -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-    
-    <!-- Load Tailwind CSS CDN -->
+    <title>GreenFeed - Social</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    
+    <script src="https://unpkg.com/lucide@latest"></script>
     <style>
-        /* Base Font and Utility Styles */
-        body { 
-            font-family: 'Inter', sans-serif; 
-        }
-        .hidden { display: none !important; }
-        .fade-in { animation: fadeIn 0.3s ease-in-out; }
+        body { font-family: 'Inter', sans-serif; background-color: #f0fdf4; }
+        .fade-in { animation: fadeIn 0.3s ease-in; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-
-        /* Simple Spinner for Loading State */
-        .spinner {
-            border: 4px solid rgba(16, 185, 129, 0.2);
-            border-left-color: #059669; 
-            border-radius: 50%;
-            width: 28px;
-            height: 28px;
-            animation: spin 1s linear infinite;
-        }
-        @keyframes spin { to { transform: rotate(360deg); } }
     </style>
 </head>
-<!-- Replaced Tailwind class with highest-precedence inline style: background-color: #f9fafb (bg-gray-50) -->
-<body style="background-color: #f9fafb;" class="min-h-screen text-gray-900">
+<body class="text-gray-800 min-h-screen flex flex-col">
 
-    <!-- Main Application Container -->
-    <div id="app" class="p-4 sm:p-8 max-w-4xl mx-auto">
-        
-        <!-- Header -->
-        <header class="flex justify-between items-center py-4 mb-6 border-b border-green-200">
-            <h1 class="text-3xl font-extrabold text-green-700 flex items-center">
-                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-7 h-7 mr-2 text-green-500">
-                    <path d="M7.9 20A10 10 0 1 0 3 15.1"/>
-                    <path d="M12 21v-4"/>
-                    <path d="M15 17h-6"/>
-                    <path d="M15 3.5a6.5 6.5 0 0 0-4.6 1.9"/>
-                    <path d="M16 11c0-1.77 1-4 1-4s1 2.23 1 4"/>
-                    <path d="M8 11c0-1.77-1-4-1-4s-1 2.23-1 4"/>
-                </svg>
-                GreenFeed
-            </h1>
-            <button id="auth-button" class="flex items-center px-4 py-2 text-sm font-semibold rounded-lg shadow-md transition duration-150">
-                Sign In
-            </button>
-        </header>
-
-        <!-- Status Message Area -->
-        <div id="status-message" class="hidden mb-4 p-4 rounded-lg text-sm font-medium shadow-sm border fade-in"></div>
-
-        <!-- Posting Form (Initially Disabled) -->
-        <div id="post-form-container" class="mb-8 bg-white p-6 rounded-xl shadow-lg border border-gray-100 opacity-50 pointer-events-none transition-all duration-300">
-            <div class="flex justify-between items-center mb-3">
-                <p id="post-user-info" class="text-sm text-gray-500 font-medium">Sign in to post</p>
+    <!-- ================= LOGIN SCREEN ================= -->
+    <div id="auth-view" class="flex-grow flex items-center justify-center p-4 hidden">
+        <div class="bg-white w-full max-w-md rounded-2xl shadow-xl overflow-hidden border border-green-100">
+            <div class="bg-green-600 p-6 text-center">
+                <i data-lucide="leaf" class="w-12 h-12 text-white mx-auto mb-2"></i>
+                <h1 class="text-2xl font-bold text-white">Welcome to GreenFeed</h1>
+                <p class="text-green-100 text-sm">Join the conversation</p>
             </div>
-            <form id="post-form">
-                <textarea
-                    id="new-post-text"
-                    placeholder="What's on your mind? (Max 280 chars)"
-                    rows="3"
-                    maxlength="280"
-                    class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-shadow resize-none bg-gray-50 focus:bg-white"
-                    required
-                ></textarea>
-                <div class="mt-3 flex justify-end">
-                    <button
-                        type="submit"
-                        id="post-button"
-                        class="flex items-center justify-center px-6 py-2 bg-green-600 text-white font-semibold rounded-lg shadow-md hover:bg-green-700 active:bg-green-800 transition duration-150 disabled:bg-green-300 disabled:cursor-not-allowed"
-                    >
-                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2">
-                            <line x1="22" y1="2" x2="11" y2="13"></line>
-                            <polygon points="22 2 15 22 11 14 2 10 22 2"></polygon>
-                        </svg>
+            
+            <div class="p-8">
+                <!-- Auth Error Message -->
+                <div id="auth-error" class="hidden bg-red-50 text-red-600 text-sm p-3 rounded-lg mb-4 border border-red-100 flex items-start">
+                    <i data-lucide="alert-circle" class="w-4 h-4 mr-2 mt-0.5 flex-shrink-0"></i>
+                    <span id="auth-error-text">Error message</span>
+                </div>
+
+                <!-- Email/Pass Form -->
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Email</label>
+                        <input type="email" id="email-input" class="w-full p-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-green-500 outline-none transition" placeholder="you@example.com">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Password</label>
+                        <input type="password" id="password-input" class="w-full p-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-green-500 outline-none transition" placeholder="••••••••">
+                    </div>
+                    
+                    <div class="flex space-x-3 pt-2">
+                        <button id="btn-signin" class="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition">
+                            Sign In
+                        </button>
+                        <button id="btn-signup" class="flex-1 bg-white hover:bg-green-50 text-green-700 border border-green-200 font-bold py-2 px-4 rounded-lg transition">
+                            Sign Up
+                        </button>
+                    </div>
+                </div>
+
+                <div class="relative my-6">
+                    <div class="absolute inset-0 flex items-center"><div class="w-full border-t border-gray-200"></div></div>
+                    <div class="relative flex justify-center text-sm"><span class="px-2 bg-white text-gray-500">Or continue with</span></div>
+                </div>
+
+                <div class="space-y-3">
+                    <button id="btn-google" class="w-full flex items-center justify-center bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-medium py-2.5 px-4 rounded-lg transition">
+                        <svg class="w-5 h-5 mr-2" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+                        Google
+                    </button>
+                    <button id="btn-anon" class="w-full flex items-center justify-center bg-gray-100 hover:bg-gray-200 text-gray-600 font-medium py-2.5 px-4 rounded-lg transition">
+                        <i data-lucide="ghost" class="w-5 h-5 mr-2"></i>
+                        Continue as Guest
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= APP SCREEN ================= -->
+    <div id="app-view" class="flex-grow flex flex-col hidden">
+        <!-- Navbar -->
+        <nav class="bg-green-600 text-white shadow-lg sticky top-0 z-50">
+            <div class="max-w-2xl mx-auto px-4">
+                <div class="flex justify-between items-center h-16">
+                    <div class="flex items-center space-x-2 font-bold text-xl cursor-pointer" onclick="window.scrollTo(0,0)">
+                        <i data-lucide="leaf" class="w-6 h-6"></i>
+                        <span>GreenFeed</span>
+                    </div>
+                    <div class="flex items-center space-x-3">
+                        <button onclick="openProfileModal()" class="flex items-center space-x-2 hover:bg-green-700 px-3 py-1.5 rounded-full transition group">
+                            <div class="w-8 h-8 bg-green-200 text-green-800 rounded-full flex items-center justify-center font-bold text-sm border-2 border-green-500 group-hover:border-white transition" id="nav-avatar">U</div>
+                            <span id="nav-username" class="text-sm font-medium hidden sm:block max-w-[100px] truncate">User</span>
+                        </button>
+                        <button id="btn-signout" class="p-2 hover:bg-green-700 rounded-full transition text-green-100 hover:text-white" title="Sign Out">
+                            <i data-lucide="log-out" class="w-5 h-5"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="flex-grow max-w-2xl w-full mx-auto px-4 py-6">
+            
+            <!-- Create Post -->
+            <div class="bg-white rounded-xl shadow-sm border border-green-100 p-4 mb-6">
+                <div class="flex space-x-3">
+                    <div class="w-10 h-10 bg-green-100 text-green-600 rounded-full flex items-center justify-center flex-shrink-0 font-bold" id="post-avatar">
+                        U
+                    </div>
+                    <div class="flex-1">
+                        <textarea id="post-input" rows="2" placeholder="What's happening?" 
+                            class="w-full bg-gray-50 border-none rounded-lg p-3 focus:ring-2 focus:ring-green-500 focus:bg-white transition resize-none outline-none text-sm md:text-base"></textarea>
+                    </div>
+                </div>
+                <div class="flex justify-end items-center mt-3 pt-3 border-t border-gray-100">
+                    <button onclick="createPost()" id="btn-post" class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-full font-medium transition shadow-md transform active:scale-95 flex items-center disabled:opacity-50 disabled:cursor-not-allowed">
+                        <i data-lucide="send" class="w-4 h-4 mr-2"></i>
                         Post
                     </button>
                 </div>
-            </form>
-        </div>
-
-        <!-- Feed List -->
-        <div class="flex items-center justify-between mb-4 border-b border-gray-200 pb-2">
-            <h2 class="text-xl font-bold text-gray-800">Recent Posts</h2>
-            <span id="feed-count" class="text-sm font-medium text-gray-500 bg-gray-100 px-2 py-1 rounded-full">0</span>
-        </div>
-        
-        <div id="feed-list" class="space-y-4 min-h-[200px]">
-            <div class="flex flex-col items-center justify-center p-10 text-gray-400 border-2 border-dashed border-gray-200 rounded-xl">
-                <div class="spinner mb-3"></div>
-                <p>Connecting to feed...</p>
             </div>
-        </div>
+
+            <!-- Feed -->
+            <div id="feed-loader" class="text-center py-10 hidden">
+                <i data-lucide="loader-2" class="w-8 h-8 text-green-500 animate-spin mx-auto"></i>
+                <p class="text-gray-400 text-sm mt-2">Loading feed...</p>
+            </div>
+            
+            <div id="feed-container" class="space-y-4 pb-10">
+                <!-- Posts go here -->
+            </div>
+
+            <!-- Empty State -->
+            <div id="empty-state" class="hidden text-center py-16">
+                <div class="bg-green-50 w-16 h-16 mx-auto rounded-full flex items-center justify-center mb-4">
+                    <i data-lucide="wind" class="w-8 h-8 text-green-400"></i>
+                </div>
+                <h3 class="text-lg font-semibold text-gray-700">No posts yet</h3>
+                <p class="text-gray-500 text-sm mt-1">Be the first to share something!</p>
+            </div>
+        </main>
     </div>
 
-    <!-- Modal Overlay -->
-    <div id="modal-overlay" class="fixed inset-0 bg-gray-900 bg-opacity-60 hidden items-center justify-center z-50 fade-in backdrop-blur-sm">
-        <div id="auth-modal" class="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-md m-4">
-            
-            <!-- Modal Header -->
-            <div class="flex justify-between items-center mb-6">
-                <h2 id="modal-title" class="text-2xl font-bold text-gray-800">Account Access</h2>
-                <button id="close-modal" class="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-                </button>
+    <!-- ================= PROFILE MODAL ================= -->
+    <div id="profile-modal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full overflow-hidden transform transition-all scale-100">
+            <div class="bg-green-600 p-4 flex justify-between items-center">
+                <h3 class="text-white font-bold text-lg">Edit Profile</h3>
+                <button onclick="closeProfileModal()" class="text-green-100 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
             </div>
-            
-            <!-- Auth Content (Login Options) -->
-            <div id="auth-content-default">
-                <div id="auth-error-message" class="hidden bg-red-50 border border-red-200 text-red-700 p-3 rounded-lg mb-4 text-sm"></div>
-
-                <div class="space-y-3 mb-6">
-                    <button id="google-sign-in" class="w-full flex items-center justify-center px-4 py-3 bg-white border border-gray-300 text-gray-700 font-semibold rounded-lg hover:bg-gray-50 transition duration-150 shadow-sm group">
-                        <!-- Google SVG Icon -->
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" class="w-5 h-5 mr-3">
-                            <path fill="#FFC107" d="M43.61 20.08v3.52H48c-1.63 7.82-8.58 13.56-17.65 13.56-11.41 0-20.67-9.26-20.67-20.67S18.94 2.72 30.35 2.72c5.44 0 9.77 2.15 13.1 5.34l-3.3 3.3c-2.3-2.19-5.32-3.66-9.8-3.66-7.85 0-14.2 6.35-14.2 14.2s6.35 14.2 14.2 14.2c9.2 0 13.6-6.12 14.1-12.75H24.35v-4.14H43.61z"/>
-                            <path fill="#FF3D00" d="M6.306 14.691c2.16-5.85 7.85-9.691 14.694-9.691 3.14 0 6.02 1.08 8.24 2.86l6.51-6.51C34.63 2.36 29.5 0 24 0 10.74 0 0 10.74 0 24s10.74 24 24 24c12.55 0 22.7-9.59 23.99-21.92l-1.38-1.997z"/>
-                            <path fill="#4CAF50" d="M24 48c13.26 0 24-10.74 24-24 0-1.74-.18-3.43-.51-5.06l-6.51 6.51C40.92 21.08 42 22.46 42 24c0 4.08-1.68 7.74-4.38 10.38l6.38 6.38C46.86 37.07 48 30.73 48 24c0-3.32-.67-6.47-1.85-9.35l-6.51 6.51c.32 1.15.51 2.36.51 3.63 0 7.72-6.28 14-14 14-4.93 0-9.27-2.58-11.83-6.48l-6.66 6.66C8.86 45.47 15.93 48 24 48z"/>
-                            <path fill="#1976D2" d="M43.611 20.083H42V20H24v8h11.303c-1.68 5.473-6.84 9.473-13.303 9.473-7.72 0-14-6.28-14-14s6.28-14 14-14c3.14 0 6.02 1.08 8.24 2.86l6.51-6.51C34.63 2.36 29.5 0 24 0 10.74 0 0 10.74 0 24s10.74 24 24 24c12.55 0 22.7-9.59 23.99-21.92l-1.38-1.997z"/>
-                        </svg>
-                        Sign in with Google
-                    </button>
-                    <button id="anonymous-sign-in" class="w-full flex items-center justify-center px-4 py-3 bg-gray-600 text-white font-semibold rounded-lg hover:bg-gray-700 transition duration-150 shadow-md">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-3 text-gray-300"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-                        Continue Anonymously
-                    </button>
+            <div class="p-6">
+                <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Display Name</label>
+                <input type="text" id="display-name-input" class="w-full p-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-green-500 outline-none mb-4">
+                
+                <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Account Type</label>
+                <div class="bg-gray-100 p-3 rounded-lg text-sm text-gray-600 mb-6 flex items-center">
+                    <i data-lucide="shield" class="w-4 h-4 mr-2 text-green-600"></i>
+                    <span id="account-type-display">Loading...</span>
                 </div>
 
-                <div class="relative flex items-center justify-center my-6">
-                    <div class="absolute inset-0 flex items-center">
-                        <div class="w-full border-t border-gray-200"></div>
-                    </div>
-                    <div class="relative bg-white px-4 text-sm text-gray-400 font-medium">OR EMAIL</div>
-                </div>
-
-                <form id="email-auth-form" class="space-y-4">
-                    <input type="email" id="email-input" placeholder="Email Address" required class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-colors">
-                    <input type="password" id="password-input" placeholder="Password (min 6 chars)" required class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-colors">
-                    <button type="submit" id="email-sign-in-up" class="w-full px-4 py-3 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition duration-150 shadow-md">
-                        Sign In / Register
-                    </button>
-                </form>
-            </div>
-
-            <!-- Profile Content (Signed In View) -->
-            <div id="auth-content-profile" class="hidden">
-                <div class="flex items-center space-x-4 mb-6 p-4 bg-indigo-50 rounded-xl border border-indigo-100">
-                    <div class="h-12 w-12 rounded-full bg-indigo-200 flex items-center justify-center text-indigo-600 font-bold text-xl" id="profile-avatar">
-                        ?
-                    </div>
-                    <div class="flex-1 min-w-0">
-                        <p class="text-base font-bold text-gray-900 truncate" id="profile-display-name-display">User</p>
-                        <p class="text-sm text-gray-500 truncate" id="profile-user-email">email@example.com</p>
-                        <p class="text-xs font-mono text-gray-400 mt-1 truncate" id="profile-user-id">ID: ...</p>
-                    </div>
-                </div>
-
-                <form id="update-profile-form" class="space-y-4">
-                    <div>
-                        <label for="display-name-input" class="block text-sm font-medium text-gray-700 mb-1">Update Display Name</label>
-                        <input type="text" id="display-name-input" placeholder="How should we call you?" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none">
-                    </div>
-                    <button type="submit" class="w-full px-4 py-3 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition duration-150 shadow-md">
-                        Save Changes
-                    </button>
-                </form>
-
-                <button id="sign-out-button" class="mt-6 w-full px-4 py-3 bg-white border border-red-200 text-red-600 font-semibold rounded-lg hover:bg-red-50 transition duration-150">
-                    Sign Out
+                <button onclick="saveProfile()" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-lg shadow transition">
+                    Save Changes
                 </button>
             </div>
         </div>
     </div>
 
-    <!-- Firebase Initialization Script -->
+    <!-- ================= JAVASCRIPT ================= -->
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        // --- Firebase Imports ---
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { 
-            getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, 
-            GoogleAuthProvider, signInWithPopup, createUserWithEmailAndPassword, 
-            signInWithEmailAndPassword, updateProfile, signOut 
-        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+            getAuth, 
+            signInWithPopup, 
+            GoogleAuthProvider, 
+            signInAnonymously,
+            createUserWithEmailAndPassword,
+            signInWithEmailAndPassword,
+            signOut,
+            onAuthStateChanged,
+            updateProfile,
+            signInWithCustomToken
+        } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
         import { 
-            getFirestore, doc, addDoc, setDoc, onSnapshot, collection, query, 
-            where, writeBatch, getDocs, deleteDoc 
-        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+            getFirestore, 
+            collection, 
+            addDoc, 
+            query, 
+            orderBy, 
+            onSnapshot, 
+            serverTimestamp, 
+            limit 
+        } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-        // --- Configuration (Uses Environment Variables) ---
-        
-        // MANDATORY: Use __firebase_config and __initial_auth_token provided by the environment
-        const firebaseConfigStr = typeof __firebase_config !== 'undefined' ? __firebase_config : null;
-        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'greenfeed-default';
+        // --- Configuration (Environment Variables) ---
+        const firebaseConfig = JSON.parse(__firebase_config);
+        const appId = __app_id;
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
 
-        let firebaseConfig = null;
-        let app, auth, db;
-        let currentUserId = null;
-        window.postListenerUnsubscribe = null; // Variable to hold the listener cleanup function
+        // --- DOM Elements ---
+        const views = {
+            auth: document.getElementById('auth-view'),
+            app: document.getElementById('app-view'),
+            loader: document.getElementById('feed-loader'),
+            empty: document.getElementById('empty-state'),
+            feed: document.getElementById('feed-container'),
+            modal: document.getElementById('profile-modal')
+        };
 
-        if (firebaseConfigStr) {
-            try {
-                // Parse the environment-provided configuration
-                firebaseConfig = JSON.parse(firebaseConfigStr);
-            } catch (e) {
-                console.error("FATAL: Failed to parse __firebase_config:", e);
-                firebaseConfig = null;
+        const inputs = {
+            email: document.getElementById('email-input'),
+            pass: document.getElementById('password-input'),
+            post: document.getElementById('post-input'),
+            displayName: document.getElementById('display-name-input')
+        };
+
+        const text = {
+            navUser: document.getElementById('nav-username'),
+            navAvatar: document.getElementById('nav-avatar'),
+            postAvatar: document.getElementById('post-avatar'),
+            error: document.getElementById('auth-error'),
+            errorText: document.getElementById('auth-error-text'),
+            accType: document.getElementById('account-type-display')
+        };
+
+        let unsubscribeFeed = null;
+        let currentUser = null;
+
+        // --- Auth Logic ---
+
+        // 1. Check for custom token (Preview Environment) or wait for user action
+        const initAuth = async () => {
+            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                try {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } catch (e) {
+                    console.error("Custom token failed", e);
+                }
             }
-        } else {
-             console.error("FATAL: __firebase_config not found. Using a dummy config.");
-             // Minimal dummy config to prevent code crash, though Firebase won't work
-             firebaseConfig = { apiKey: "dummy", authDomain: "dummy", projectId: "dummy" };
+        };
+        initAuth();
+
+        // 2. State Listener
+        onAuthStateChanged(auth, (user) => {
+            currentUser = user;
+            if (user) {
+                // Logged In
+                showView('app');
+                updateUserProfileUI(user);
+                loadFeed();
+                lucide.createIcons();
+            } else {
+                // Logged Out
+                showView('auth');
+                if (unsubscribeFeed) unsubscribeFeed();
+                lucide.createIcons();
+            }
+        });
+
+        // 3. Auth Actions
+        window.handleGoogle = async () => {
+            try {
+                const provider = new GoogleAuthProvider();
+                await signInWithPopup(auth, provider);
+            } catch (e) { showError(e.message); }
+        };
+
+        window.handleAnon = async () => {
+            try { await signInAnonymously(auth); } catch (e) { showError(e.message); }
+        };
+
+        window.handleEmailSignIn = async () => {
+            try {
+                await signInWithEmailAndPassword(auth, inputs.email.value, inputs.pass.value);
+            } catch (e) { showError(e.message); }
+        };
+
+        window.handleEmailSignUp = async () => {
+            try {
+                const cred = await createUserWithEmailAndPassword(auth, inputs.email.value, inputs.pass.value);
+                // Set default display name for email users
+                await updateProfile(cred.user, { displayName: inputs.email.value.split('@')[0] });
+                updateUserProfileUI(cred.user);
+            } catch (e) { showError(e.message); }
+        };
+
+        window.handleSignOut = async () => {
+            try { await signOut(auth); } catch (e) { console.error(e); }
+        };
+
+        // --- UI Logic ---
+
+        function showView(viewName) {
+            views.auth.classList.add('hidden');
+            views.app.classList.add('hidden');
+            views[viewName].classList.remove('hidden');
+            if (viewName === 'auth') text.error.classList.add('hidden');
         }
 
-        // Configuration Constants
-        const TTL_DAYS = 30;
-        const POSTS_COLLECTION = "green_feed_public_posts";
-        const PROFILES_COLLECTION = "user_profiles";
-        
-        // DOM Elements Helper
-        const D = (id) => document.getElementById(id);
-        const elements = {
-            authButton: D('auth-button'),
-            modalOverlay: D('modal-overlay'),
-            closeModal: D('close-modal'),
-            authContentDefault: D('auth-content-default'),
-            authContentProfile: D('auth-content-profile'),
-            authErrorMessage: D('auth-error-message'),
-            googleSignIn: D('google-sign-in'),
-            anonymousSignIn: D('anonymous-sign-in'),
-            emailAuthForm: D('email-auth-form'),
-            emailInput: D('email-input'),
-            passwordInput: D('password-input'),
-            profileUserId: D('profile-user-id'),
-            profileUserEmail: D('profile-user-email'),
-            displayNameInput: D('display-name-input'),
-            profileDisplayNameDisplay: D('profile-display-name-display'),
-            profileAvatar: D('profile-avatar'),
-            updateProfileForm: D('update-profile-form'),
-            signOutButton: D('sign-out-button'),
-            postFormContainer: D('post-form-container'),
-            postForm: D('post-form'),
-            postButton: D('post-button'),
-            newPostText: D('new-post-text'),
-            postUserInfo: D('post-user-info'),
-            feedList: D('feed-list'),
-            feedCount: D('feed-count'),
-            statusMessage: D('status-message'),
-        };
+        function showError(msg) {
+            text.errorText.textContent = msg.replace('Firebase: ', '');
+            text.error.classList.remove('hidden');
+        }
 
-        // --- Utility Functions ---
-
-        const showStatus = (message, type = 'info') => {
-            elements.statusMessage.textContent = message;
-            elements.statusMessage.className = `mb-4 p-4 rounded-lg text-sm font-medium shadow-sm border flex items-center fade-in`;
+        function updateUserProfileUI(user) {
+            const name = user.displayName || (user.isAnonymous ? "Guest" : "User");
+            const initial = name[0].toUpperCase();
             
-            if (type === 'success') {
-                elements.statusMessage.classList.add('bg-green-50', 'text-green-700', 'border', 'border-green-200');
-            } else if (type === 'error') {
-                elements.statusMessage.classList.add('bg-red-50', 'text-red-700', 'border', 'border-red-200');
-            } else { // info
-                elements.statusMessage.classList.add('bg-indigo-50', 'text-indigo-700', 'border', 'border-indigo-200');
-            }
-            elements.statusMessage.classList.remove('hidden');
+            text.navUser.textContent = name;
+            text.navAvatar.textContent = initial;
+            text.postAvatar.textContent = initial;
             
-            setTimeout(() => { elements.statusMessage.classList.add('hidden'); }, 5000);
+            // For Modal
+            inputs.displayName.value = name;
+            text.accType.textContent = user.isAnonymous ? "Anonymous (Guest)" : (user.email ? "Email Account" : "Google Account");
+        }
+
+        // --- Profile Modal ---
+
+        window.openProfileModal = () => {
+            views.modal.classList.remove('hidden');
+            if (currentUser) inputs.displayName.value = currentUser.displayName || "User";
         };
 
-        const getPublicPostsPath = () => {
-            return `artifacts/${appId}/public/data/${POSTS_COLLECTION}`;
+        window.closeProfileModal = () => {
+            views.modal.classList.add('hidden');
         };
 
-        const getPrivateCollectionPath = (collectionName) => {
-            if (!currentUserId) return null;
-            return `artifacts/${appId}/users/${currentUserId}/${collectionName}`;
-        };
-
-        const formatTimestamp = (ms) => {
-            return new Date(ms).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
-        };
-
-        const getInitials = (name) => {
-            // Use only alphanumeric characters for initials
-            const cleanedName = name.replace(/[^a-zA-Z0-9\s]/g, '').trim();
-            if (!cleanedName) return '??';
-            
-            const parts = cleanedName.split(/\s+/).filter(Boolean);
-            if (parts.length > 1) {
-                return (parts[0][0] + parts[1][0]).toUpperCase();
-            } else if (parts[0]) {
-                 return parts[0].substring(0, 2).toUpperCase();
-            }
-            return '??';
-        };
-
-        // --- Data Persistence (Firestore) ---
-
-        const saveUserProfile = async (user) => {
-            if (!db || !user) return;
-            const profilePath = getPrivateCollectionPath(PROFILES_COLLECTION);
-            if (!profilePath) return;
-
-            const profileDocRef = doc(db, profilePath, user.uid);
-            
-            const profileData = {
-                uid: user.uid,
-                email: user.email || (user.isAnonymous ? 'N/A (Anonymous)' : 'N/A (No Email)'),
-                displayName: user.displayName || (user.isAnonymous ? 'Anonymous User' : 'New User'),
-                lastLogin: Date.now(),
-            };
-            
-            try {
-                await setDoc(profileDocRef, profileData, { merge: true });
-                
-                // Update Firebase Auth profile if the display name was just a placeholder
-                if (!user.displayName && !user.isAnonymous) {
-                    await updateProfile(user, { displayName: profileData.displayName });
-                }
-                
-            } catch (error) {
-                console.error("Error saving user profile:", error);
-            }
-        };
-
-        // --- Authentication Handlers ---
-
-        const handleAuthAction = async (actionFn) => {
-            if (!auth) return;
-            elements.authErrorMessage.classList.add('hidden');
-            try {
-                await actionFn();
-                elements.modalOverlay.classList.add('hidden');
-            } catch (error) {
-                console.error("Auth Error:", error);
-                const message = error.message || (error.code ? error.code.replace('auth/', '').replace(/-/g, ' ') : 'An unknown error occurred.');
-                elements.authErrorMessage.textContent = `Sign-in failed: ${message}`;
-                elements.authErrorMessage.classList.remove('hidden');
-            }
-        };
-
-        const handleGoogleSignIn = () => handleAuthAction(async () => {
-            const provider = new GoogleAuthProvider();
-            provider.setCustomParameters({ prompt: 'select_account' }); 
-            await signInWithPopup(auth, provider);
-            showStatus("Signed in with Google!", 'success');
-        });
-
-        const handleAnonymousSignIn = () => handleAuthAction(async () => {
-            await signInAnonymously(auth);
-            showStatus("Continuing anonymously.", 'info');
-        });
-
-        const handleEmailAuth = (e) => {
-            e.preventDefault();
-            const email = elements.emailInput.value;
-            const password = elements.passwordInput.value;
-
-            handleAuthAction(async () => {
-                try {
-                    await signInWithEmailAndPassword(auth, email, password);
-                    showStatus("Signed in successfully!", 'success');
-                } catch (signInError) {
-                    if (signInError.code === 'auth/user-not-found' || signInError.code === 'auth/wrong-password' || signInError.code === 'auth/invalid-credential') {
-                        // User not found, attempt registration
-                        const result = await createUserWithEmailAndPassword(auth, email, password);
-                        await updateProfile(result.user, { displayName: email.split('@')[0] });
-                        showStatus("Registration successful. Welcome!", 'success');
-                    } else {
-                        throw signInError; // Re-throw other errors
-                    }
-                }
-            });
-        };
-
-        const handleUpdateProfile = async (e) => {
-            e.preventDefault();
-            if (!auth || !auth.currentUser) return;
-
-            const newDisplayName = elements.displayNameInput.value.trim();
-            if (!newDisplayName) {
-                showStatus("Display name cannot be empty.", 'error');
-                return;
-            }
+        window.saveProfile = async () => {
+            const newName = inputs.displayName.value.trim();
+            if (!newName) return;
 
             try {
-                await updateProfile(auth.currentUser, { displayName: newDisplayName });
-                await saveUserProfile(auth.currentUser);
-                updateAuthUI(auth.currentUser); // Refresh UI
-                showStatus("Profile name updated successfully!", 'success');
-            } catch (error) {
-                console.error("Error updating profile:", error);
-                showStatus(`Failed to update profile: ${error.message}`, 'error');
+                await updateProfile(currentUser, { displayName: newName });
+                updateUserProfileUI(currentUser);
+                closeProfileModal();
+                // Ideally we would update all past posts too, but for simplicity we only update local state
+                // and new posts will use the new name.
+            } catch (e) {
+                alert("Failed to update profile: " + e.message);
             }
         };
 
-        const handleSignOut = () => handleAuthAction(async () => {
-            await signOut(auth);
-            showStatus("You have been signed out.", 'info');
-        });
+        // --- Feed Logic (Firestore) ---
 
-        // --- Data Management & Cleanup (TTL) ---
+        function loadFeed() {
+            views.loader.classList.remove('hidden');
+            views.empty.classList.add('hidden');
+            views.feed.innerHTML = '';
 
-        const checkAndDeleteOldData = async () => {
-            if (!db) return;
-            const cutoffTime = Date.now() - (TTL_DAYS * 24 * 60 * 60 * 1000);
-            const dataPath = getPublicPostsPath(); 
+            const q = query(
+                collection(db, 'artifacts', appId, 'public', 'data', 'posts'), // Shared Collection
+                orderBy('createdAt', 'desc'),
+                limit(50)
+            );
 
-            try {
-                const q = query(collection(db, dataPath), where('createdAt', '<', cutoffTime));
-                const snapshot = await getDocs(q);
-                if (snapshot.empty) return;
+            unsubscribeFeed = onSnapshot(q, (snapshot) => {
+                views.loader.classList.add('hidden');
+                views.feed.innerHTML = '';
 
-                const batch = writeBatch(db);
-                snapshot.forEach((docSnap) => batch.delete(docSnap.ref));
-                await batch.commit();
-                console.log(`[GreenFeed TTL] Deleted ${snapshot.size} old post(s).`);
-            } catch (error) {
-                console.error("[GreenFeed TTL] Cleanup Error:", error);
-            }
-        };
-
-        const handleNewPost = async (e) => {
-            e.preventDefault();
-            const text = elements.newPostText.value.trim();
-            if (!text || !db || !currentUserId) return;
-
-            const dataPath = getPublicPostsPath(); 
-            elements.postButton.disabled = true;
-
-            try {
-                await addDoc(collection(db, dataPath), {
-                    text: text,
-                    createdAt: Date.now(),
-                    creatorId: currentUserId,
-                    creatorName: auth.currentUser.displayName || 'Anonymous'
-                });
-                elements.newPostText.value = '';
-                showStatus("Post published!", 'success');
-            } catch (error) {
-                console.error("Error adding document:", error);
-                showStatus(`Could not post item: ${error.message}`, 'error');
-            } finally {
-                elements.postButton.disabled = false;
-            }
-        };
-        
-        // --- Delete Functionality ---
-        
-        window.deletePost = async (postId) => {
-            if (!db) return;
-            
-            // Replaced alert/confirm with a more robust modal/dialog method in a real app,
-            // but keeping simple confirm for this example based on environment constraints.
-            if (!window.confirm("Are you sure you want to delete this post?")) return;
-            
-            const dataPath = getPublicPostsPath();
-            const postRef = doc(db, dataPath, postId);
-            
-            try {
-                await deleteDoc(postRef);
-                showStatus("Post deleted successfully.", 'success');
-            } catch (error) {
-                console.error("Error deleting post:", error);
-                showStatus(`Failed to delete post: ${error.message}`, 'error');
-            }
-        };
-
-        // --- UI Rendering ---
-
-        const renderPosts = (posts) => {
-            elements.feedList.innerHTML = '';
-            elements.feedCount.textContent = `(${posts.length})`;
-
-            if (posts.length === 0) {
-                elements.feedList.innerHTML = `
-                    <div class="flex flex-col items-center justify-center p-8 text-gray-400 border-2 border-dashed border-gray-200 rounded-xl bg-gray-50">
-                        <p>The feed is empty.</p>
-                        <p class="text-sm">Be the first to post!</p>
-                    </div>`;
-                return;
-            }
-
-            posts.forEach(item => {
-                const isOld = (Date.now() - item.createdAt) > (TTL_DAYS * 24 * 60 * 60 * 1000);
-                const dateString = formatTimestamp(item.createdAt);
-                const isOwner = item.creatorId === currentUserId;
-                const authorName = item.creatorName || 'Unknown';
-                const avatarInitials = getInitials(authorName);
-                
-                const card = document.createElement('div');
-                card.className = `p-5 rounded-xl shadow-sm transition-all duration-300 bg-white border border-gray-100 hover:shadow-md ${isOld ? 'opacity-70' : ''}`;
-                
-                const deleteButtonHtml = isOwner ? `
-                    <button onclick="deletePost('${item.id}')" class="text-gray-400 hover:text-red-500 p-1.5 rounded-full hover:bg-red-50 transition-colors" title="Delete Post">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-                    </button>
-                ` : '';
-                
-                card.innerHTML = `
-                    <div class="flex justify-between items-start mb-3">
-                         <div class="flex items-center space-x-3">
-                            <div class="h-10 w-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-bold text-sm">
-                                ${avatarInitials}
-                            </div>
-                            <div>
-                                <div class="font-bold text-gray-900 text-sm">${authorName}</div>
-                                <div class="text-xs text-gray-400">${dateString}</div>
-                            </div>
-                         </div>
-                         ${deleteButtonHtml}
-                    </div>
-                    <p class="text-gray-800 text-base leading-relaxed break-words">${item.text}</p>
-                     ${isOld ? `<div class="mt-3 border-t border-red-100 pt-2"><span class="inline-flex items-center text-xs font-semibold text-red-600 bg-red-50 px-2 py-1 rounded-full">Pending Deletion (TTL)</span></div>` : ''}
-                `;
-                elements.feedList.appendChild(card);
-            });
-        };
-
-        const updateAuthUI = (user) => {
-            if (user) {
-                currentUserId = user.uid;
-                const displayName = user.displayName || (user.isAnonymous ? 'Anonymous' : user.email || 'User');
-                
-                elements.authButton.textContent = displayName;
-                elements.authButton.className = 'flex items-center px-4 py-2 text-sm font-semibold rounded-lg shadow-md transition duration-150 bg-white text-indigo-600 border border-indigo-200 hover:bg-indigo-50';
-                
-                elements.postFormContainer.classList.remove('opacity-50', 'pointer-events-none');
-                elements.postUserInfo.textContent = `Posting as ${displayName}`;
-
-                elements.authContentDefault.classList.add('hidden');
-                elements.authContentProfile.classList.remove('hidden');
-                elements.profileUserId.textContent = user.uid;
-                elements.profileUserEmail.textContent = user.email || 'Anonymous Session';
-                elements.displayNameInput.value = user.displayName || '';
-                elements.profileDisplayNameDisplay.textContent = displayName;
-                elements.profileAvatar.textContent = getInitials(displayName);
-
-            } else {
-                currentUserId = null;
-                elements.authButton.textContent = 'Sign In / Profile';
-                elements.authButton.className = 'flex items-center px-4 py-2 text-sm font-semibold rounded-lg shadow-md transition duration-150 bg-indigo-600 text-white hover:bg-indigo-700';
-
-                elements.postFormContainer.classList.add('opacity-50', 'pointer-events-none');
-                elements.postUserInfo.textContent = 'Sign in to post.';
-
-                elements.authContentDefault.classList.remove('hidden');
-                elements.authContentProfile.classList.add('hidden');
-            }
-        };
-
-        // --- Firebase Initialization ---
-
-        const initializeFirebase = async () => {
-            if (!firebaseConfig || firebaseConfig.projectId === 'dummy') {
-                showStatus("FATAL: Firebase configuration is missing or invalid. Please check the environment setup.", 'error');
-                return;
-            }
-
-            try {
-                app = initializeApp(firebaseConfig);
-                auth = getAuth(app);
-                db = getFirestore(app);
-                
-                // IMPORTANT: Start the post listener immediately as the feed is public
-                setupPostListener();
-
-                // Use the initial auth token if provided, otherwise sign in anonymously
-                if (initialAuthToken) {
-                    await signInWithCustomToken(auth, initialAuthToken).catch(e => {
-                        console.warn("Token sign-in failed, falling back to anonymous:", e);
-                        signInAnonymously(auth);
-                    });
+                if (snapshot.empty) {
+                    views.empty.classList.remove('hidden');
                 } else {
-                     signInAnonymously(auth);
+                    views.empty.classList.add('hidden');
+                    snapshot.forEach(doc => {
+                        const post = doc.data();
+                        renderPost(post, doc.id);
+                    });
                 }
-
-                onAuthStateChanged(auth, async (user) => {
-                    if (user) {
-                        currentUserId = user.uid;
-                        await saveUserProfile(user);
-                        updateAuthUI(user);
-                        checkAndDeleteOldData();
-                    } else {
-                        updateAuthUI(null);
-                        // The post listener is already running, no need to clear the posts here.
-                    }
-                });
-
-                showStatus("Ready. Public Feed Active.", 'success');
-            } catch (error) {
-                console.error("Init Error:", error);
-                showStatus(`Initialization failed: ${error.message}. Check browser console for details.`, 'error');
-            }
-        };
-
-        const setupPostListener = () => {
-            if (!db) return;
-            
-            const dataPath = getPublicPostsPath();
-            // Using a simple query for the public feed, which sorts client-side in renderPosts
-            const q = query(collection(db, dataPath));
-
-            // Clean up existing listener if it exists
-            if (window.postListenerUnsubscribe) {
-                window.postListenerUnsubscribe();
-            }
-
-            // Start the new listener
-            window.postListenerUnsubscribe = onSnapshot(q, (snapshot) => {
-                const posts = [];
-                snapshot.forEach((doc) => {
-                    const data = doc.data();
-                    posts.push({ id: doc.id, ...data });
-                });
-                // Sort client-side (most recent first)
-                posts.sort((a, b) => b.createdAt - a.createdAt); 
-                renderPosts(posts);
+                lucide.createIcons();
             }, (error) => {
-                console.error("Listener Error:", error);
-                showStatus(`Feed listener failed: ${error.message}`, 'error');
+                console.error("Feed error:", error);
+                views.loader.classList.add('hidden');
             });
+        }
+
+        window.createPost = async () => {
+            const content = inputs.post.value.trim();
+            if (!content || !currentUser) return;
+
+            const btn = document.getElementById('btn-post');
+            btn.disabled = true;
+
+            try {
+                await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'posts'), {
+                    content: content,
+                    authorId: currentUser.uid,
+                    authorName: currentUser.displayName || "Anonymous",
+                    createdAt: serverTimestamp(),
+                    likes: 0
+                });
+                inputs.post.value = '';
+            } catch (e) {
+                console.error("Post failed", e);
+                alert("Could not post. Check console.");
+            } finally {
+                btn.disabled = false;
+            }
         };
 
-        // --- Event Listeners ---
-        elements.authButton.addEventListener('click', () => {
-            elements.modalOverlay.classList.remove('hidden');
-            elements.authErrorMessage.classList.add('hidden'); 
-        });
-        elements.closeModal.addEventListener('click', () => elements.modalOverlay.classList.add('hidden'));
-        elements.modalOverlay.addEventListener('click', (e) => {
-            if (e.target === elements.modalOverlay) elements.modalOverlay.classList.add('hidden');
-        });
-        elements.googleSignIn.addEventListener('click', handleGoogleSignIn);
-        elements.anonymousSignIn.addEventListener('click', handleAnonymousSignIn);
-        elements.emailAuthForm.addEventListener('submit', handleEmailAuth);
-        elements.updateProfileForm.addEventListener('submit', handleUpdateProfile);
-        elements.signOutButton.addEventListener('click', handleSignOut);
-        elements.postForm.addEventListener('submit', handleNewPost);
+        function renderPost(post, id) {
+            const div = document.createElement('div');
+            div.className = "bg-white p-5 rounded-xl shadow-sm border border-green-50 fade-in hover:shadow-md transition duration-200";
+            
+            // Date formatting
+            let timeStr = "Just now";
+            if (post.createdAt) {
+                const date = post.createdAt.toDate();
+                timeStr = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            }
 
-        initializeFirebase();
+            const initial = post.authorName ? post.authorName[0].toUpperCase() : 'U';
+            const isMe = currentUser && post.authorId === currentUser.uid;
+
+            div.innerHTML = `
+                <div class="flex space-x-3">
+                    <div class="w-10 h-10 bg-gradient-to-br ${isMe ? 'from-green-500 to-green-700' : 'from-gray-400 to-gray-600'} rounded-full flex items-center justify-center text-white font-bold shadow-sm flex-shrink-0">
+                        ${initial}
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-2 overflow-hidden">
+                                <h4 class="font-bold text-gray-900 truncate">${post.authorName}</h4>
+                                <span class="text-gray-400 text-xs flex-shrink-0">${timeStr}</span>
+                            </div>
+                            ${isMe ? '<span class="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-medium">You</span>' : ''}
+                        </div>
+                        <p class="mt-1 text-gray-800 leading-relaxed whitespace-pre-line break-words">${post.content}</p>
+                    </div>
+                </div>
+            `;
+            views.feed.appendChild(div);
+        }
+
+        // --- Event Listeners (Binding Buttons) ---
+        document.getElementById('btn-google').addEventListener('click', window.handleGoogle);
+        document.getElementById('btn-anon').addEventListener('click', window.handleAnon);
+        document.getElementById('btn-signin').addEventListener('click', window.handleEmailSignIn);
+        document.getElementById('btn-signup').addEventListener('click', window.handleEmailSignUp);
+        document.getElementById('btn-signout').addEventListener('click', window.handleSignOut);
+
     </script>
 </body>
 </html>
+
 
