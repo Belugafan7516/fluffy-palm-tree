@@ -10,6 +10,8 @@
         body { font-family: 'Inter', sans-serif; background-color: #f0fdf4; }
         .fade-in { animation: fadeIn 0.4s ease-out forwards; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        /* Ensure cursor pointer for all interactive elements */
+        button, .cursor-pointer { cursor: pointer; }
     </style>
 </head>
 <body class="text-gray-800 min-h-screen flex flex-col">
@@ -44,33 +46,37 @@
             </div>
             
             <div class="p-8">
-                <!-- Auth Error Message -->
-                <div id="auth-error" class="hidden bg-red-50 text-red-600 text-sm p-3 rounded-lg mb-4 border border-red-100 flex items-start">
+                <!-- Auth Message Area (Will be styled red for errors, green for test success) -->
+                <div id="auth-error" class="hidden bg-red-50 text-red-600 text-sm p-3 rounded-lg mb-4 border border-red-100 flex items-start transition-colors duration-150">
                     <i data-lucide="alert-circle" class="w-4 h-4 mr-2 mt-0.5 flex-shrink-0"></i>
-                    <span id="auth-error-text">Error message</span>
+                    <span id="auth-error-text">Message</span>
                 </div>
 
-                <!-- Email/Pass Form -->
-                <div class="space-y-4">
-                    <div>
-                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Email</label>
-                        <input type="email" id="email-input" class="w-full p-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-green-500 outline-none transition" placeholder="you@example.com">
+                <!-- Email/Pass Form (Using onSubmit for reliability) -->
+                <form id="email-auth-form" onsubmit="event.preventDefault(); window.handleEmailAuth(event);">
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Email</label>
+                            <!-- REQUIRED ATTRIBUTE REMOVED HERE -->
+                            <input type="email" id="email-input" class="w-full p-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-green-500 outline-none transition" placeholder="you@example.com">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Password</label>
+                            <!-- REQUIRED ATTRIBUTE REMOVED HERE -->
+                            <input type="password" id="password-input" class="w-full p-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-green-500 outline-none transition" placeholder="••••••••">
+                        </div>
+                        
+                        <div class="flex space-x-3 pt-2">
+                            <!-- Buttons are now Submit buttons with names to indicate action -->
+                            <button name="action" value="signin" type="submit" class="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition transform active:scale-95">
+                                Sign In
+                            </button>
+                            <button name="action" value="signup" type="submit" class="flex-1 bg-white hover:bg-green-50 text-green-700 border border-green-200 font-bold py-2 px-4 rounded-lg transition transform active:scale-95">
+                                Sign Up
+                            </button>
+                        </div>
                     </div>
-                    <div>
-                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Password</label>
-                        <input type="password" id="password-input" class="w-full p-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-green-500 outline-none transition" placeholder="••••••••">
-                    </div>
-                    
-                    <div class="flex space-x-3 pt-2">
-                        <!-- DIRECT ONCLICK CALLS -->
-                        <button onclick="handleEmailSignIn()" class="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition transform active:scale-95">
-                            Sign In
-                        </button>
-                        <button onclick="handleEmailSignUp()" class="flex-1 bg-white hover:bg-green-50 text-green-700 border border-green-200 font-bold py-2 px-4 rounded-lg transition transform active:scale-95">
-                            Sign Up
-                        </button>
-                    </div>
-                </div>
+                </form>
 
                 <div class="relative my-6">
                     <div class="absolute inset-0 flex items-center"><div class="w-full border-t border-gray-200"></div></div>
@@ -78,12 +84,13 @@
                 </div>
 
                 <div class="space-y-3">
-                    <!-- DIRECT ONCLICK CALLS -->
-                    <button onclick="handleGoogle()" class="w-full flex items-center justify-center bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-medium py-2.5 px-4 rounded-lg transition transform active:scale-95">
+                    <!-- Google Auth (Using simplified onclick) -->
+                    <button onclick="window.handleGoogle()" class="w-full flex items-center justify-center bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-medium py-2.5 px-4 rounded-lg transition transform active:scale-95">
                         <svg class="w-5 h-5 mr-2" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
                         Google
                     </button>
-                    <button onclick="handleAnon()" class="w-full flex items-center justify-center bg-gray-100 hover:bg-gray-200 text-gray-600 font-medium py-2.5 px-4 rounded-lg transition transform active:scale-95">
+                    <!-- Anonymous Auth (Using simplified onclick) -->
+                    <button onclick="window.handleAnon()" class="w-full flex items-center justify-center bg-gray-100 hover:bg-gray-200 text-gray-600 font-medium py-2.5 px-4 rounded-lg transition transform active:scale-95">
                         <i data-lucide="ghost" class="w-5 h-5 mr-2"></i>
                         Continue as Guest
                     </button>
@@ -103,11 +110,11 @@
                         <span>GreenFeed</span>
                     </div>
                     <div class="flex items-center space-x-3">
-                        <button onclick="openProfileModal()" class="flex items-center space-x-2 hover:bg-green-700 px-3 py-1.5 rounded-full transition group border border-transparent hover:border-green-400">
+                        <button onclick="window.openProfileModal()" class="flex items-center space-x-2 hover:bg-green-700 px-3 py-1.5 rounded-full transition group border border-transparent hover:border-green-400">
                             <div class="w-8 h-8 bg-green-200 text-green-800 rounded-full flex items-center justify-center font-bold text-sm border-2 border-green-500 group-hover:border-white transition" id="nav-avatar">U</div>
                             <span id="nav-username" class="text-sm font-medium hidden sm:block max-w-[100px] truncate">User</span>
                         </button>
-                        <button onclick="handleSignOut()" class="p-2 hover:bg-green-700 rounded-full transition text-green-100 hover:text-white" title="Sign Out">
+                        <button id="btn-signout" onclick="window.handleSignOut()" class="p-2 hover:bg-green-700 rounded-full transition text-green-100 hover:text-white" title="Sign Out">
                             <i data-lucide="log-out" class="w-5 h-5"></i>
                         </button>
                     </div>
@@ -130,7 +137,7 @@
                     </div>
                 </div>
                 <div class="flex justify-end items-center mt-3 pt-3 border-t border-gray-100">
-                    <button onclick="createPost()" id="btn-post" class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-full font-medium transition shadow-md transform active:scale-95 flex items-center disabled:opacity-50 disabled:cursor-not-allowed">
+                    <button onclick="window.createPost()" id="btn-post" class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-full font-medium transition shadow-md transform active:scale-95 flex items-center disabled:opacity-50 disabled:cursor-not-allowed">
                         <i data-lucide="send" class="w-4 h-4 mr-2"></i>
                         Post
                     </button>
@@ -163,7 +170,7 @@
         <div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full overflow-hidden transform transition-all scale-100">
             <div class="bg-green-600 p-4 flex justify-between items-center">
                 <h3 class="text-white font-bold text-lg">Edit Profile</h3>
-                <button onclick="closeProfileModal()" class="text-green-100 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+                <button onclick="window.closeProfileModal()" class="text-green-100 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
             </div>
             <div class="p-6">
                 <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Display Name</label>
@@ -175,7 +182,7 @@
                     <span id="account-type-display">Loading...</span>
                 </div>
 
-                <button onclick="saveProfile()" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-lg shadow transition transform active:scale-95">
+                <button onclick="window.saveProfile()" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-lg shadow transition transform active:scale-95">
                     Save Changes
                 </button>
             </div>
@@ -226,7 +233,8 @@
             loader: document.getElementById('feed-loader'),
             empty: document.getElementById('empty-state'),
             feed: document.getElementById('feed-container'),
-            modal: document.getElementById('profile-modal')
+            modal: document.getElementById('profile-modal'),
+            error: document.getElementById('auth-error')
         };
 
         const inputs = {
@@ -240,7 +248,6 @@
             navUser: document.getElementById('nav-username'),
             navAvatar: document.getElementById('nav-avatar'),
             postAvatar: document.getElementById('post-avatar'),
-            error: document.getElementById('auth-error'),
             errorText: document.getElementById('auth-error-text'),
             accType: document.getElementById('account-type-display')
         };
@@ -248,6 +255,41 @@
         let unsubscribeFeed = null;
         let currentUser = null;
         
+        // --- Message Display Functions (Modified for Testing) ---
+
+        /** Shows a temporary success message in the error box. */
+        function showTestMessage(msg) {
+            if (!views.error || !text.errorText) return;
+            
+            text.errorText.textContent = msg;
+            views.error.classList.remove('hidden');
+            
+            // Apply success styling (Green)
+            views.error.classList.remove('bg-red-50', 'text-red-600', 'border-red-100');
+            views.error.classList.add('bg-green-100', 'text-green-700', 'border-green-200');
+        }
+        
+        /** Shows an actual Firebase error message (or a custom validation error). */
+        function showFirebaseError(msg) {
+            if (!views.error || !text.errorText) return;
+            
+            text.errorText.textContent = msg.replace('Firebase: ', '');
+            views.error.classList.remove('hidden');
+            
+            // Apply error styling (Red)
+            views.error.classList.remove('bg-green-100', 'text-green-700', 'border-green-200');
+            views.error.classList.add('bg-red-50', 'text-red-600', 'border-red-100');
+        }
+
+        /** Clears the message box and restores default error styling. */
+        function clearAuthMessage() {
+            if (views.error) views.error.classList.add('hidden');
+            
+            // Restore default error styling immediately after clearing
+            views.error.classList.remove('bg-green-100', 'text-green-700', 'border-green-200');
+            views.error.classList.add('bg-red-50', 'text-red-600', 'border-red-100');
+        }
+
         // 1. Auth Initialization (Custom Token)
         const initAuth = async () => {
             if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
@@ -277,35 +319,71 @@
             lucide.createIcons();
         });
 
-        // 3. Auth Actions (Exposed to Global Scope via window for HTML onclick)
+        // 3. Auth Actions (Exposed to window for HTML event handlers)
+        
+        window.handleEmailAuth = async (event) => {
+            const action = event.submitter ? event.submitter.value : null;
+            if (!action) return;
+            
+            clearAuthMessage();
+
+            const email = inputs.email.value.trim();
+            const password = inputs.pass.value.trim();
+
+            // --- CUSTOM VALIDATION (Replaces native 'required') ---
+            if (!email || !password) {
+                showFirebaseError("Please enter both your email and password to proceed.");
+                return;
+            }
+            // -----------------------------------------------------
+
+            // --- TEST BLOCK START: Shows button press confirmation ---
+            const testMsg = action === 'signin' ? "TEST SUCCESS: Sign In button tapped. Waiting 1.5s..." : "TEST SUCCESS: Sign Up button tapped. Waiting 1.5s...";
+            showTestMessage(testMsg); 
+            await new Promise(r => setTimeout(r, 1500)); 
+            clearAuthMessage(); 
+            // --- TEST BLOCK END ---
+
+            if (action === 'signin') {
+                console.log("Attempting email/password sign-in...");
+                try {
+                    await signInWithEmailAndPassword(auth, email, password);
+                } catch (e) { showFirebaseError(e.message); }
+            } else if (action === 'signup') {
+                console.log("Attempting email/password sign-up...");
+                try {
+                    const cred = await createUserWithEmailAndPassword(auth, email, password);
+                    const name = email.split('@')[0];
+                    await updateProfile(cred.user, { displayName: name });
+                    updateUserProfileUI(cred.user); 
+                } catch (e) { showFirebaseError(e.message); }
+            }
+        };
+
+
         window.handleGoogle = async () => {
+            // --- TEST BLOCK START: Shows button press confirmation ---
+            showTestMessage("TEST SUCCESS: Google button tapped. Waiting 1.5s...");
+            await new Promise(r => setTimeout(r, 1500));
+            clearAuthMessage();
+            // --- TEST BLOCK END ---
+            
             console.log("Attempting Google sign-in...");
             try {
                 const provider = new GoogleAuthProvider();
                 await signInWithPopup(auth, provider);
-            } catch (e) { showError(e.message); }
+            } catch (e) { showFirebaseError(e.message); }
         };
 
         window.handleAnon = async () => {
+            // --- TEST BLOCK START: Shows button press confirmation ---
+            showTestMessage("TEST SUCCESS: Guest button tapped. Waiting 1.5s...");
+            await new Promise(r => setTimeout(r, 1500));
+            clearAuthMessage();
+            // --- TEST BLOCK END ---
+            
             console.log("Attempting anonymous sign-in...");
-            try { await signInAnonymously(auth); } catch (e) { showError(e.message); }
-        };
-
-        window.handleEmailSignIn = async () => {
-            console.log("Attempting email/password sign-in...");
-            try {
-                await signInWithEmailAndPassword(auth, inputs.email.value, inputs.pass.value);
-            } catch (e) { showError(e.message); }
-        };
-
-        window.handleEmailSignUp = async () => {
-            console.log("Attempting email/password sign-up...");
-            try {
-                const cred = await createUserWithEmailAndPassword(auth, inputs.email.value, inputs.pass.value);
-                const name = inputs.email.value.split('@')[0];
-                await updateProfile(cred.user, { displayName: name });
-                updateUserProfileUI(cred.user); 
-            } catch (e) { showError(e.message); }
+            try { await signInAnonymously(auth); } catch (e) { showFirebaseError(e.message); }
         };
 
         window.handleSignOut = async () => {
@@ -316,43 +394,38 @@
         // --- UI Helpers ---
 
         function showView(viewName) {
-            views.auth.classList.add('hidden');
-            views.app.classList.add('hidden');
-            views[viewName].classList.remove('hidden');
-            if (viewName === 'auth') text.error.classList.add('hidden');
-        }
-
-        function showError(msg) {
-            text.errorText.textContent = msg.replace('Firebase: ', '');
-            text.error.classList.remove('hidden');
+            if (views.auth) views.auth.classList.add('hidden');
+            if (views.app) views.app.classList.add('hidden');
+            if (views[viewName]) views[viewName].classList.remove('hidden');
+            if (viewName === 'auth') clearAuthMessage();
         }
 
         function updateUserProfileUI(user) {
             const name = user.displayName || (user.isAnonymous ? "Guest" : "User");
             const initial = name[0] ? name[0].toUpperCase() : "U";
             
-            text.navUser.textContent = name;
-            text.navAvatar.textContent = initial;
-            text.postAvatar.textContent = initial;
+            if (text.navUser) text.navUser.textContent = name;
+            if (text.navAvatar) text.navAvatar.textContent = initial;
+            if (text.postAvatar) text.postAvatar.textContent = initial;
             
-            inputs.displayName.value = name;
-            text.accType.textContent = user.isAnonymous ? "Guest Session" : (user.email ? "Email Account" : "Google Account");
+            if (inputs.displayName) inputs.displayName.value = name;
+            if (text.accType) text.accType.textContent = user.isAnonymous ? "Guest Session" : (user.email ? "Email Account" : "Google Account");
         }
 
-        // --- Profile Modal ---
+        // --- Profile Modal (Exposed to window for inline HTML onclick) ---
 
         window.openProfileModal = () => {
-            views.modal.classList.remove('hidden');
-            if (currentUser) inputs.displayName.value = currentUser.displayName || "";
+            if (views.modal) views.modal.classList.remove('hidden');
+            if (currentUser && inputs.displayName) inputs.displayName.value = currentUser.displayName || "";
         };
 
         window.closeProfileModal = () => {
-            views.modal.classList.add('hidden');
+            if (views.modal) views.modal.classList.add('hidden');
         };
 
         window.saveProfile = async () => {
             const newName = inputs.displayName.value.trim();
-            if (!newName) return;
+            if (!newName || !currentUser) return;
 
             try {
                 await updateProfile(currentUser, { displayName: newName });
@@ -360,13 +433,15 @@
                 closeProfileModal();
             } catch (e) {
                 console.error("Error saving profile:", e);
-                showError("Failed to save profile. See console for details.");
+                showFirebaseError("Failed to save profile. See console for details.");
             }
         };
 
-        // --- Feed Logic ---
+        // --- Feed Logic (Exposed to window for inline HTML onclick) ---
 
         function loadFeed() {
+            if (!views.loader || !views.empty || !views.feed) return;
+            
             views.loader.classList.remove('hidden');
             views.empty.classList.add('hidden');
             
@@ -402,6 +477,8 @@
             if (!content || !currentUser) return;
 
             const btn = document.getElementById('btn-post');
+            if (!btn) return;
+            
             btn.disabled = true;
             btn.innerHTML = `<i data-lucide="loader-2" class="w-4 h-4 mr-2 animate-spin"></i> Sending...`;
             lucide.createIcons();
@@ -417,7 +494,7 @@
                 inputs.post.value = '';
             } catch (e) {
                 console.error("Post failed", e);
-                showError("Failed to post. Please try again.");
+                showFirebaseError("Failed to post. Please try again.");
             } finally {
                 btn.disabled = false;
                 btn.innerHTML = `<i data-lucide="send" class="w-4 h-4 mr-2"></i> Post`;
@@ -456,16 +533,17 @@
                     </div>
                 </div>
             `;
-            views.feed.appendChild(div);
+            if (views.feed) views.feed.appendChild(div);
         }
 
         // --- Keyboard Shortcut for Posting (Desktop only) ---
-        inputs.post.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
-                createPost();
-            }
-        });
-
+        if (inputs.post) {
+            inputs.post.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+                    window.createPost();
+                }
+            });
+        }
     </script>
 </body>
 </html>
